@@ -43,7 +43,6 @@ def extractRelevantSections(all_corr_sections, version):
     # number of sections and can cause the script to fail. This allows you to know exactly which section is which.
 
 def droppedChannels(text_section, stations):
-    #station_id = [['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26'], ['Ke', 'Yg', 'Hb', 'Ho'], ['a', 'i', 'd', 'H']]
     dropped_chans = []
     for ant in stations:
         regex = ant + '.*'
@@ -59,7 +58,6 @@ def droppedChannels(text_section, stations):
     # The input of this function is a text section from the correlator report (section[5])
     
 def manualPcal(text_section, stations):
-    #station_id = [['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26'], ['Ke', 'Yg', 'Hb', 'Ho'], ['a', 'i', 'd', 'H']]
     manual_pcal = []
     for ant in stations:
         if ant in text_section:
