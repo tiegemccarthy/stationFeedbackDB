@@ -42,10 +42,10 @@ def extractRelevantSections(all_corr_sections, version):
     # This pulls the relevant sections out of the split corr report, it is required as sometimes corr reports have different 
     # number of sections and can cause the script to fail. This allows you to know exactly which section is which.
 
-def droppedChannels(text_section):
-    station_id = [['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26'], ['Ke', 'Yg', 'Hb', 'Ho'], ['a', 'i', 'd', 'H']]
+def droppedChannels(text_section, stations):
+    #station_id = [['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26'], ['Ke', 'Yg', 'Hb', 'Ho'], ['a', 'i', 'd', 'H']]
     dropped_chans = []
-    for ant in station_id[1]:
+    for ant in stations:
         regex = ant + '.*'
         dropped = re.findall(regex,text_section,re.MULTILINE)
         if dropped == []:
@@ -58,10 +58,10 @@ def droppedChannels(text_section):
     # This function takes a block of text, and scrapes out whether any AuScope antennas have dropped channels
     # The input of this function is a text section from the correlator report (section[5])
     
-def manualPcal(text_section):
-    station_id = [['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26'], ['Ke', 'Yg', 'Hb', 'Ho'], ['a', 'i', 'd', 'H']]
+def manualPcal(text_section, stations):
+    #station_id = [['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26'], ['Ke', 'Yg', 'Hb', 'Ho'], ['a', 'i', 'd', 'H']]
     manual_pcal = []
-    for ant in station_id[1]:
+    for ant in stations:
         if ant in text_section:
             manual_pcal.append(True)
         else:
@@ -197,7 +197,21 @@ def basnumArray(snr_data, antennas_corr_reference, SEFD_tags):
     basnum=np.stack(basnum, axis=0)
     return basnum
 
+def stationParse(stations_config='stations.config'):
+    with open(stations_config) as file:
+        station_contents = file.read()
+    stationTable = ascii.read(station_contents, data_start=0)
+    if len(stationTable) == 1: # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
+        stationNames = [stationTable[0][0]]
+        stationNamesLong = [stationTable[0][1]]
+    else:
+        stationNames = stationTable[0][:]
+        stationNamesLong = stationTable[1][:]
+    return stationNames, stationNamesLong
+
+
 def main(exp_id, sql_db_name = False, sefd_est = False):
+    stationNames, stationNamesLong = stationParse()
     # Check if corr report is available.
     if os.path.isfile("corr_files/"+ exp_id + '.corr'):
         print("Beginning corr and skd file ingest for experiment " + exp_id + ".")
@@ -219,19 +233,18 @@ def main(exp_id, sql_db_name = False, sefd_est = False):
     if len(relevant_section) < 4:
         print("Incompatible correlator report format.")
     # Define the station IDs you care about extracting
-    station_id = ["Ke", "Yg", "Hb", "Ho"]
     valid_stations = []
     # Report version specific loop to determine which of our 'valid' stations are in the report
-    for j in range(0, len(station_id)):
+    for j in range(0, len(stationNames)):
         if report_version == 3:
-            if "\n" + station_id[j] in relevant_section[0]:
-                valid_stations.append(station_id[j])
+            if "\n" + stationNames[j] in relevant_section[0]:
+                valid_stations.append(stationNames[j])
         else:
-            if station_id[j] + "/" in relevant_section[0]:
-                valid_stations.append(station_id[j])
+            if stationNames[j] + "/" in relevant_section[0]:
+                valid_stations.append(stationNames[j])
     # Extract strings for dropped channels and manual Pcal, along with a station/mk4 id reference list
-    dropped_channels = droppedChannels(relevant_section[1])
-    manual_pcal = manualPcal(relevant_section[2])
+    dropped_channels = droppedChannels(relevant_section[1],stationNames)
+    manual_pcal = manualPcal(relevant_section[2],stationNames)
     antennas_corr_reference = antennaReference_CORR(relevant_section[0],report_version)
     if len(antennas_corr_reference) == 0:
         print("No stations defined in correlator report!")    
