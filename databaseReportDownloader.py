@@ -8,6 +8,7 @@ import MySQLdb as mariadb
 import sys
 import tarfile
 import argparse
+from astropy.io import ascii
 
 dirname = os.path.dirname(__file__)
 
@@ -21,15 +22,14 @@ def parseFunc():
     args = parser.parse_args()
     return args
 
-def checkExistingData(db_name):
+def checkExistingData(db_name, stations):
     # db_name should be the name of the auscope database (as a string) we want to query for 
     #  unique existing experiment IDs
     conn = mariadb.connect(user='auscope', passwd='password', db=db_name)
     cursor = conn.cursor()
-    station_key = ['Ke', 'Yg', 'Hb', 'Ho']
+    #station_key = ['Ke', 'Yg', 'Hb', 'Ho']
     existing_experiments = []
-
-    for ant in station_key:
+    for ant in stations:
         query = "SELECT ExpID FROM " + ant
         cursor.execute(query)
         result_list = [item for sublist in cursor.fetchall() for item in sublist]
@@ -108,7 +108,20 @@ def corrReportDL(exp_id,vgos_tag):
             print("Corr report not available for experiment " + exp_id + ".")
             return
 
+def stationParse(stations_config='stations.config'):
+    with open(stations_config) as file:
+        station_contents = file.read()
+    stationTable = ascii.read(station_contents, data_start=0)
+    if len(stationTable) == 1: # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
+        stationNames = [stationTable[0][0]]
+        stationNamesLong = [stationTable[0][1]]
+    else:
+        stationNames = stationTable[0][:]
+        stationNamesLong = stationTable[1][:]
+    return stationNames, stationNamesLong
+
 def main(master_schedule, db_name):
+    stationNames, stationNamesLong = stationParse()
     schedule = str(master_schedule)
     ftps = FTP_TLS(host = 'gdc.cddis.eosdis.nasa.gov')
     ftps.login(user='anonymous', passwd='tiegem@utas.edu.au')
@@ -124,7 +137,7 @@ def main(master_schedule, db_name):
     else: # this is for v2
         year = schedule[6:10]
     valid_experiment = validExpFinder(os.path.join(dirname, schedule))
-    existing_experiments = checkExistingData(str(db_name))
+    existing_experiments = checkExistingData(str(db_name), stationNames)
     if existing_experiments == None:
         experiments_to_download = valid_experiment
     else:
