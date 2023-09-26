@@ -9,6 +9,7 @@ import os
 import csv
 import argparse
 from astropy.table import vstack, Table
+from astropy.io import ascii
 
 dirname = os.path.dirname(__file__)
 
@@ -23,8 +24,7 @@ def parseFunc():
     args = parser.parse_args()
     return args
 
-def problemFinder(text_section): # searches first section of text for a problem, creates two lists one with a boolean value, the other with at least 1 line of the string where a problem is mentioned
-    stations = ['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26']
+def problemFinder(text_section, stations): # searches first section of text for a problem, creates two lists one with a boolean value, the other with at least 1 line of the string where a problem is mentioned
     problem_bool = []
     problem_string = []
     for ant in stations:
@@ -41,8 +41,7 @@ def problemFinder(text_section): # searches first section of text for a problem,
 def percent2decimal(percent_string):
     return float(percent_string.strip('%'))/100
 
-def stationPerformance(text_section): # Extracts the percentage of useable scans for each station.
-    stations = ['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26']
+def stationPerformance(text_section, stations): # Extracts the percentage of useable scans for each station.
     station_performance = []
     for ant in stations:
         regex = ant + ".*"
@@ -72,8 +71,7 @@ def metaData(text_section):
         analyser = "-"
     return exp_code[0], analyser[0], date, date_mjd, vgosDBtag[0]
     
-def stationPositions(text_section): # extracts station positons from the spoolfile
-    stations = ["KATH12M", "YARRA12M", "HOBART12", "HOBART26"]
+def stationPositions(text_section, stations): # extracts station positons from the spoolfile
     station_positions = []
     for ant in stations:
         regex_xyz = ant + ".*[XYZ]\sComp.*"
@@ -89,8 +87,7 @@ def stationPositions(text_section): # extracts station positons from the spoolfi
             station_positions[i] = ['NULL','NULL','NULL','NULL','NULL','NULL'] # this is a gross hacky way to deal with when a station exists in an analyis report but not the spool file.
     return station_positions
     
-def delayRMS(text_section): # This function pulls the w.rms delay from the spool file
-    stations = ['KATH12M', 'YARRA12M', 'HOBART12', 'HOBART26'] 
+def delayRMS(text_section, stations): # This function pulls the w.rms delay from the spool file
     station_delays = []
     for ant in stations:
         regex = "(?<=\n\s{5})" + ant + ".*"
@@ -102,26 +99,38 @@ def delayRMS(text_section): # This function pulls the w.rms delay from the spool
             station_delays[i] = ''
     return station_delays 
 
+def stationParse(stations_config='stations.config'):
+    with open(stations_config) as file:
+        station_contents = file.read()
+    stationTable = ascii.read(station_contents, data_start=0)
+    if len(stationTable) == 1: # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
+        stationNames = [stationTable[0][0]]
+        stationNamesLong = [stationTable[0][1]]
+    else:
+        stationNames = stationTable[0][:]
+        stationNamesLong = stationTable[1][:]
+    return stationNames, stationNamesLong
+
 def main(exp_code, sql_db_name=False):
+    stationNames, stationNamesLong = stationParse()
+    print(stationNames)
     print("Beginning analysis report and spoolfile ingest for experiment " + exp_code + ".")
     file_report = dirname + '/analysis_reports/' + str(exp_code) + '_report.txt'
     file_spool = dirname + '/analysis_reports/' + str(exp_code) + '_spoolfile.txt'
     sql_command = []
-    station_id = ["Ke", "Yg", "Hb", "Ho"]
-    
     with open(file_report) as file:
         contents_report = file.read()
         sections = contents_report.split('-----------------------------------------')   
     meta = metaData(sections[0])
-    performance = stationPerformance(sections[2])
+    performance = stationPerformance(sections[2], stationNamesLong)
     print(performance)
-    problems = problemFinder(sections[0])
+    problems = problemFinder(sections[0], stationNamesLong)
     # check if a spoolfile exists and extract data if so.
     if os.path.isfile(file_spool): 
         with open(file_spool) as file:
             contents_spool = file.read()
-        position = stationPositions(contents_spool)
-        delays = delayRMS(contents_spool)
+        position = stationPositions(contents_spool, stationNamesLong)
+        delays = delayRMS(contents_spool, stationNamesLong)
     else: # fill with dummy data needed for CSV file - not sure if this is also necessary for SQL command
         position = [['', '', '', '', '', ''],
                     ['', '', '', '', '', ''],
@@ -130,9 +139,9 @@ def main(exp_code, sql_db_name=False):
         delays = ['', '', '', '']
     # Output a data table
     data_table = Table(names=('station', 'Performance', 'Date', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Pos_U', 'Pos_E', 'Pos_N', 'W_RMS_del', 'Problem', 'Problem_String', 'Analyser', 'vgosDB_tag'), dtype=('str','float', 'str', 'float','str', 'str', 'str', 'str', 'str', 'str', 'str', 'bool' , 'str', 'str', 'str'))
-    for i in range(0,len(station_id)):
+    for i in range(0,len(stationNames)):
         if performance[i] != None:
-            data_table.add_row([station_id[i], performance[i], meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i], problems[0][i], problems[1][i], meta[1], meta[4]])        
+            data_table.add_row([stationNames[i], performance[i], meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i], problems[0][i], problems[1][i], meta[1], meta[4]])        
     data_table.pprint_all()
     # Now time to push extracted data to database  
     if sql_db_name != False:
@@ -146,7 +155,7 @@ def main(exp_code, sql_db_name=False):
                 cursor.execute(sql_station, data)
                 conn.commit()
                 conn.close()
-    return data_table                      
+    return data_table        
 
 if __name__ == '__main__':
     # parseAnalysisSpool.py executed as a script
