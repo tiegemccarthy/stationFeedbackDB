@@ -52,7 +52,10 @@ def main(master_schedule, db_name):
     cursor.execute(query)
     conn.commit()
     for ant in stationNames:
-        query = "CREATE TABLE IF NOT EXISTS "+ ant + " (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, Performance decimal(4,3) NOT NULL, Date DATETIME , Date_MJD decimal(9,2), Pos_X decimal(14,2), Pos_Y decimal(14,2), Pos_Z decimal(14,2), Pos_U decimal(14,2), Pos_E decimal(14,2), Pos_N decimal(14,2), W_RMS_del decimal(5,2), estSEFD_X decimal(8,2), estSEFD_S decimal(8,2), Manual_Pcal BIT(1), Dropped_Chans VARCHAR(1500), Problem BIT(1), Problem_String VARCHAR(100), Analyser VARCHAR(10) NOT NULL, vgosDB_tag VARCHAR(10));" 
+        query_content = """ (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, Performance decimal(4,3) NOT NULL, Date DATETIME , Date_MJD decimal(9,2), Pos_X decimal(14,2), Pos_Y decimal(14,2), 
+            Pos_Z decimal(14,2), Pos_U decimal(14,2), Pos_E decimal(14,2), Pos_N decimal(14,2), W_RMS_del decimal(5,2), Detect_Rate_X decimal(5,3), Detect_Rate_S decimal(5,3), estSEFD_X decimal(8,2), estSEFD_S decimal(8,2), Manual_Pcal BIT(1), 
+            Dropped_Chans VARCHAR(1500), Problem BIT(1), Problem_String VARCHAR(100), Analyser VARCHAR(10) NOT NULL, vgosDB_tag VARCHAR(18));"""
+        query = "CREATE TABLE IF NOT EXISTS "+ ant + query_content
         cursor.execute(query)
         conn.commit()
     conn.close()
@@ -60,7 +63,7 @@ def main(master_schedule, db_name):
     databaseReportDownloader.main(master_schedule, db_name) # comment this line out for troubleshooting downstream problems, otherwise this tries to redownload all the experiments with no files available.
     # Check for valid experiments, determine whether they are in the database already - add the data from the parsed files if they aren't.
     valid_experiments = databaseReportDownloader.validExpFinder(os.path.join(dirname, master_schedule))
-    existing_experiments = databaseReportDownloader.checkExistingData(str(db_name))
+    existing_experiments = databaseReportDownloader.checkExistingData(str(db_name), stationNames)
     experiments_to_add = [x for x in valid_experiments if x.lower() not in existing_experiments]
     print(experiments_to_add)
     #experiments_to_add = valid_experiments
@@ -72,8 +75,11 @@ def main(master_schedule, db_name):
                 meta_data = parseAnalysisSpool.metaData(file.read())
             vgosDB = meta_data[4]
             databaseReportDownloader.corrReportDL(exp, vgosDB)
-            parseCorrSkd.main(exp, db_name)
-                
+            try:
+                parseCorrSkd.main(exp, db_name)
+            except:
+                print('Error processing Corr/Skd files...')
+                pass
    
 if __name__ == '__main__':
     args = parseFunc()
