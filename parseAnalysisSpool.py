@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import re
 from datetime import datetime
@@ -55,13 +55,30 @@ def stationPerformance(text_section, stations): # Extracts the percentage of use
     
     return station_performance
     
-def metaData(text_section):
-    vgosDBtag = re.findall("(?<=\$).{9}",text_section,re.MULTILINE)
-    if len(vgosDBtag) == 0:
-        vgosDBtag = re.findall("(?<=\().{15}",text_section,re.MULTILINE)
+# def metaData(text_section, exp_code):
+#     vgosDBtag = re.findall("(?<=\$).{9}",text_section,re.MULTILINE)
+#     if len(vgosDBtag) == 0 or exp_code in vgosDbtag[0]:
+#         vgosDBtag = re.findall("(?<=\().{15}",text_section,re.MULTILINE)
+#         date = re.findall("(?<=\().{8}",text_section,re.MULTILINE)
+#         date = datetime.strptime(date[0], '%Y%m%d').strftime('%Y-%m-%d')
+#     else:
+#         date = re.findall("(?<=\$).{7}",text_section,re.MULTILINE)
+#         date = datetime.strptime(date[0], '%y%b%d').strftime('%Y-%m-%d')
+#     date_mjd = Time(date).mjd
+#     exp_code = re.findall("(?<=Analysis Report for\s)(.*?(?=\s))",text_section,re.MULTILINE)
+#     analyser = re.findall("\S.*(?=\sAnalysis Report for\s)",text_section,re.MULTILINE)
+#     if len(analyser) == 0:
+#         analyser = "-"
+#     return exp_code[0], analyser[0], date, date_mjd, vgosDBtag[0]
+
+
+def metaData(text_section, exp_code):
+    vgosDBtag = re.findall("(?<=\().{15}",text_section,re.MULTILINE)
+    if exp_code in vgosDBtag[0]:
         date = re.findall("(?<=\().{8}",text_section,re.MULTILINE)
         date = datetime.strptime(date[0], '%Y%m%d').strftime('%Y-%m-%d')
     else:
+        vgosDBtag = re.findall("(?<=\$).{9}",text_section,re.MULTILINE)
         date = re.findall("(?<=\$).{7}",text_section,re.MULTILINE)
         date = datetime.strptime(date[0], '%y%b%d').strftime('%Y-%m-%d')
     date_mjd = Time(date).mjd
@@ -121,7 +138,7 @@ def main(exp_code, sql_db_name=False):
     with open(file_report) as file:
         contents_report = file.read()
         sections = contents_report.split('-----------------------------------------')   
-    meta = metaData(sections[0])
+    meta = metaData(sections[0], exp_code)
     performance = stationPerformance(sections[2], stationNamesLong)
     print(performance)
     problems = problemFinder(sections[0], stationNamesLong)
@@ -147,7 +164,7 @@ def main(exp_code, sql_db_name=False):
     if sql_db_name != False:
         for i in range(0, len(performance)):
             if performance[i] != None:
-                sql_station = "INSERT IGNORE INTO {} (ExpID, Performance, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, W_RMS_del, Problem, Problem_String, Analyser, vgosDB_tag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);".format(station_id[i])
+                sql_station = "INSERT IGNORE INTO {} (ExpID, Performance, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, W_RMS_del, Problem, Problem_String, Analyser, vgosDB_tag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);".format(stationNames[i])
                 data = [meta[0].lower(), performance[i], meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i], problems[0][i], problems[1][i], meta[1], meta[4]]
                 print(data)
                 conn = mariadb.connect(user='auscope', passwd='password', db=str(sql_db_name))

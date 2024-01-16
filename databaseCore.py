@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import re
 import os
@@ -72,7 +72,7 @@ def main(master_schedule, db_name):
         if os.path.isfile(dirname+'/analysis_reports/'+ exp +'_report.txt'):
             parseAnalysisSpool.main(exp, db_name)
             with open(dirname + '/analysis_reports/'+ exp +'_report.txt') as file:
-                meta_data = parseAnalysisSpool.metaData(file.read())
+                meta_data = parseAnalysisSpool.metaData(file.read(), exp)
             vgosDB = meta_data[4]
             databaseReportDownloader.corrReportDL(exp, vgosDB)
             try:
