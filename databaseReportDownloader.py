@@ -39,23 +39,28 @@ def checkExistingData(db_name, stations):
     unique_existing_experiments = set(existing_experiments)
     return unique_existing_experiments
 
-def validExpFinder(master_schedule):
+def validExpFinder(master_schedule, station_names):
     schedule = str(master_schedule)
     with open(schedule) as file:
         schedule_contents = file.readlines()
+    # Generate the regex for stations within the station_config file
+    station_regex = ''
+    for i in range(0,len(station_names)):
+        station_regex = station_regex + "(?<!-)" + station_names[i] + "|"
+        if i == len(station_names)-1: #drop the uneeded last '|'
+            station_regex = station_regex[:-1]
+    # find the experiments to download
     valid_experiment = []
     for line in schedule_contents:
         line = line.split('|')
         if ' 2.0 ' in schedule_contents[0]: # master schedule version check
             if len(line) > 13 and len(line[10].strip()) == 8:
-                regex = '(?<!-)Ke|(?<!-)Yg|(?<!-)Hb|(?<!-)Ho'
-                participated = re.findall(regex,line[7],re.MULTILINE)
+                participated = re.findall(station_regex,line[7],re.MULTILINE)
                 if len(participated) > 0:
                     valid_experiment.append(line[3].strip())
         elif ' 1.0 ' in schedule_contents[0]: # master schedule version check
             if len(line) > 13 and '1.0' in line[11]:
-                regex = '(?<!-)Ke|(?<!-)Yg|(?<!-)Hb|(?<!-)Ho'
-                participated = re.findall(regex,line[7],re.MULTILINE)
+                participated = re.findall(station_regex,line[7],re.MULTILINE)
                 if len(participated) > 0:
                     valid_experiment.append(line[2].strip())
     return valid_experiment
@@ -136,7 +141,7 @@ def main(master_schedule, db_name):
         year = '20' + schedule[6:8]
     else: # this is for v2
         year = schedule[6:10]
-    valid_experiment = validExpFinder(os.path.join(dirname, schedule))
+    valid_experiment = validExpFinder(os.path.join(dirname, schedule), stationNames)
     existing_experiments = checkExistingData(str(db_name), stationNames)
     if existing_experiments == None:
         experiments_to_download = valid_experiment
