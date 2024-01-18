@@ -52,25 +52,23 @@ def stationPerformance(text_section, stations): # Extracts the percentage of use
             station_performance.append(performance)
         else:
             station_performance.append(None)
-    
     return station_performance
-    
-# def metaData(text_section, exp_code):
-#     vgosDBtag = re.findall("(?<=\$).{9}",text_section,re.MULTILINE)
-#     if len(vgosDBtag) == 0 or exp_code in vgosDbtag[0]:
-#         vgosDBtag = re.findall("(?<=\().{15}",text_section,re.MULTILINE)
-#         date = re.findall("(?<=\().{8}",text_section,re.MULTILINE)
-#         date = datetime.strptime(date[0], '%Y%m%d').strftime('%Y-%m-%d')
-#     else:
-#         date = re.findall("(?<=\$).{7}",text_section,re.MULTILINE)
-#         date = datetime.strptime(date[0], '%y%b%d').strftime('%Y-%m-%d')
-#     date_mjd = Time(date).mjd
-#     exp_code = re.findall("(?<=Analysis Report for\s)(.*?(?=\s))",text_section,re.MULTILINE)
-#     analyser = re.findall("\S.*(?=\sAnalysis Report for\s)",text_section,re.MULTILINE)
-#     if len(analyser) == 0:
-#         analyser = "-"
-#     return exp_code[0], analyser[0], date, date_mjd, vgosDBtag[0]
 
+def stationPerformanceUsedVsRecovered(text_section, station_names):
+    usedVsRecoveredPerformance = []
+    for ant in station_names:
+        regex = ant + ".*"
+        performance = re.findall(regex,text_section,re.MULTILINE)
+        if len(performance) > 0:
+            performance = [x for y in performance[0].split('  ') if (x := y.strip())]
+            try:
+                used_vs_recoverable = float(performance[3])/float(performance[2])
+                usedVsRecoveredPerformance.append(used_vs_recoverable)
+            except:
+                usedVsRecoveredPerformance.append(None)
+        else:
+            usedVsRecoveredPerformance.append(None)
+    return usedVsRecoveredPerformance
 
 def metaData(text_section, exp_code):
     vgosDBtag = re.findall("(?<=\().{15}",text_section,re.MULTILINE)
@@ -140,7 +138,7 @@ def main(exp_code, sql_db_name=False):
         sections = contents_report.split('-----------------------------------------')   
     meta = metaData(sections[0], exp_code)
     performance = stationPerformance(sections[2], stationNamesLong)
-    print(performance)
+    performanceUsedVsRecovered = stationPerformanceUsedVsRecovered(sections[2], stationNamesLong)
     problems = problemFinder(sections[0], stationNamesLong)
     # check if a spoolfile exists and extract data if so.
     if os.path.isfile(file_spool): 
