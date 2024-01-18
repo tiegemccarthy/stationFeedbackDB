@@ -153,7 +153,7 @@ def main(exp_code, sql_db_name=False):
                     ['', '', '', '', '', '']]
         delays = ['', '', '', '']
     # Output a data table
-    data_table = Table(names=('station', 'Performance', 'Performance_UsedVsRecov', 'Date', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Pos_U', 'Pos_E', 'Pos_N', 'W_RMS_del', 'Problem', 'Problem_String', 'Analyser', 'vgosDB_tag'), dtype=('str','float', 'str', 'float','str', 'str', 'str', 'str', 'str', 'str', 'str', 'bool' , 'str', 'str', 'str'))
+    data_table = Table(names=('station', 'Performance', 'Performance_UsedVsRecov', 'Date', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Pos_U', 'Pos_E', 'Pos_N', 'W_RMS_del', 'Problem', 'Problem_String', 'Analyser', 'vgosDB_tag'), dtype=('str','float', 'float','str', 'float','str', 'str', 'str', 'str', 'str', 'str', 'str', 'bool' , 'str', 'str', 'str'))
     for i in range(0,len(stationNames)):
         if performance[i] != None:
             data_table.add_row([stationNames[i], performance[i], performanceUsedVsRecovered[i], meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i], problems[0][i], problems[1][i], meta[1], meta[4]])        
@@ -162,7 +162,7 @@ def main(exp_code, sql_db_name=False):
     if sql_db_name != False:
         for i in range(0, len(performance)):
             if performance[i] != None:
-                sql_station = "INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, W_RMS_del, Problem, Problem_String, Analyser, vgosDB_tag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);".format(stationNames[i])
+                sql_station = "INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, W_RMS_del, Problem, Problem_String, Analyser, vgosDB_tag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);".format(stationNames[i])
                 data = [meta[0].lower(), performance[i], performanceUsedVsRecovered[i],meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i], problems[0][i], problems[1][i], meta[1], meta[4]]
                 print(data)
                 conn = mariadb.connect(user='auscope', passwd='password', db=str(sql_db_name))

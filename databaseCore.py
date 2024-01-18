@@ -62,7 +62,7 @@ def main(master_schedule, db_name):
     # Download any SKD/Analysis/Spool/Corr files that are in the master schedule but not yet in the database.
     databaseReportDownloader.main(master_schedule, db_name) # comment this line out for troubleshooting downstream problems, otherwise this tries to redownload all the experiments with no files available.
     # Check for valid experiments, determine whether they are in the database already - add the data from the parsed files if they aren't.
-    valid_experiments = databaseReportDownloader.validExpFinder(os.path.join(dirname, master_schedule))
+    valid_experiments = databaseReportDownloader.validExpFinder(os.path.join(dirname, master_schedule), stationNames)
     existing_experiments = databaseReportDownloader.checkExistingData(str(db_name), stationNames)
     experiments_to_add = [x for x in valid_experiments if x.lower() not in existing_experiments]
     print(experiments_to_add)
