@@ -110,8 +110,9 @@ def delayRMS(text_section, stations): # This function pulls the w.rms delay from
         delay = [i.split()[3] for i in delay]
         station_delays.append(delay)
     for i in range(0, len(station_delays)):
-        if station_delays[i] == []:
-            station_delays[i] = ''
+        if station_delays[i] == [] or station_delays[i][0] == '0.0':
+            station_delays[i] = '-999'
+    #print(station_delays)
     return station_delays 
 
 def stationParse(stations_config='stations.config'):
@@ -176,3 +177,4 @@ if __name__ == '__main__':
     # parseAnalysisSpool.py executed as a script
     args = parseFunc()
     main(args.session_name, sql_db_name=args.db_name)
+9
