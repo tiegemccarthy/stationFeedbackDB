@@ -12,6 +12,10 @@ import sys
 import csv
 import argparse
 
+import warnings
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+
 dirname = os.path.dirname(__file__)
 
 def parseFunc():
@@ -207,6 +211,49 @@ def stationParse(stations_config='stations.config'):
         stationNamesLong = stationTable[1][:]
     return stationNames, stationNamesLong
 
+def createStationQTables(section, corr_ref, band):
+    qcode_split = section.split('\n')
+    qcode_trimmed = []
+    for line in qcode_split:
+        if ':' in line.split(' ')[0]:
+            qcode_trimmed.append(line)
+    qcode_table_full = ascii.read(qcode_trimmed, header_start=0)
+    # Now time to sum all baseline pairs for each station
+    summed_qcode_table = []
+    for antenna in corr_ref:
+        mk4_id = antenna[1]
+        valid_baseline = []
+        for j in range(0,len(qcode_table_full['bl:band'])):
+            if mk4_id in qcode_table_full['bl:band'][j].split(':')[0]:
+                if band in qcode_table_full['bl:band'][j].split(':')[1]:
+                    valid_baseline.append(j)
+        baseline_sum_qcode = qcode_table_full[valid_baseline].groups.aggregate(np.sum)
+        baseline_sum_qcode.add_column(mk4_id, index=0, name='station')
+        try: 
+            summed_qcode_table = vstack([summed_qcode_table, baseline_sum_qcode])
+        except:
+            summed_qcode_table = summed_qcode_table
+    return summed_qcode_table
+
+def extractQcodeInfo(qcode_table):
+    #not_corr = qcode_table['N'] + qcode_table['-']
+    total = qcode_table['total']
+    good = qcode_table['5'] + qcode_table['6'] + qcode_table['7'] + qcode_table['8'] + qcode_table['9']
+    bad = qcode_table['0'] + qcode_table['1'] + qcode_table['2'] + qcode_table['3'] + qcode_table['4']  
+    try:
+        Gee = qcode_table['G']
+        bad = bad + Gee
+    except:
+        pass
+    try:
+        Aych = qcode_table['H']
+        bad = bad + Aych
+    except:
+        pass
+    return qcode_table['station'], good/(good+bad), good/total, good+bad
+    # this function returns the ammont of useable scans as a fraction against all correlated scans with no-issues, and against all scheduled scans
+    
+
 
 def main(exp_id, sql_db_name = False, sefd_est = False):
     stationNames, stationNamesLong = stationParse()
@@ -280,25 +327,46 @@ def main(exp_id, sql_db_name = False, sefd_est = False):
         X = [None, None, None, None]
         S = [None, None, None, None]             
     stations_to_add = list(set(SEFD_tags).intersection(valid_stations))
+    # Qcode table stats
+    if ':X' in relevant_section[5]:
+        summed_qcode_table = createStationQTables(relevant_section[5], antennas_corr_reference, 'X')
+        stat_list_ref_X, good_vs_bad_X, good_vs_total_X, total_obs_X = extractQcodeInfo(summed_qcode_table)
+        #stat_index = list(stat_list_ref).index[stat_mk4id]
+    if ':S' in relevant_section[5]:
+        summed_qcode_table = createStationQTables(relevant_section[5], antennas_corr_reference, 'S')
+        stat_list_ref_S, good_vs_bad_S, good_vs_total_S, total_obs_S = extractQcodeInfo(summed_qcode_table)  
+    q_code_data_X = []
+    q_code_data_S = []
+    for station in stations_to_add:
+        corr_ref_array = np.array(antennas_corr_reference)
+        stat_mk4 = corr_ref_array[np.where(corr_ref_array == station)[0], 1]
+        try:
+            stat_index = list(stat_list_ref_X).index(stat_mk4)
+            q_code_data_X.append([round(good_vs_bad_X[stat_index],3), round(good_vs_total_X[stat_index],3), round(total_obs_X[stat_index],3)])
+        except:
+            q_code_data_X.append([None, None, None])
+        try:
+            stat_index = list(stat_list_ref_S).index(stat_mk4)
+            q_code_data_S.append([round(good_vs_bad_S[stat_index],3), round(good_vs_total_S[stat_index],3), round(total_obs_S[stat_index],3)])
+        except:
+            q_code_data_S.append([None, None, None])
     # Return a data table
-    data_table = Table(names=('station', 'X_SEFD', 'S_SEFD', 'Manual_Pcal', 'Dropped_channels'), dtype=('str','float64', 'float64', 'bool','str'))
+    data_table = Table(names=('station', 'X_SEFD', 'S_SEFD', 'Manual_Pcal', 'Dropped_channels', 'Total_Obs', 'Detect_Rate_X', 'Detect_Rate_S'), dtype=('str','float64', 'float64', 'bool','str', 'float64', 'float64', 'float64'))
     for i in range(0,len(stations_to_add)):
-        data_table.add_row([stations_to_add[i], X[list(SEFD_tags).index(stations_to_add[i])], S[list(SEFD_tags).index(stations_to_add[i])], manual_pcal[i], dropped_channels[i]])        
+        data_table.add_row([stations_to_add[i], X[list(SEFD_tags).index(stations_to_add[i])], S[list(SEFD_tags).index(stations_to_add[i])], manual_pcal[i], dropped_channels[i], q_code_data_X[i][2], q_code_data_X[i][0], q_code_data_S[i][0]])        
     data_table.pprint_all()
     # add to database
     if sql_db_name != False:
         print('Adding relevant report contents to SQL database')
         for i in range(0,len(stations_to_add)):
-            sql_station = """UPDATE {} SET estSEFD_X=%s, estSEFD_S=%s, Manual_Pcal=%s, Dropped_Chans=%s WHERE ExpID=%s""".format(stations_to_add[i])
-            data = [X[list(SEFD_tags).index(stations_to_add[i])], S[list(SEFD_tags).index(stations_to_add[i])], manual_pcal[i], dropped_channels[i][:1499], str(exp_id)]
+            sql_station = """UPDATE {} SET estSEFD_X=%s, estSEFD_S=%s, Manual_Pcal=%s, Dropped_Chans=%s, Total_Obs=%s, Detect_Rate_X=%s, Detect_Rate_S=%s WHERE ExpID=%s""".format(stations_to_add[i])
+            data = [X[list(SEFD_tags).index(stations_to_add[i])], S[list(SEFD_tags).index(stations_to_add[i])], manual_pcal[i], dropped_channels[i][:1499], q_code_data_X[i][2], q_code_data_X[i][0], q_code_data_S[i][0], str(exp_id)]
             conn = mariadb.connect(user='auscope', passwd='password', db=str(sql_db_name))
             cursor = conn.cursor()
             cursor.execute(sql_station, data)
             conn.commit()
             conn.close()
-    return data_table
-
-                      
+    return data_table           
 
 if __name__ == '__main__':
     # parseCorrSkd.py executed as a script
