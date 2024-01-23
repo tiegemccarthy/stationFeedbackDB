@@ -32,7 +32,7 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     cursor = conn.cursor()
     query = "USE " + database_name +";"
     cursor.execute(query)
-    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, W_RMS_del FROM " + station_code+ " WHERE ExpID LIKE \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
+    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs FROM " + station_code+ " WHERE ExpID LIKE \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
     cursor.execute(query)
     result = cursor.fetchall()
     return result
@@ -74,13 +74,13 @@ def performanceAnalysis(results):
     wrms_runavg = np.convolve(np.array(table['col3'], dtype=float), np.ones(N)/(N), mode='valid')
     mjd_x = np.convolve(np.array(table['col2'], dtype=float), np.ones(N)/(N), mode='valid')
     #print("Number of sessions: " + str(len(table['col3'])))
-    print("Median station 'Performance: " + str(np.median(table['col3'])))
+    print("Median station Performance: " + str(np.median(table['col3'])))
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(table['col2'], table['col3'], color='k', s=5)
     ax.fill_between(table['col2'], table['col3'], alpha = 0.5)
     #ax.plot(mjd_x, wrms_runavg, color='r')
-    ax.set_title('Fractional Used/Schedule Observations vs. Time')
+    ax.set_title('Performance (used/scheduled) vs. Time')
     ax.set_xlabel('MJD (days)')
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
@@ -95,7 +95,7 @@ def usedVsRecoveredAnalysis(results):
             bad_data.append(i)
     table.remove_rows(bad_data)
     #print("Number of sessions: " + str(len(table['col4'])))
-    print("Median used vs recovered observations: " + str(np.median(table['col4'])))
+    #print("Median used vs recovered observations: " + str(np.median(table['col4'])))
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(table['col2'], table['col4'], color='k', s=5)
@@ -106,14 +106,41 @@ def usedVsRecoveredAnalysis(results):
     ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
     return ax
 
+def detectRate(results, band):
+    if band == 'X':
+        col_name = 'col6'
+    elif band == 'S':
+        col_name = 'col7'
+    table = Table(rows=results)
+    # filter sessions with 0% data
+    bad_data = []
+    for i in range(0, len(table[col_name])):
+        if table[col_name][i] == 0 or table[col_name][i] == None:
+            bad_data.append(i)
+    table.remove_rows(bad_data)
+    print("Median " + band + "-band detection rate: " + str(np.median(table[col_name])))
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(table['col2'], table[col_name], color='k', s=5)
+    ax.fill_between(table['col2'], table[col_name], alpha = 0.5)
+    ax.set_title('Session ' + band + '-band Detection ratio')
+    ax.set_ylabel('Fraction of usable obs. vs. correlated obs.')
+    ax.set_xlabel('MJD (days)')
+    ax.set_ylim([0, 1.0])
+    ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
+    return ax
+
 def main(stat_code, db_name, mjd_start, mjd_stop, search='%'):
     result = extractStationData(stat_code, db_name, mjd_start, mjd_stop, search)
     table = Table(rows=result)
-    print('Data extracted for time range MJD ' + str(mjd_start) + " through MJD " + str(mjd_stop) + "...")
+    print(stat_code + ' data extracted for time range MJD ' + str(mjd_start) + " through MJD " + str(mjd_stop) + "...")
     print("Total number of " + str(stat_code) + " sessions matching search criteria: " + str(len(table['col4'])))
-    ax_two = performanceAnalysis(result)
-    ax_three = wRmsAnalysis(result)
-    ax_one = usedVsRecoveredAnalysis(result)
+    print("Total number of " + str(stat_code) + " observations across all sessions matching search criteria: " + str(np.nansum(table['col8'].astype(float)).astype(int)))
+    ax_two = wRmsAnalysis(result)
+    ax_one = performanceAnalysis(result)
+    #ax_three = usedVsRecoveredAnalysis(result)
+    ax_four = detectRate(result, 'X')
+    ax_five = detectRate(result, 'S')
     plt.show()
     
 if __name__ == '__main__':
