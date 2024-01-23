@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
-from datetime import datetime
-from astropy.time import Time
 import MySQLdb as mariadb
 from astropy.table import vstack, Table
-from astropy.io import ascii
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+from reportlab.pdfgen.canvas import Canvas
+
 
 
 def parseFunc():
@@ -59,6 +58,7 @@ def wRmsAnalysis(results):
     ax.set_ylabel('W.RMS (ps)')
     ax.set_title('Station W.RMS vs. Time')
     ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
+    plt.savefig('wRMS.png')
     return ax
 
 def performanceAnalysis(results):
@@ -84,6 +84,7 @@ def performanceAnalysis(results):
     ax.set_xlabel('MJD (days)')
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
+    plt.savefig('performance.png')
     return ax
 
 def usedVsRecoveredAnalysis(results):
@@ -118,7 +119,8 @@ def detectRate(results, band):
         if table[col_name][i] == 0 or table[col_name][i] == None:
             bad_data.append(i)
     table.remove_rows(bad_data)
-    print("Median " + band + "-band detection rate: " + str(np.median(table[col_name])))
+    rate_str = "Median " + band + "-band detection rate: " + str(np.median(table[col_name]))
+    print(rate_str)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(table['col2'], table[col_name], color='k', s=5)
@@ -128,19 +130,31 @@ def detectRate(results, band):
     ax.set_xlabel('MJD (days)')
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
-    return ax
+    plt.savefig(band + '_detect_rate.png')
+    return ax, rate_str
 
 def main(stat_code, db_name, mjd_start, mjd_stop, search='%'):
     result = extractStationData(stat_code, db_name, mjd_start, mjd_stop, search)
     table = Table(rows=result)
-    print(stat_code + ' data extracted for time range MJD ' + str(mjd_start) + " through MJD " + str(mjd_stop) + "...")
-    print("Total number of " + str(stat_code) + " sessions matching search criteria: " + str(len(table['col4'])))
-    print("Total number of " + str(stat_code) + " observations across all sessions matching search criteria: " + str(np.nansum(table['col8'].astype(float)).astype(int)))
+    intro_str = stat_code + ' data extracted for time range MJD ' + str(mjd_start) + " through MJD " + str(mjd_stop) + "..."
+    tot_sess_str = "\nTotal number of " + str(stat_code) + " sessions matching search criteria: " + str(len(table['col4']))
+    tot_obs_str = "\nTotal number of " + str(stat_code) + " observations across all sessions matching search criteria: " + str(np.nansum(table['col8'].astype(float)).astype(int))
+    print(intro_str + tot_sess_str + tot_obs_str)
     ax_two = wRmsAnalysis(result)
     ax_one = performanceAnalysis(result)
-    #ax_three = usedVsRecoveredAnalysis(result)
-    ax_four = detectRate(result, 'X')
-    ax_five = detectRate(result, 'S')
+    ax_four, str4 = detectRate(result, 'X')
+    ax_five, str5 = detectRate(result, 'S')
+    # Make the PDF report
+    report = Canvas("test.pdf")
+    t = report.beginText()
+    t.setTextOrigin(50, 740)
+    t.textLines(intro_str + tot_sess_str + tot_obs_str + '\n' + str4 + '\n' + str5)
+    report.drawText(t)
+    report.drawInlineImage( 'X_detect_rate.png', 40, 330, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'S_detect_rate.png', 300, 330, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'wRMS.png', 40, 110, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'performance.png', 300, 110, width=280, preserveAspectRatio=True)
+    report.save()
     plt.show()
     
 if __name__ == '__main__':
