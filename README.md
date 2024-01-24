@@ -4,5 +4,8 @@ In order to use this early stage of the database, all that should be required is
 Pull this repo into a directory, and then manually run databaseCore.py to setup the initial SQL database and bring database up-to-date. databaseCore.py can then be setup as a cron job to periodically update the SQL databases.
 
 TO DO:
-1. Add better recording of how many observations your station has been involved in (or data quantity recorded).
-2. Write a report generation script - allow you to set a start and end date for the report (default to quarterly report).
+1. Switch report generation script to using 'normal' dates, not MJD, to improve human readability.
+2. Add session name tags to data points in plots
+3. Think about a fortnightly report, where data is sent out to operations for feedback.
+
+
