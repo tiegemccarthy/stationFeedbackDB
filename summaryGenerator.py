@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import MySQLdb as mariadb
-from astropy.table import vstack, Table
+from astropy.table import vstack, Table, Column
+from astropy.time import Time
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from reportlab.pdfgen.canvas import Canvas
+from datetime import datetime
 
 
 
@@ -44,20 +46,18 @@ def wRmsAnalysis(results):
         if table['col5'][i] == -999:
             bad_data.append(i)
     table.remove_rows(bad_data)
-    #
-    N = 12
-    wrms_runavg = np.convolve(np.array(table['col5'], dtype=float), np.ones(N)/(N), mode='valid')
-    mjd_x = np.convolve(np.array(table['col2'], dtype=float), np.ones(N)/(N), mode='valid')
+    time_data = Column(table['col1'], dtype=Time)
     #print("Number of sessions: " + str(len(table['col5'])))
     print("Median station W.RMS: " + str(np.median(table['col5'])))
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(table['col2'], table['col5'], color='k', s=10)
+    ax.scatter(time_data, table['col5'], color='k', s=10)
     #ax.plot(mjd_x, wrms_runavg, color='r')
     ax.set_xlabel('MJD (days)')
     ax.set_ylabel('W.RMS (ps)')
     ax.set_title('Station W.RMS vs. Time')
-    ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
+    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.tick_params(axis='x', labelrotation=90)
     plt.savefig('wRMS.png')
     return ax
 
@@ -69,21 +69,18 @@ def performanceAnalysis(results):
         if table['col3'][i] == 0:
             bad_data.append(i)
     table.remove_rows(bad_data)
-    #
-    N = 10
-    wrms_runavg = np.convolve(np.array(table['col3'], dtype=float), np.ones(N)/(N), mode='valid')
-    mjd_x = np.convolve(np.array(table['col2'], dtype=float), np.ones(N)/(N), mode='valid')
-    #print("Number of sessions: " + str(len(table['col3'])))
+    time_data = Column(table['col1'], dtype=Time)
     print("Median station Performance: " + str(np.median(table['col3'])))
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(table['col2'], table['col3'], color='k', s=5)
-    ax.fill_between(table['col2'], table['col3'], alpha = 0.5)
+    ax.scatter(time_data, table['col3'], color='k', s=5)
+    ax.fill_between(time_data, table['col3'], alpha = 0.5)
     #ax.plot(mjd_x, wrms_runavg, color='r')
     ax.set_title('Performance (used/scheduled) vs. Time')
     ax.set_xlabel('MJD (days)')
     ax.set_ylim([0, 1.0])
-    ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
+    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.tick_params(axis='x', labelrotation=90)
     plt.savefig('performance.png')
     return ax
 
@@ -95,16 +92,18 @@ def usedVsRecoveredAnalysis(results):
         if table['col4'][i] == 0 or table['col4'][i] == None:
             bad_data.append(i)
     table.remove_rows(bad_data)
+    time_data = Column(table['col1'], dtype=Time)
     #print("Number of sessions: " + str(len(table['col4'])))
     #print("Median used vs recovered observations: " + str(np.median(table['col4'])))
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(table['col2'], table['col4'], color='k', s=5)
-    ax.fill_between(table['col2'], table['col4'], alpha = 0.5)
+    ax.scatter(time_data, table['col4'], color='k', s=5)
+    ax.fill_between(time_data, table['col4'], alpha = 0.5)
     ax.set_title('Fractional Used/Recovered Observations vs. Time')
     ax.set_xlabel('MJD (days)')
     ax.set_ylim([0, 1.0])
-    ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
+    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.tick_params(axis='x', labelrotation=90)
     return ax
 
 def detectRate(results, band):
@@ -119,24 +118,43 @@ def detectRate(results, band):
         if table[col_name][i] == 0 or table[col_name][i] == None:
             bad_data.append(i)
     table.remove_rows(bad_data)
+    time_data = Column(table['col1'], dtype=Time)
     rate_str = "Median " + band + "-band detection rate: " + str(np.median(table[col_name]))
     print(rate_str)
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(table['col2'], table[col_name], color='k', s=5)
-    ax.fill_between(table['col2'], table[col_name], alpha = 0.5)
+    ax.scatter(time_data, table[col_name], color='k', s=5)
+    ax.fill_between(time_data, table[col_name], alpha = 0.5)
     ax.set_title('Session ' + band + '-band Detection ratio')
     ax.set_ylabel('Fraction of usable obs. vs. correlated obs.')
     ax.set_xlabel('MJD (days)')
     ax.set_ylim([0, 1.0])
-    ax.set_xlim([np.min(table['col2']), np.max(table['col2'])])
+    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.tick_params(axis='x', labelrotation=90)
     plt.savefig(band + '_detect_rate.png')
     return ax, rate_str
+
+def generatePDF(pdf_name, station, str1, str2, str3, str4, str5):
+    report = Canvas(pdf_name)
+    report.setFont('Helvetica-Bold', 12)
+    report.drawString(50, 780, station + ' station report')
+    report.setFont('Helvetica', 10)
+    t1 = report.beginText()
+    t1.setTextOrigin(50, 750)
+    t1.textLines(str1 + str2 + str3 + '\n' + str4 + '\n' + str5)
+    report.drawText(t1)
+    report.drawInlineImage( 'X_detect_rate.png', 35, 330, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'S_detect_rate.png', 295, 330, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'wRMS.png', 35, 110, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'performance.png', 295, 110, width=280, preserveAspectRatio=True)
+    report.save()    
+
 
 def main(stat_code, db_name, mjd_start, mjd_stop, search='%'):
     result = extractStationData(stat_code, db_name, mjd_start, mjd_stop, search)
     table = Table(rows=result)
-    intro_str = stat_code + ' data extracted for time range MJD ' + str(mjd_start) + " through MJD " + str(mjd_stop) + "..."
+    time_data = Column(table['col1'], dtype=Time)
+    intro_str = stat_code + ' data extracted for time range MJD ' + str(Time(mjd_start, format='mjd')) + " through MJD " + str(mjd_stop) + "..."
     tot_sess_str = "\nTotal number of " + str(stat_code) + " sessions matching search criteria: " + str(len(table['col4']))
     tot_obs_str = "\nTotal number of " + str(stat_code) + " observations across all sessions matching search criteria: " + str(np.nansum(table['col8'].astype(float)).astype(int))
     print(intro_str + tot_sess_str + tot_obs_str)
@@ -146,19 +164,7 @@ def main(stat_code, db_name, mjd_start, mjd_stop, search='%'):
     ax_five, str5 = detectRate(result, 'S')
     # Make the PDF report
     print('Generating PDF report...')
-    report = Canvas("test.pdf")
-    report.setFont('Helvetica-Bold', 12)
-    report.drawString(50, 780, stat_code + ' station report')
-    report.setFont('Helvetica', 10)
-    t1 = report.beginText()
-    t1.setTextOrigin(50, 750)
-    t1.textLines(intro_str + tot_sess_str + tot_obs_str + '\n' + str4 + '\n' + str5)
-    report.drawText(t1)
-    report.drawInlineImage( 'X_detect_rate.png', 35, 330, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'S_detect_rate.png', 295, 330, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'wRMS.png', 35, 110, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'performance.png', 295, 110, width=280, preserveAspectRatio=True)
-    report.save()
+    generatePDF('test.pdf', stat_code, intro_str, tot_sess_str, tot_obs_str, str4, str5)
     plt.show()
     
 if __name__ == '__main__':

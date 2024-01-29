@@ -8,9 +8,12 @@ import numpy as np
 import estimateSEFD
 import scipy.optimize
 from astropy.table import vstack, Table
+from astropy.time import Time
 import sys
 import csv
 import argparse
+from datetime import datetime
+
 
 import warnings
 if not sys.warnoptions:
@@ -30,6 +33,7 @@ def parseFunc():
                         Note, this script only updates existing entries for a particular session, and therefore requires the analysis report ingest script to have been run prior.""")
     args = parser.parse_args()
     return args
+
 
 
 def extractRelevantSections(all_corr_sections, version):
@@ -253,7 +257,14 @@ def extractQcodeInfo(qcode_table):
     return qcode_table['station'], good/(good+bad), good/total, good+bad
     # this function returns the ammont of useable scans as a fraction against all correlated scans with no-issues, and against all scheduled scans
     
-
+def corrMeta(contents):
+    for line in contents.split('\n')[0:24]:
+        if 'START' in line:
+            start_time = line.split()[1]
+            start_time = datetime.strptime(start_time, '%Y-%j-%H%M').strftime('%Y-%m-%d %H:%M:%S')
+        if 'VGOSDB' in line:
+            vgosdb_tag = line.split()[1]
+    return Time(start_time), vgosdb_tag
 
 def main(exp_id, sql_db_name = False, sefd_est = False):
     stationNames, stationNamesLong = stationParse()
@@ -268,6 +279,7 @@ def main(exp_id, sql_db_name = False, sefd_est = False):
         corr_section = contents.split('\n+')
         if len(corr_section) < 3: # another ad-hoc addition for if corr-reports have a space before ever line in them (e.g. aov032)
             corr_section = contents.split('\n +')
+    start_date, vgos_tag_corr = corrMeta(contents)
     # Check report version
     if '%CORRELATOR_REPORT_FORMAT 3' in corr_section[0]:
         report_version = 3
@@ -359,8 +371,8 @@ def main(exp_id, sql_db_name = False, sefd_est = False):
     if sql_db_name != False:
         print('Adding relevant report contents to SQL database')
         for i in range(0,len(stations_to_add)):
-            sql_station = """UPDATE {} SET estSEFD_X=%s, estSEFD_S=%s, Manual_Pcal=%s, Dropped_Chans=%s, Total_Obs=%s, Detect_Rate_X=%s, Detect_Rate_S=%s WHERE ExpID=%s""".format(stations_to_add[i])
-            data = [X[list(SEFD_tags).index(stations_to_add[i])], S[list(SEFD_tags).index(stations_to_add[i])], manual_pcal[i], dropped_channels[i][:1499], q_code_data_X[i][2], q_code_data_X[i][0], q_code_data_S[i][0], str(exp_id)]
+            sql_station = """UPDATE {} SET Date=%s, Date_MJD=%s, vgosDB_tag=%s, estSEFD_X=%s, estSEFD_S=%s, Manual_Pcal=%s, Dropped_Chans=%s, Total_Obs=%s, Detect_Rate_X=%s, Detect_Rate_S=%s WHERE ExpID=%s""".format(stations_to_add[i])
+            data = [start_date, start_date.mjd, vgos_tag_corr, X[list(SEFD_tags).index(stations_to_add[i])], S[list(SEFD_tags).index(stations_to_add[i])], manual_pcal[i], dropped_channels[i][:1499], q_code_data_X[i][2], q_code_data_X[i][0], q_code_data_S[i][0], str(exp_id)]
             conn = mariadb.connect(user='auscope', passwd='password', db=str(sql_db_name))
             cursor = conn.cursor()
             cursor.execute(sql_station, data)
