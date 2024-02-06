@@ -223,13 +223,13 @@ def generatePDF(pdf_name, station, str1, str2, str3, str4, str5, problem_string)
     report.drawInlineImage( 'U_pos.png', 300, -80, width=280, preserveAspectRatio=True)
     report.save()
 
-    def text_plotter(x_data, y_data, text_positions, axis,txt_width,txt_height):
+def text_plotter(x_data, y_data, text_positions, axis,txt_width,txt_height):
     for x,y,t in zip(x_data, y_data, text_positions):
         axis.text(x - .03, 1.02*t, '%d'%int(y),rotation=0, color='blue', fontsize=13)
         if y != t:
             axis.arrow(x, t+20,0,y-t, color='blue',alpha=0.2, width=txt_width*0.0,
-                       head_width=.02, head_length=txt_height*0.5,
-                       zorder=0,length_includes_head=True)
+                        head_width=.02, head_length=txt_height*0.5,
+                        zorder=0,length_includes_head=True)
 
 def main(stat_code, db_name, start, stop, search='%'):
     start_time = Time(start, format='yday', out_subfmt='date')
