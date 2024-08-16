@@ -48,8 +48,12 @@ def stationPerformance(text_section, stations): # Extracts the percentage of use
         performance = re.findall(regex,text_section,re.MULTILINE)
         if len(performance) > 0:
             percentage = [s for s in performance[0].split() if '%' in s]
-            performance = percent2decimal(percentage[0])
-            station_performance.append(performance)
+            print(percentage)
+            if percentage[0] == 'nan%':
+            	station_performance.append(None)
+            else:
+            	performance = percent2decimal(percentage[0])
+            	station_performance.append(performance)
         else:
             station_performance.append(None)
     return station_performance

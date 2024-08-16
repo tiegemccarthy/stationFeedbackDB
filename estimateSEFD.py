@@ -48,11 +48,12 @@ def main(X0, corrtab, basnum):
     # Make sure any baselines with r_snr = 0  get removed
     valid_mask = np.where(corrtab[:,1] != 0)
     corrtab = corrtab[valid_mask]
+    basnum = basnum[valid_mask]
+    # Check there are more than 3 stations
     if len(corrtab) < 3:
         print('Need at least 3 stations to estimate SEFD.')
         X = ['NULL']
         return X
-    basnum = basnum[valid_mask]
     # Determine observables
     L =[]
     for i in range(0,len(basnum)):
@@ -87,6 +88,7 @@ def main(X0, corrtab, basnum):
     X = X0+x
     print(X)
     return X
+    
     
 if __name__ == '__main__':
     main(X0, corrtab, basnum)

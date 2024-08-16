@@ -49,7 +49,8 @@ def wRmsAnalysis(results):
     table.remove_rows(bad_data)
     time_data = Column(table['col1'], dtype=Time)
     #print("Number of sessions: " + str(len(table['col5'])))
-    print("Median station W.RMS: " + str(np.median(table['col5'])))
+    wrms_med_str = "Median station W.RMS over period: " + str(np.median(table['col5'])) + " ps"
+    print(wrms_med_str)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(time_data, table['col5'], color='k', s=10)
@@ -60,7 +61,7 @@ def wRmsAnalysis(results):
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=90)
     plt.savefig('wRMS.png', bbox_inches="tight")
-    return ax
+    return ax, wrms_med_str
 
 def performanceAnalysis(results):
     table = Table(rows=results)
@@ -71,7 +72,8 @@ def performanceAnalysis(results):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['col1'], dtype=Time)
-    print("Median station Performance: " + str(np.median(table['col3'])))
+    perf_str = "Median station 'Performance' over period: " + str(np.median(table['col3']))
+    print(perf_str)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(time_data, table['col3'], color='k', s=5)
@@ -83,7 +85,7 @@ def performanceAnalysis(results):
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=90)
     plt.savefig('performance.png', bbox_inches="tight")
-    return ax
+    return ax, perf_str
 
 def posAnalysis(results, coord):
     if coord == 'X':
@@ -176,6 +178,8 @@ def detectRate(results, band):
     return ax, rate_str
 
 def problemExtract(results):
+    problem_flag = ['pcal', 'phase', 'bad', 'lost', 'clock', 
+                    'error', ' late ', 'issue', 'sensitivity']
     table = Table(rows=results)
     bad_data = []
     for i in range(0, len(table['col9'])):
@@ -185,34 +189,29 @@ def problemExtract(results):
     problem_list = []
     for j in range(0,len(table['col9'])):
         problem = table['col0'][j] + ': ' + table['col9'][j]
-        problem_list.append(problem)
+        if any(element in problem.lower() for element in problem_flag): # see if a 'problem' flag is present in the notes
+            if not "manual phase calibration" in problem.lower(): # filter out the generic manual pcal notes
+                problem_list.append(problem)
     return problem_list
 
 
 def generatePDF(pdf_name, station, str1, str2, str3, str4, str5, problem_string):
     # Page 1
     report = Canvas(pdf_name)
-    report.setFont('Helvetica-Bold', 12)
+    report.setFont('Helvetica-Bold', 20)
     report.drawString(50, 780, station + ' station report')
     t1 = report.beginText()
     t1.setFont('Helvetica', 10)
     t1.setTextOrigin(50, 750)
-    t1.textLines(str1 + str2 + str3 + '\n' + str4 + '\n' + str5)
+    t1.textLines(str1 + str2 + str3 + "\n" + str4 + "\n" + str5) 
     report.drawText(t1)
-    report.drawInlineImage( 'X_detect_rate.png', 22, 320, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'S_detect_rate.png', 300, 320, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'wRMS.png', 22, 75, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'performance.png', 300, 75, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'wRMS.png', 20, 320, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'performance.png', 300, 320, width=280, preserveAspectRatio=True)
+    report.drawInlineImage( 'X_pos.png', 20, 100, width=180, preserveAspectRatio=True)
+    report.drawInlineImage( 'Y_pos.png', 200, 100, width=180, preserveAspectRatio=True)
+    report.drawInlineImage( 'Z_pos.png', 380, 100, width=180, preserveAspectRatio=True)
     report.showPage()
     # Page 2
-    report.drawInlineImage( 'X_pos.png', 22, 420, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'Y_pos.png', 22, 170, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'Z_pos.png', 22, -80, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'E_pos.png', 300, 420, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'N_pos.png', 300, 170, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'U_pos.png', 300, -80, width=280, preserveAspectRatio=True)
-    report.showPage()
-    # Page 3 
     report.drawString(50, 780, "Reported issues (as extracted from analysis reports)")
     t2 = report.beginText()
     t2.setTextOrigin(50, 750)
@@ -222,9 +221,6 @@ def generatePDF(pdf_name, station, str1, str2, str3, str4, str5, problem_string)
     report.drawText(t2)
     report.showPage()
     report.save()
-
-
-
 
 def text_plotter(x_data, y_data, text_positions, axis,txt_width,txt_height):
     for x,y,t in zip(x_data, y_data, text_positions):
@@ -244,10 +240,10 @@ def main(stat_code, db_name, start, stop, search='%'):
     tot_sess_str = "\nTotal number of " + str(stat_code) + " sessions matching search criteria: " + str(len(table['col4']))
     tot_obs_str = "\nTotal number of " + str(stat_code) + " observations across all sessions matching search criteria: " + str(np.nansum(table['col8'].astype(float)).astype(int))
     print(intro_str + tot_sess_str + tot_obs_str)
-    ax_two = wRmsAnalysis(result)
-    ax_one = performanceAnalysis(result)
-    ax_four, str4 = detectRate(result, 'X')
-    ax_five, str5 = detectRate(result, 'S')
+    ax_two, wrms_str = wRmsAnalysis(result)
+    ax_one, perf_str = performanceAnalysis(result)
+    #ax_four, str4 = detectRate(result, 'X')
+    #ax_five, str5 = detectRate(result, 'S')
     ax_six = posAnalysis(result, 'X')
     ax_seven = posAnalysis(result, 'Y')
     ax_eight = posAnalysis(result, 'Z')
@@ -257,7 +253,7 @@ def main(stat_code, db_name, start, stop, search='%'):
     # Make the PDF report
     problems = problemExtract(result)
     print('Generating PDF report...')
-    generatePDF('test.pdf', stat_code, intro_str, tot_sess_str, tot_obs_str, str4, str5, problems)
+    generatePDF('test.pdf', stat_code, intro_str, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems)
     plt.show()
     return
     
