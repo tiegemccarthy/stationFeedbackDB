@@ -50,6 +50,27 @@ def extractRelevantSections(all_corr_sections, version):
     # This pulls the relevant sections out of the split corr report, it is required as sometimes corr reports have different 
     # number of sections and can cause the script to fail. This allows you to know exactly which section is which.
 
+def noteFinder(text_section, stations): 
+    note_bool = []
+    note_string_list = []
+    text_section = text_section.split("\n")
+    for ant in stations:
+        station_str = ant + '  '
+        note_string = []
+        for line in text_section:
+            if station_str in line:
+                note_string.append(line.replace('\n', "").strip(ant + "  "))
+        note_string = '; '.join(note_string)
+        if len(note_string) > 0:
+            note_bool.append(True)
+            note_string_list.append(note_string)
+        else:
+            note_bool.append(False)
+            note_string_list.append('')
+    return note_bool, note_string_list
+    # # searches first section of text for a problem, creates two lists one with a boolean value, the other with at least 1 line of 
+    # the string where a problem is mentioned
+
 def droppedChannels(text_section, stations):
     dropped_chans = []
     for ant in stations:
@@ -305,40 +326,41 @@ def main(exp_id, sql_db_name = False, sefd_est = False):
     antennas_corr_reference = antennaReference_CORR(relevant_section[0],report_version)
     if len(antennas_corr_reference) == 0:
         print("No stations defined in correlator report!")    
-    # SEFD re-estimation - not well tested yet
-    if sefd_est == True:
-        try:
-            if os.path.isfile('skd_files/' + str(exp_id) + '.skd'):
-                with open('skd_files/' + str(exp_id) + '.skd') as file:
-                    skd_contents = file.read()
-                antenna_reference = antennaReference_SKD(skd_contents)
-                if report_version == 3:
-                    snr_data, corrtab_X, corrtab_S = sefdTableExtractV3(relevant_section[3], antennas_corr_reference, antenna_reference)
-                else:
-                    snr_data, corrtab_X, corrtab_S = sefdTableExtract(relevant_section[3], antennas_corr_reference, antenna_reference)
-                if len(snr_data) == 0: # this is if corr file exists, but no SNR table exists.
-                    print("No SNR table exists!, skipping SEFD re-estimation.")
-                else:
-                    SEFD_tags, SEFD_X, SEFD_S = predictedSEFDextract(skd_contents, antenna_reference)
-                    basnum = basnumArray(snr_data, antennas_corr_reference, SEFD_tags)
-                    print("Calculating SEFD values for experiment " + exp_id + ".")
-                    X = estimateSEFD.main(SEFD_X, corrtab_X, basnum)
-                    S = estimateSEFD.main(SEFD_S, corrtab_S, basnum)
-                    if len(X) == 1 or len(S) == 1: # for the rare case when less than 3 stations are in the experiment with valid data.
-                        print("Not enough baselines to perform SEFD re-estimation")
-                    else:
-                        X = [round(num, 1) for num in X]
-                        S = [round(num, 1) for num in S]
-        except Exception:
-            print("No SKD file available, skipping SEFD re-estimation")
+#    # SEFD re-estimation - not well tested yet
+#    if sefd_est == True:
+#        try:
+#            if os.path.isfile('skd_files/' + str(exp_id) + '.skd'):
+#                with open('skd_files/' + str(exp_id) + '.skd') as file:
+#                    skd_contents = file.read()
+#                antenna_reference = antennaReference_SKD(skd_contents)
+#                if report_version == 3:
+#                    snr_data, corrtab_X, corrtab_S = sefdTableExtractV3(relevant_section[3], antennas_corr_reference, antenna_reference)
+#                else:
+#                    snr_data, corrtab_X, corrtab_S = sefdTableExtract(relevant_section[3], antennas_corr_reference, antenna_reference)
+#                if len(snr_data) == 0: # this is if corr file exists, but no SNR table exists.
+#                    print("No SNR table exists!, skipping SEFD re-estimation.")
+#                else:
+#                    SEFD_tags, SEFD_X, SEFD_S = predictedSEFDextract(skd_contents, antenna_reference)
+#                    basnum = basnumArray(snr_data, antennas_corr_reference, SEFD_tags)
+#                    print("Calculating SEFD values for experiment " + exp_id + ".")
+#                    X = estimateSEFD.main(SEFD_X, corrtab_X, basnum)
+#                    S = estimateSEFD.main(SEFD_S, corrtab_S, basnum)
+#                    if len(X) == 1 or len(S) == 1: # for the rare case when less than 3 stations are in the experiment with valid data.
+#                        print("Not enough baselines to perform SEFD re-estimation")
+#                    else:
+#                        X = [round(num, 1) for num in X]
+#                        S = [round(num, 1) for num in S]
+#        except Exception:
+#            print("No SKD file available, skipping SEFD re-estimation")
     # Bit of a hacky workaround to continue using existing code - adds dummy values for SEFD if they werent generated.
-    try:
-        X
-    except NameError:
-        SEFD_tags = np.array(valid_stations)
-        X = [None, None, None, None]
-        S = [None, None, None, None]             
-    stations_to_add = list(set(SEFD_tags).intersection(valid_stations))
+#    try:
+#        X
+#    except NameError:
+#        SEFD_tags = np.array(valid_stations)
+#        X = [None, None, None, None]
+#        S = [None, None, None, None]             
+#    stations_to_add = list(set(SEFD_tags).intersection(valid_stations))
+    stations_to_add = np.array(valid_stations)
     # Qcode table stats
     if ':X' in relevant_section[5]:
         summed_qcode_table = createStationQTables(relevant_section[5], antennas_corr_reference, 'X')
@@ -362,17 +384,18 @@ def main(exp_id, sql_db_name = False, sefd_est = False):
             q_code_data_S.append([round(good_vs_bad_S[stat_index],3), round(good_vs_total_S[stat_index],3), round(total_obs_S[stat_index],3)])
         except:
             q_code_data_S.append([None, None, None])
+    notes_bool, notes = noteFinder(corr_section[4], stationNames)
     # Return a data table
-    data_table = Table(names=('station', 'X_SEFD', 'S_SEFD', 'Manual_Pcal', 'Dropped_channels', 'Total_Obs', 'Detect_Rate_X', 'Detect_Rate_S'), dtype=('str','float64', 'float64', 'bool','str', 'float64', 'float64', 'float64'))
+    data_table = Table(names=('station', 'Manual_Pcal', 'Dropped_channels', 'Total_Obs', 'Detect_Rate_X', 'Detect_Rate_S', 'Note?', 'Notes'), dtype=('str','bool','str', 'float64', 'float64', 'float64', 'bool', 'str'))
     for i in range(0,len(stations_to_add)):
-        data_table.add_row([stations_to_add[i], X[list(SEFD_tags).index(stations_to_add[i])], S[list(SEFD_tags).index(stations_to_add[i])], manual_pcal[i], dropped_channels[i], q_code_data_X[i][2], q_code_data_X[i][0], q_code_data_S[i][0]])        
+        data_table.add_row([stations_to_add[i], manual_pcal[i], dropped_channels[i], q_code_data_X[i][2], q_code_data_X[i][0], q_code_data_S[i][0], notes_bool[i], notes[i]])        
     data_table.pprint_all()
     # add to database
     if sql_db_name != False:
         print('Adding relevant report contents to SQL database')
         for i in range(0,len(stations_to_add)):
-            sql_station = """UPDATE {} SET Date=%s, Date_MJD=%s, vgosDB_tag=%s, estSEFD_X=%s, estSEFD_S=%s, Manual_Pcal=%s, Dropped_Chans=%s, Total_Obs=%s, Detect_Rate_X=%s, Detect_Rate_S=%s WHERE ExpID=%s""".format(stations_to_add[i])
-            data = [start_date, start_date.mjd, vgos_tag_corr, X[list(SEFD_tags).index(stations_to_add[i])], S[list(SEFD_tags).index(stations_to_add[i])], manual_pcal[i], dropped_channels[i][:1499], q_code_data_X[i][2], q_code_data_X[i][0], q_code_data_S[i][0], str(exp_id)]
+            sql_station = """UPDATE {} SET Date=%s, Date_MJD=%s, vgosDB_tag=%s, Manual_Pcal=%s, Dropped_Chans=%s, Total_Obs=%s, Detect_Rate_X=%s, Detect_Rate_S=%s, Note_Bool=%s, Notes=%s WHERE ExpID=%s""".format(stations_to_add[i])
+            data = [start_date, start_date.mjd, vgos_tag_corr, manual_pcal[i], dropped_channels[i][:1499], q_code_data_X[i][2], q_code_data_X[i][0], q_code_data_S[i][0], notes_bool[i], notes[i], str(exp_id)]
             conn = mariadb.connect(user='auscope', passwd='password', db=str(sql_db_name))
             cursor = conn.cursor()
             cursor.execute(sql_station, data)

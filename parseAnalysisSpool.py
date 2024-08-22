@@ -48,12 +48,11 @@ def stationPerformance(text_section, stations): # Extracts the percentage of use
         performance = re.findall(regex,text_section,re.MULTILINE)
         if len(performance) > 0:
             percentage = [s for s in performance[0].split() if '%' in s]
-            print(percentage)
             if percentage[0] == 'nan%':
-            	station_performance.append(None)
+                station_performance.append(None)
             else:
-            	performance = percent2decimal(percentage[0])
-            	station_performance.append(performance)
+                performance = percent2decimal(percentage[0])
+                station_performance.append(performance)
         else:
             station_performance.append(None)
     return station_performance
@@ -133,7 +132,6 @@ def stationParse(stations_config='stations.config'):
 
 def main(exp_code, sql_db_name=False):
     stationNames, stationNamesLong = stationParse()
-    print(stationNames)
     print("Beginning analysis report and spoolfile ingest for experiment " + exp_code + ".")
     file_report = dirname + '/analysis_reports/' + str(exp_code) + '_report.txt'
     file_spool = dirname + '/analysis_reports/' + str(exp_code) + '_spoolfile.txt'
@@ -144,7 +142,7 @@ def main(exp_code, sql_db_name=False):
     meta = metaData(sections[0], exp_code)
     performance = stationPerformance(sections[2], stationNamesLong)
     performanceUsedVsRecovered = stationPerformanceUsedVsRecovered(sections[2], stationNamesLong)
-    problems = problemFinder(sections[0], stationNamesLong)
+    #problems = problemFinder(sections[0], stationNamesLong)
     # check if a spoolfile exists and extract data if so.
     if os.path.isfile(file_spool): 
         with open(file_spool) as file:
@@ -158,18 +156,17 @@ def main(exp_code, sql_db_name=False):
                     ['', '', '', '', '', '']]
         delays = ['', '', '', '']
     # Output a data table
-    data_table = Table(names=('station', 'Performance', 'Performance_UsedVsRecov', 'Date', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Pos_U', 'Pos_E', 'Pos_N', 'W_RMS_del', 'Problem', 'Problem_String', 'Analyser', 'vgosDB_tag'), dtype=('str','float', 'float','str', 'float','str', 'str', 'str', 'str', 'str', 'str', 'str', 'bool' , 'str', 'str', 'str'))
+    data_table = Table(names=('station', 'Performance', 'Performance_UsedVsRecov', 'Date', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Pos_U', 'Pos_E', 'Pos_N', 'W_RMS_del', 'Analyser', 'vgosDB_tag'), dtype=('str','float', 'float','str', 'float','str', 'str', 'str', 'str', 'str', 'str', 'str', 'str', 'str'))
     for i in range(0,len(stationNames)):
         if performance[i] != None:
-            data_table.add_row([stationNames[i], performance[i], performanceUsedVsRecovered[i], meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i], problems[0][i], problems[1][i], meta[1], meta[4]])        
+            data_table.add_row([stationNames[i], performance[i], performanceUsedVsRecovered[i], meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i],  meta[1], meta[4]])        
     data_table.pprint_all()
     # Now time to push extracted data to database  
     if sql_db_name != False:
         for i in range(0, len(performance)):
             if performance[i] != None:
-                sql_station = "INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, W_RMS_del, Problem, Problem_String, Analyser, vgosDB_tag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);".format(stationNames[i])
-                data = [meta[0].lower(), performance[i], performanceUsedVsRecovered[i],meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i], problems[0][i], problems[1][i], meta[1], meta[4]]
-                print(data)
+                sql_station = "INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, W_RMS_del, Analyser, vgosDB_tag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);".format(stationNames[i])
+                data = [meta[0].lower(), performance[i], performanceUsedVsRecovered[i],meta[2], meta[3], position[i][0], position[i][1], position[i][2], position[i][3], position[i][4], position[i][5], delays[i], meta[1], meta[4]]
                 conn = mariadb.connect(user='auscope', passwd='password', db=str(sql_db_name))
                 cursor = conn.cursor()
                 cursor.execute(sql_station, data)

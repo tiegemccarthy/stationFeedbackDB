@@ -9,6 +9,7 @@ import argparse
 from reportlab.pdfgen.canvas import Canvas
 from datetime import datetime
 from adjustText import adjust_text
+import textwrap
 
 
 
@@ -34,7 +35,7 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     cursor = conn.cursor()
     query = "USE " + database_name +";"
     cursor.execute(query)
-    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Problem_String, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID LIKE \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
+    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID LIKE \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
     cursor.execute(query)
     result = cursor.fetchall()
     return result
@@ -179,7 +180,8 @@ def detectRate(results, band):
 
 def problemExtract(results):
     problem_flag = ['pcal', 'phase', 'bad', 'lost', 'clock', 
-                    'error', ' late ', 'issue', 'sensitivity']
+                    'error', ' late ', 'issue', 'sensitivity',
+                    'minus', 'removed']
     table = Table(rows=results)
     bad_data = []
     for i in range(0, len(table['col9'])):
@@ -188,12 +190,13 @@ def problemExtract(results):
     table.remove_rows(bad_data)
     problem_list = []
     for j in range(0,len(table['col9'])):
-        problem = table['col0'][j] + ': ' + table['col9'][j]
+        problem = table['col0'][j].upper() + ': ' + table['col9'][j]
+        problem = problem.replace("Applied manual phase calibration", "")
         if any(element in problem.lower() for element in problem_flag): # see if a 'problem' flag is present in the notes
-            if not "manual phase calibration" in problem.lower(): # filter out the generic manual pcal notes
-                problem_list.append(problem)
+            #if not "manual phase calibration" in problem.lower(): # filter out the generic manual pcal notes
+            problem = textwrap.wrap(problem, 160)
+            problem_list.append(problem)
     return problem_list
-
 
 def generatePDF(pdf_name, station, str1, str2, str3, str4, str5, problem_string):
     # Page 1

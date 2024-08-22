@@ -53,8 +53,8 @@ def main(master_schedule, db_name):
     conn.commit()
     for ant in stationNames:
         query_content = """ (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, Performance decimal(4,3) NOT NULL, Performance_UsedVsRecov decimal(4,3), Date DATETIME , Date_MJD decimal(9,2), Pos_X decimal(14,2), Pos_Y decimal(14,2), 
-            Pos_Z decimal(14,2), Pos_U decimal(14,2), Pos_E decimal(14,2), Pos_N decimal(14,2), W_RMS_del decimal(5,2), Total_Obs decimal(9,2),Detect_Rate_X decimal(5,3), Detect_Rate_S decimal(5,3), estSEFD_X decimal(8,2), estSEFD_S decimal(8,2), Manual_Pcal BIT(1), 
-            Dropped_Chans VARCHAR(1500), Problem BIT(1), Problem_String VARCHAR(100), Analyser VARCHAR(10) NOT NULL, vgosDB_tag VARCHAR(18));"""
+            Pos_Z decimal(14,2), Pos_U decimal(14,2), Pos_E decimal(14,2), Pos_N decimal(14,2), W_RMS_del decimal(5,2), Total_Obs decimal(9,2),Detect_Rate_X decimal(5,3), Detect_Rate_S decimal(5,3), Manual_Pcal BIT(1), 
+            Dropped_Chans VARCHAR(1500), Note_Bool BIT(1), Notes VARCHAR(500), Analyser VARCHAR(10) NOT NULL, vgosDB_tag VARCHAR(18));"""
         query = "CREATE TABLE IF NOT EXISTS "+ ant + query_content
         cursor.execute(query)
         conn.commit()
