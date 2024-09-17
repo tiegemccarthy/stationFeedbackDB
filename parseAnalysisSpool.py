@@ -121,13 +121,13 @@ def delayRMS(text_section, stations): # This function pulls the w.rms delay from
 def stationParse(stations_config='stations.config'):
     with open(stations_config) as file:
         station_contents = file.read()
-    stationTable = ascii.read(station_contents, data_start=0)
+    stationTable = ascii.read(station_contents, data_start=0, names=['2char', 'full'])
     if len(stationTable) == 1: # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
         stationNames = [stationTable[0][0]]
         stationNamesLong = [stationTable[0][1]]
     else:
-        stationNames = stationTable[0][:]
-        stationNamesLong = stationTable[1][:]
+        stationNames = stationTable['2char'][:]
+        stationNamesLong = stationTable['full'][:]
     return stationNames, stationNamesLong
 
 def main(exp_code, sql_db_name=False):
