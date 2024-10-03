@@ -25,8 +25,10 @@ def parseFunc():
                         help="""Start date (in MJD) of the time period.""")
     parser.add_argument('date_stop', 
                         help="""The end date (in MJD) of the time period.""")
+    parser.add_argument('output_name',
+                        help="""File name for output PDF.""")
     parser.add_argument('sql_search', default='%',
-                        help="""SQL search string""")
+                        help="""SQL search string.""")
     args = parser.parse_args()
     return args
 
@@ -238,7 +240,7 @@ def text_plotter(x_data, y_data, text_positions, axis,txt_width,txt_height):
                         head_width=.02, head_length=txt_height*0.5,
                         zorder=0,length_includes_head=True)
 
-def main(stat_code, db_name, start, stop, search='%'):
+def main(stat_code, db_name, start, stop, output_name, search='%'):
     start_time = Time(start, format='yday', out_subfmt='date')
     stop_time = Time(stop, format='yday', out_subfmt='date')
     result = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search)
@@ -262,10 +264,10 @@ def main(stat_code, db_name, start, stop, search='%'):
     # Make the PDF report
     problems = problemExtract(result)
     print('Generating PDF report...')
-    generatePDF('test.pdf', start_time, stop_time, stat_code, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems)
+    generatePDF(output_name, start_time, stop_time, stat_code, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems)
     #plt.show()
     return
     
 if __name__ == '__main__':
     args = parseFunc()
-    main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.sql_search)
+    main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search)
