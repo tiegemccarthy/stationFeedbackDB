@@ -27,7 +27,10 @@ def main(database_name):
     stationNames, stationNamesLong = stationParse()
     for station in stationNames:
         output_name = 'reports/' + station + '_' + today_date.strftime("%Y%m%d") + '.pdf'
-        summaryGenerator.main(station, database_name, start_date, end_date, output_name, '%')
+        try:
+            summaryGenerator.main(station, database_name, start_date, end_date, output_name, '%')
+        except:
+            print("Report generation has failed, likely not enough available data within date range.")
 
 if __name__ == '__main__':
     main(sys.argv[1])
