@@ -67,8 +67,12 @@ def wRmsAnalysis(table_input):
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=90)
+    #for i, label in enumerate(table['ExpID']):
+    #    ax.annotate(label, (time_data[i], table['W_RMS_del'][i]), alpha=0.6, fontsize=7)
+    #ax = [ax.annotate(label, (time_data[i], table['W_RMS_del'][i]), alpha=0.6, fontsize=7) for i, label in enumerate(table['ExpID'])]
+    #adjust_text(ax)
     plt.savefig('wRMS.png', bbox_inches="tight")
-    return ax, wrms_med_str
+    return wrms_med_str
 
 def performanceAnalysis(table_input):
     table = table_input.copy()
@@ -93,7 +97,7 @@ def performanceAnalysis(table_input):
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=90)
     plt.savefig('performance.png', bbox_inches="tight")
-    return ax, perf_str
+    return perf_str
 
 def posAnalysis(table_input, coord):
     table = table_input.copy()
@@ -126,10 +130,10 @@ def posAnalysis(table_input, coord):
     ax.set_ylabel(coord + ' (mm)')
     ax.set_ylim([lim_offset-250, lim_offset+250])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.set_aspect(0.1)
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.tick_params(axis='x', labelrotation=90)
     plt.savefig(coord + '_pos.png', bbox_inches="tight")
-    return ax
 
 def usedVsRecoveredAnalysis(table_input):
     table = table_input.copy()
@@ -151,7 +155,6 @@ def usedVsRecoveredAnalysis(table_input):
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=90)
-    return ax
 
 def detectRate(table_input, band):
     table = table_input.copy()
@@ -185,7 +188,7 @@ def detectRate(table_input, band):
     #txt_width = 0.02*(plt.xlim()[1] - plt.xlim()[0])
     #adjust_text(texts, only_move={'points':'y', 'texts':'y'}, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
     plt.savefig(band + '_detect_rate.png', bbox_inches="tight")
-    return ax, rate_str
+    return rate_str
 
 def problemExtract(table_input):
     table = table_input.copy()
@@ -217,13 +220,19 @@ def generatePDF(pdf_name, start, stop, station, str2, str3, str4, str5, problem_
     t1.setTextOrigin(50, 750)
     t1.textLines(str2 + str3 + "\n" + str4 + "\n" + str5) 
     report.drawText(t1)
-    report.drawInlineImage( 'wRMS.png', 20, 320, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'performance.png', 300, 320, width=280, preserveAspectRatio=True)
-    report.drawInlineImage( 'U_pos.png', 20, 100, width=180, preserveAspectRatio=True)
-    report.drawInlineImage( 'E_pos.png', 200, 100, width=180, preserveAspectRatio=True)
-    report.drawInlineImage( 'N_pos.png', 380, 100, width=180, preserveAspectRatio=True)
+    report.drawInlineImage( 'wRMS.png', 100, 285, width=380, preserveAspectRatio=True)
+    report.drawInlineImage( 'performance.png', 100, -50, width=380, preserveAspectRatio=True)
     report.showPage()
     # Page 2
+    report.drawInlineImage( 'X_detect_rate.png', 100, 285, width=380, preserveAspectRatio=True)
+    report.drawInlineImage( 'S_detect_rate.png', 100, -50, width=380, preserveAspectRatio=True)
+    report.showPage()
+    # Page 3
+    report.drawInlineImage( 'U_pos.png', 100, 480, width=380, preserveAspectRatio=True)
+    report.drawInlineImage( 'E_pos.png', 100, 250, width=380, preserveAspectRatio=True)
+    report.drawInlineImage( 'N_pos.png', 100, 20, width=380, preserveAspectRatio=True)
+    report.showPage()
+    # Page 4
     report.setFont('Helvetica-Bold', 12)
     report.drawString(50, 780, "Reported issues (as extracted from correlation reports)")
     t2 = report.beginText()
@@ -233,7 +242,7 @@ def generatePDF(pdf_name, start, stop, station, str2, str3, str4, str5, problem_
         t2.textLines(line)
     report.drawText(t2)
     report.showPage()
-    # Page 3
+    # Page 5
     report.setFont('Helvetica-Bold', 12)
     report.drawString(50, 780, "Tabulated data")
     t3 = report.beginText()
@@ -263,17 +272,17 @@ def main(stat_code, db_name, start, stop, output_name, search='%'):
     tot_sess_str = "\nTotal number of " + str(stat_code) + " sessions found in database for this time range: " + str(len(table['ExpID']))
     tot_obs_str = "\nTotal number of " + str(stat_code) + " observations across all sessions in this time range: " + str(np.nansum(table['Total_Obs'].astype(float)).astype(int))
     print(intro_str + tot_sess_str + tot_obs_str)
-    ax_two, wrms_str = wRmsAnalysis(table)
-    ax_one, perf_str = performanceAnalysis(table)
-    #ax_four, detectX_str = detectRate(result, 'X')
-    #ax_four, detectS_str = detectRate(result, 'S')
+    wrms_str = wRmsAnalysis(table)
+    perf_str = performanceAnalysis(table)
+    detectX_str = detectRate(table, 'X')
+    detectS_str = detectRate(table, 'S')
     #ax_five,  = detectRate(result, 'S')
     #ax_six = posAnalysis(result, 'X')
     #ax_seven = posAnalysis(result, 'Y')
     #ax_eight = posAnalysis(result, 'Z')
-    ax_nine = posAnalysis(table, 'E')
-    ax_ten = posAnalysis(table, 'N')
-    ax_eleven = posAnalysis(table, 'U')
+    posAnalysis(table, 'E')
+    posAnalysis(table, 'N')
+    posAnalysis(table, 'U')
     # Make the PDF report
     problems = problemExtract(table)
     print('Generating PDF report...')
@@ -283,6 +292,7 @@ def main(stat_code, db_name, start, stop, output_name, search='%'):
     with open('table.tmp', 'r') as f:
         table_data = f.readlines()
     generatePDF(output_name, start_time, stop_time, stat_code, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems, table_data)
+    plt.close('all')
     return
     
 if __name__ == '__main__':
