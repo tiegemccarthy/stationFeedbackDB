@@ -33,7 +33,6 @@ def main(database_name):
     stationNames, stationNamesLong = stationParse()
     for station in stationNames:
         output_name = dirname + '/reports/' + station + '_' + today_date.strftime("%Y%m%d") + '.pdf'
-        #output_name = '/home/tiege/Documents/research/geodesy/stationFeedbackDB/reports/' + station + '_' + today_date.strftime("%Y%m%d") + '.pdf'
         try:
             sg.main(station, database_name, start_date, end_date, output_name, "%")
         except:
