@@ -41,12 +41,12 @@ def stationParse(stations_config='stations.config'):
 def main(master_schedule, db_name):
     stationNames, stationNamesLong = stationParse()
     # Setup the directories for downloaded files
-    if not os.path.exists('analysis_reports'):
-        os.makedirs('analysis_reports')
-    if not os.path.exists('corr_files'):
-        os.makedirs('corr_files')
-    if not os.path.exists('skd_files'):
-        os.makedirs('skd_files')        
+    if not os.path.exists(dirname + '/analysis_reports'):
+        os.makedirs(dirname + '/analysis_reports')
+    if not os.path.exists(dirname + '/corr_files'):
+        os.makedirs(dirname + '/corr_files')
+    if not os.path.exists(dirname + '/skd_files'):
+        os.makedirs(dirname + '/skd_files')        
     # Create mariaDB if it doesn't exist
     master_schedule = str(master_schedule)
     db_name = str(db_name) 

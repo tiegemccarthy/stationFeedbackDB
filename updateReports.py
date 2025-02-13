@@ -4,7 +4,7 @@ from astropy.time import Time
 from datetime import datetime, timedelta
 import sys
 from astropy.io import ascii
-import summaryGenerator
+import summaryGenerator as sg
 
 def stationParse(stations_config='stations-reports.config'):
     with open(stations_config) as file:
@@ -19,6 +19,8 @@ def stationParse(stations_config='stations-reports.config'):
     return stationNames, stationNamesLong
 
 def main(database_name):
+    if not os.path.exists(dirname + '/reports'):
+        os.makedirs(dirname + '/reports')  
     # sort out date range...
     today_date = datetime.now()
     end_date = Time(today_date).to_value('yday', subfmt='date') 
@@ -28,7 +30,7 @@ def main(database_name):
     for station in stationNames:
         output_name = 'reports/' + station + '_' + today_date.strftime("%Y%m%d") + '.pdf'
         try:
-            summaryGenerator.main(station, database_name, start_date, end_date, output_name, '%')
+            sg.main(station, database_name, start_date, end_date, output_name, '%')
         except:
             print("Report generation has failed, likely not enough available data within date range.")
 
