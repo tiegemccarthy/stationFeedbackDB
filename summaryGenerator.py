@@ -29,15 +29,21 @@ def parseFunc():
                         help="""File name for output PDF.""")
     parser.add_argument('sql_search', default='%',
                         help="""SQL search string.""")
+    parser.add_argument('reverse_search', default=0,
+                        help="""Change SQL search string clause from 'LIKE' to 'NOT LIKE.'""")
     args = parser.parse_args()
     return args
 
-def extractStationData(station_code, database_name, mjd_start, mjd_stop, search='%'):
+def extractStationData(station_code, database_name, mjd_start, mjd_stop, search='%', like_or_notlike=0):
+    if float(like_or_notlike) == 1:
+        like = "NOT LIKE"
+    else:
+        like = "LIKE"
     conn = mariadb.connect(user='auscope', passwd='password')
     cursor = conn.cursor()
     query = "USE " + database_name +";"
     cursor.execute(query)
-    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, session_fit, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID LIKE \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
+    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, session_fit, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID " + like + " \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
     cursor.execute(query)
     result = cursor.fetchall()
     col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "session_fit", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
@@ -263,10 +269,10 @@ def text_plotter(x_data, y_data, text_positions, axis,txt_width,txt_height):
                         head_width=.02, head_length=txt_height*0.5,
                         zorder=0,length_includes_head=True)
 
-def main(stat_code, db_name, start, stop, output_name, search='%'):
+def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
     start_time = Time(start, format='yday', out_subfmt='date')
     stop_time = Time(stop, format='yday', out_subfmt='date')
-    result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search)
+    result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
     table = Table(rows=result, names=col_names)
     #time_data = Column(table['col1'], dtype=Time)
     intro_str = stat_code + ' data extracted for time range: ' + start_time.iso + " through " + stop_time.iso
@@ -276,7 +282,12 @@ def main(stat_code, db_name, start, stop, output_name, search='%'):
     wrms_str = wRmsAnalysis(table)
     perf_str = performanceAnalysis(table)
     detectX_str = detectRate(table, 'X')
-    detectS_str = detectRate(table, 'S')
+    try:
+        detectS_str = detectRate(table, 'S')
+    except:
+        print("No S-band data present...")
+        fig = plt.figure()
+        plt.savefig('S_detect_rate.png', bbox_inches="tight")
     #ax_five,  = detectRate(result, 'S')
     #ax_six = posAnalysis(result, 'X')
     #ax_seven = posAnalysis(result, 'Y')
@@ -298,4 +309,4 @@ def main(stat_code, db_name, start, stop, output_name, search='%'):
     
 if __name__ == '__main__':
     args = parseFunc()
-    main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search)
+    main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)

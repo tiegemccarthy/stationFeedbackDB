@@ -32,11 +32,16 @@ def main(database_name):
     # generate report
     stationNames, stationNamesLong = stationParse()
     for station in stationNames:
-        output_name = dirname + '/reports/' + station + '_' + today_date.strftime("%Y%m%d") + '.pdf'
+        output_name_legacy = dirname + '/reports/' + station + '_legacy_' + today_date.strftime("%Y%m%d") + '.pdf'
+        output_name_vgos = dirname + '/reports/' + station + '_VGOS_' + today_date.strftime("%Y%m%d") + '.pdf'
         try:
-            sg.main(station, database_name, start_date, end_date, output_name, "%")
+            sg.main(station, database_name, start_date, end_date, output_name_legacy, "v%", 1)
         except:
-            print("Error generating new report for " + str(station) + ". Check whether data is available.")
+            print("Unable to generate legacy performance report for " + str(station) + ". Check whether sufficient data is available.")
+        try:
+            sg.main(station, database_name, start_date, end_date, output_name_vgos, "v%", 0)
+        except:
+            print("Unable to generate VGOS performance report for " + str(station) + ". Check whether sufficient data is available.")
 
 if __name__ == '__main__':
     main(sys.argv[1])
