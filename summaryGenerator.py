@@ -13,8 +13,6 @@ from adjustText import adjust_text
 import textwrap
 import pandas as pd
 
-
-
 def parseFunc():
     # Argument parsing
     parser = argparse.ArgumentParser(description="""Current draft script for a report/summary generator that interacts with the SQL database and
@@ -39,10 +37,10 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     cursor = conn.cursor()
     query = "USE " + database_name +";"
     cursor.execute(query)
-    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID LIKE \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
+    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, session_fit, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID LIKE \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
     cursor.execute(query)
     result = cursor.fetchall()
-    col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
+    col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "session_fit", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
     return result, col_names 
 
 def wRmsAnalysis(table_input):
@@ -60,7 +58,10 @@ def wRmsAnalysis(table_input):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(time_data, table['W_RMS_del'], color='k', s=20)
-    #ax.plot(mjd_x, wrms_runavg, color='r')
+    ax.scatter(time_data, table['session_fit'], color='r', s=20)
+    ax.hlines(np.median(table['W_RMS_del']), np.min(time_data), np.max(time_data), linestyle='dashed', colors='k')
+    ax.hlines(np.median(table['session_fit']), np.min(time_data), np.max(time_data), linestyle='dashed', colors='r')
+    ax.legend(['Station W.RMS delay', 'Session W.RMS delay', 'Median Station W.RMS delay' , 'Median Session W.RMS delay'])    
     ax.set_xlabel('Date')
     ax.set_ylabel('W.RMS (ps)')
     ax.set_title('Station W.RMS vs. Time')
@@ -220,12 +221,12 @@ def generatePDF(pdf_name, start, stop, station, str2, str3, str4, str5, problem_
     t1.setTextOrigin(50, 750)
     t1.textLines(str2 + str3 + "\n" + str4 + "\n" + str5) 
     report.drawText(t1)
-    report.drawInlineImage( 'wRMS.png', 100, 285, width=380, preserveAspectRatio=True)
-    report.drawInlineImage( 'performance.png', 100, -50, width=380, preserveAspectRatio=True)
+    report.drawInlineImage( 'wRMS.png', 100, 285, width=320, preserveAspectRatio=True)
+    report.drawInlineImage( 'performance.png', 100, -50, width=320, preserveAspectRatio=True)
     report.showPage()
     # Page 2
-    report.drawInlineImage( 'X_detect_rate.png', 100, 285, width=380, preserveAspectRatio=True)
-    report.drawInlineImage( 'S_detect_rate.png', 100, -50, width=380, preserveAspectRatio=True)
+    report.drawInlineImage( 'X_detect_rate.png', 100, 285, width=320, preserveAspectRatio=True)
+    report.drawInlineImage( 'S_detect_rate.png', 100, -50, width=320, preserveAspectRatio=True)
     report.showPage()
     # Page 3
     report.drawInlineImage( 'U_pos.png', 100, 480, width=380, preserveAspectRatio=True)
