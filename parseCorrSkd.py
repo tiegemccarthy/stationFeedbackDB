@@ -253,8 +253,8 @@ def createStationQTables(section, corr_ref, band):
                 if band in qcode_table_full['bl:band'][j].split(':')[1]:
                     valid_baseline.append(j)
         baseline_sum_qcode = qcode_table_full[valid_baseline].groups.aggregate(np.sum)
-        baseline_sum_qcode.add_column(mk4_id, index=0, name='station')
         try: 
+            baseline_sum_qcode.add_column(mk4_id, index=0, name='station')
             summed_qcode_table = vstack([summed_qcode_table, baseline_sum_qcode])
         except:
             summed_qcode_table = summed_qcode_table
