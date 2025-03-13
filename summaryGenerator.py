@@ -39,7 +39,12 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
         like = "NOT LIKE"
     else:
         like = "LIKE"
-    conn = mariadb.connect(user='auscope', passwd='password')
+    
+    ########
+    # added a remote host here so can run locally (for testing)
+    conn = mariadb.connect(host='56d09x2.phys.utas.edu.au', user='auscope', passwd='password')
+    ########
+    
     cursor = conn.cursor()
     query = "USE " + database_name +";"
     cursor.execute(query)
@@ -295,6 +300,8 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
     posAnalysis(table, 'E')
     posAnalysis(table, 'N')
     posAnalysis(table, 'U')
+
+
     # Make the PDF report
     problems = problemExtract(table)
     print('Generating PDF report...')
@@ -303,10 +310,41 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
     ascii.write(table, 'table.tmp', format='fixed_width', overwrite=True)
     with open('table.tmp', 'r') as f:
         table_data = f.readlines()
+
+    ###############
+
+
     generatePDF(output_name, start_time, stop_time, stat_code, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems, table_data)
+    
+    #####################
+
     plt.close('all')
     return
+
+#########################
+
+def utc2mjd(utc_time):
+
+    time_obj = Time(utc_time, format='iso', scale='utc')
+    mjd = time_obj.mjd
+    print(f"mjd: {mjd}")
+    return mjd
+
+#########################
     
 if __name__ == '__main__':
-    args = parseFunc()
-    main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
+
+    #############
+    # original: #
+    #############
+    #args = parseFunc()
+    #main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
+
+    ###########
+    # testing #
+    ###########
+
+    start_mjd = utc2mjd(Time.now())
+    stop_mjd = utc2mjd(Time.now() - timedelta(days=90days))
+
+    extractStationData(hb, auscopeDB, mjd_start, mjd_stop)
