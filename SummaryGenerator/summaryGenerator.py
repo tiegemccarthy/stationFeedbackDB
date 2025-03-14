@@ -8,51 +8,53 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from reportlab.pdfgen.canvas import Canvas
-from datetime import datetime
+from datetime import datetime, timedelta
+from pprint import pprint
+import base64
+from io import BytesIO
+
 from adjustText import adjust_text
 import textwrap
 import pandas as pd
 
+from program_parameters import *
+from createReport import *
+
 def parseFunc():
+    """
+    pass the program_parameters default config object into the defaults here
+    :return:
+    """
     # Argument parsing
     parser = argparse.ArgumentParser(description="""Current draft script for a report/summary generator that interacts with the SQL database and
                                         extracts data over a requested time range.""")
     parser.add_argument('station',
+                        default='hb',
                         help="""2 letter station code of the station you would like to extract data for.""")
     parser.add_argument('sql_db_name', 
+                        default='auscopeDB',
                         help="""The name of the SQL database you would like to use.""")
     parser.add_argument('date_start', 
+                        default=utc2mjd(Time.now()),
                         help="""Start date (in MJD) of the time period.""")
     parser.add_argument('date_stop', 
+                        default=utc2mjd(Time.now()-timedelta(weeks=52)),
                         help="""The end date (in MJD) of the time period.""")
     parser.add_argument('output_name',
+                        default='report.pdf',
                         help="""File name for output PDF.""")
-    parser.add_argument('sql_search', default='%',
+    parser.add_argument('sql_search',
+                        default='%',
                         help="""SQL search string.""")
-    parser.add_argument('reverse_search', default=0,
+    parser.add_argument('reverse_search',
+                        default=0,
                         help="""Change SQL search string clause from 'LIKE' to 'NOT LIKE.'""")
     args = parser.parse_args()
     return args
 
-def extractStationData(station_code, database_name, mjd_start, mjd_stop, search='%', like_or_notlike=0):
-    if float(like_or_notlike) == 1:
-        like = "NOT LIKE"
-    else:
-        like = "LIKE"
-    
-    ########
-    # added a remote host here so can run locally (for testing)
-    conn = mariadb.connect(host='56d09x2.phys.utas.edu.au', user='auscope', passwd='password')
-    ########
-    
-    cursor = conn.cursor()
-    query = "USE " + database_name +";"
-    cursor.execute(query)
-    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, session_fit, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID " + like + " \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
-    cursor.execute(query)
-    result = cursor.fetchall()
-    col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "session_fit", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
-    return result, col_names 
+"""
+every function that saves a figure needs to return it as a base64 variabls
+"""
 
 def wRmsAnalysis(table_input):
     table = table_input.copy()
@@ -78,14 +80,26 @@ def wRmsAnalysis(table_input):
     ax.set_title('Station W.RMS vs. Time')
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
-    ax.tick_params(axis='x', labelrotation=90)
+    ax.tick_params(axis='x', labelrotation=45)
     #for i, label in enumerate(table['ExpID']):
     #    ax.annotate(label, (time_data[i], table['W_RMS_del'][i]), alpha=0.6, fontsize=7)
     #ax = [ax.annotate(label, (time_data[i], table['W_RMS_del'][i]), alpha=0.6, fontsize=7) for i, label in enumerate(table['ExpID'])]
     #adjust_text(ax)
-    plt.savefig('wRMS.png', bbox_inches="tight")
-    return wrms_med_str
+    #plt.savefig('wRMS.png', bbox_inches="tight")
 
+    ### save
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png", bbox_inches="tight")
+    buffer.seek(0)
+    img_filename = "wRMS.png"
+    with open(img_filename, "wb") as f:
+        f.write(buffer.getvalue())
+    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    plt.close(fig)
+
+    return wrms_med_str, img_b64
+
+#
 def performanceAnalysis(table_input):
     table = table_input.copy()
     # filter sessions with 0% data
@@ -107,10 +121,21 @@ def performanceAnalysis(table_input):
     ax.set_ylim([0, 1.0])
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
-    ax.tick_params(axis='x', labelrotation=90)
-    plt.savefig('performance.png', bbox_inches="tight")
-    return perf_str
+    ax.tick_params(axis='x', labelrotation=45)
+    #plt.savefig('performance.png', bbox_inches="tight")
+    ### save
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png", bbox_inches="tight")
+    buffer.seek(0)
+    img_filename = "performance.png"
+    with open(img_filename, "wb") as f:
+        f.write(buffer.getvalue())
+    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    plt.close(fig)
 
+    return perf_str, img_b64
+
+#
 def posAnalysis(table_input, coord):
     table = table_input.copy()
     if coord == 'X':
@@ -144,9 +169,32 @@ def posAnalysis(table_input, coord):
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.set_aspect(0.1)
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
-    ax.tick_params(axis='x', labelrotation=90)
-    plt.savefig(coord + '_pos.png', bbox_inches="tight")
+    ax.tick_params(axis='x', labelrotation=45)
+    # these ticks should probably be 45 degrees
 
+    ### save
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png", bbox_inches="tight")
+    buffer.seek(0)
+    img_filename = f"{coord}_pos.png"
+    with open(img_filename, "wb") as f:
+        f.write(buffer.getvalue())
+    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    plt.close(fig)
+    return img_filename, img_b64
+
+
+#####################
+
+class ImgVar:
+    def __init__(self):
+        self.name
+        self.img_b64
+        self.caption
+
+#####################
+
+# THIS ONE, Doesn't save a fig? Or at least not used in report
 def usedVsRecoveredAnalysis(table_input):
     table = table_input.copy()
     # filter sessions with 0% data
@@ -166,8 +214,9 @@ def usedVsRecoveredAnalysis(table_input):
     ax.set_xlabel('MJD (days)')
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
-    ax.tick_params(axis='x', labelrotation=90)
+    ax.tick_params(axis='x', labelrotation=45)
 
+# 
 def detectRate(table_input, band):
     table = table_input.copy()
     if band == 'X':
@@ -192,16 +241,30 @@ def detectRate(table_input, band):
     ax.set_xlabel('Date')
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
-    ax.tick_params(axis='x', labelrotation=90)
+    ax.tick_params(axis='x', labelrotation=45)
     # session labels
     #for i, txt in enumerate(table['col0']):
     #    ax.text(time_data[i], table[col_name][i], txt, rotation=90, verticalalignment='top', fontsize=6)
     #txt_height = 0.04*(plt.ylim()[1] - plt.ylim()[0])
     #txt_width = 0.02*(plt.xlim()[1] - plt.xlim()[0])
     #adjust_text(texts, only_move={'points':'y', 'texts':'y'}, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
-    plt.savefig(band + '_detect_rate.png', bbox_inches="tight")
-    return rate_str
+    #plt.savefig(band + '_detect_rate.png', bbox_inches="tight")
 
+    ### save
+    # this could be a little function which is passed plt...
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png", bbox_inches="tight")
+    buffer.seek(0)
+    img_filename = f"{band}_detect_rate.png"
+    with open(img_filename, "wb") as f:
+        f.write(buffer.getvalue())
+    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    plt.close(fig)
+    return rate_str, img_b64
+
+###
+
+# this needs to be cleared up
 def problemExtract(table_input):
     table = table_input.copy()
     problem_flag = ['pcal', 'phase', 'bad', 'lost', 'clock', 
@@ -221,6 +284,22 @@ def problemExtract(table_input):
             problem = textwrap.wrap(problem, 160)
             problem_list.append(problem)
     return problem_list
+
+
+###########################
+
+# WE'RE GOING TO REPLACE THIS
+
+"""
+FIGURES:
+wRMS
+performance
+X_detect_rate
+S_detect_rate
+U_pos
+E_pos
+N_pos
+"""
 
 def generatePDF(pdf_name, start, stop, station, str2, str3, str4, str5, problem_string, table):
     # Page 1
@@ -274,37 +353,91 @@ def text_plotter(x_data, y_data, text_positions, axis,txt_width,txt_height):
                         head_width=.02, head_length=txt_height*0.5,
                         zorder=0,length_includes_head=True)
 
+
+######################################
+
+
+"""
+"""
+
+
+##############################
+
+
+"""
 def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
+
     start_time = Time(start, format='yday', out_subfmt='date')
     stop_time = Time(stop, format='yday', out_subfmt='date')
+
+    # extract the table data
     result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
+
+    # now once we have this we can produce the report elements that summirise this...
+
+    # so maybe this should form the first aspect of our stationSummary object...
+
+    print("result:")
+    pprint(result)
+    print("col_names:")
+    pprint(col_names)
+
+    print(f"Number of columns in result: {len(result[0])}")
+    print(f"Number of column names: {len(col_names)}")
+
+    if len(result[0]) != len(col_names):
+        raise ValueError("Mismatched names to data columns.")
+
+    #####################
+
     table = Table(rows=result, names=col_names)
     #time_data = Column(table['col1'], dtype=Time)
+
+    ####
+
     intro_str = stat_code + ' data extracted for time range: ' + start_time.iso + " through " + stop_time.iso
     tot_sess_str = "\nTotal number of " + str(stat_code) + " sessions found in database for this time range: " + str(len(table['ExpID']))
     tot_obs_str = "\nTotal number of " + str(stat_code) + " observations across all sessions in this time range: " + str(np.nansum(table['Total_Obs'].astype(float)).astype(int))
     print(intro_str + tot_sess_str + tot_obs_str)
-    wrms_str = wRmsAnalysis(table)
-    perf_str = performanceAnalysis(table)
-    detectX_str = detectRate(table, 'X')
+
+    wrms_str, wrms_img = wRmsAnalysis(table)
+    
+    perf_str, perf_img = performanceAnalysis(table)
+
+    ###
+
+    detectX_str, detectX_img = detectRate(table, 'X')
+
     try:
-        detectS_str = detectRate(table, 'S')
+        detectS_str, detectS_img = detectRate(table, 'S')
     except:
+        # hmmmmmm
         print("No S-band data present...")
         fig = plt.figure()
         plt.savefig('S_detect_rate.png', bbox_inches="tight")
+
+    
     #ax_five,  = detectRate(result, 'S')
     #ax_six = posAnalysis(result, 'X')
     #ax_seven = posAnalysis(result, 'Y')
     #ax_eight = posAnalysis(result, 'Z')
-    posAnalysis(table, 'E')
-    posAnalysis(table, 'N')
-    posAnalysis(table, 'U')
 
+    ### get position analysis images as variables
+
+    E_pos_img = posAnalysis(table, 'E')[1]
+    N_pos_img = posAnalysis(table, 'N')[1]
+    U_pos_img = posAnalysis(table, 'U')[1]
+
+    #print(f"DEBUG: E_pos_img: {E_pos_img}")
+
+    ###
 
     # Make the PDF report
-    problems = problemExtract(table)
     print('Generating PDF report...')
+
+
+    problems = problemExtract(table)
+
     del table['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Performance_UsedVsRecov']
     # A disgustingly hacky way to get a formatted table that I can write with reportlab, should revise to remove the need to generate a txt file.
     ascii.write(table, 'table.tmp', format='fixed_width', overwrite=True)
@@ -320,31 +453,145 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
 
     plt.close('all')
     return
-
+"""
 #########################
 
-def utc2mjd(utc_time):
+class StationSummariser:
+    def __init__(self, stat_code, start_time, stop_time, table):
+        self.stat_code = stat_code
+        self.start_time = start_time.iso
+        self.stop_time = stop_time.iso
 
-    time_obj = Time(utc_time, format='iso', scale='utc')
-    mjd = time_obj.mjd
-    print(f"mjd: {mjd}")
-    return mjd
+        # put this str into the html & load in the variables
+        self.intro_str = f"{stat_code} data extracted for time range: {self.start_time} through {self.stop_time}"
+
+        self.total_sessions = len(table['ExpID'])
+        self.total_observations = int(np.nansum(table['Total_Obs'].astype(float)))
+
+        self.wrms_analysis, self.wrms_img = wRmsAnalysis(table)
+        self.performance_analysis, self.perf_img = performanceAnalysis(table)
+        self.detectX_str, self.detectX_img = detectRate(table, 'X')
+        # here, above, also, strings should be templated...
+
+        try:
+            self.detectS_str, self.detectS_img = detectRate(table, 'S')
+        except Exception:
+            self.detectS_str = "No S-band data present..."
+            fig = plt.figure()
+            plt.savefig('S_detect_rate.png', bbox_inches="tight")
+            plt.close(fig)
+
+        # Store Base64-encoded images from position analysis
+        self.E_pos_img = posAnalysis(table, 'E')[1]
+        self.N_pos_img = posAnalysis(table, 'N')[1]
+        self.U_pos_img = posAnalysis(table, 'U')[1]
+
+
+    def to_json(self):
+        return json.dumps(self.__dict__, indent=4)
+
+
+def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
+
+    start_time = Time(start, format='yday', out_subfmt='date')
+    stop_time = Time(stop, format='yday', out_subfmt='date')
+
+    # extract the table data
+    result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
+
+    # now once we have this we can produce the report elements that summirise this...
+
+    print("result:")
+    pprint(result)
+    print("col_names:")
+    pprint(col_names)
+
+    print(f"Number of columns in result: {len(result[0])}")
+    print(f"Number of column names: {len(col_names)}")
+
+    if len(result[0]) != len(col_names):
+        raise ValueError("Mismatched names to data columns.")
+
+    #####################
+    # create the info table which will be used to generate the rest of it...
+    table = Table(rows=result, names=col_names)
+
+    ####
+    stat_sum = StationSummariser(stat_code, start_time, stop_time, table)
+
+    # Print the JSON representation of the StationSummariser object
+    print(stat_sum.to_json())
+
+    ## TODO
+
+    # Make the PDF report
+    print('Generating PDF report...')
+
+    problems = problemExtract(table)
+
+    del table['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Performance_UsedVsRecov']
+    # A disgustingly hacky way to get a formatted table that I can write with reportlab, should revise to remove the need to generate a txt file.
+    ascii.write(table, 'table.tmp', format='fixed_width', overwrite=True)
+    with open('table.tmp', 'r') as f:
+        table_data = f.readlines()
+
+    ###############
+
+    create_report(stat_sum)
+    #generatePDF(output_name, start_time, stop_time, stat_code, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems, table_data)
+    
+    #####################
+
+    plt.close('all')
+    return
+
+def createReport(station_summary):
+    print("todo")
+
+
+def extractStationData(station_code, database_name, mjd_start, mjd_stop, search='%', like_or_notlike=0):
+    if float(like_or_notlike) == 1:
+        like = "NOT LIKE"
+    else:
+        like = "LIKE"
+    
+    ########
+    # added a remote host here so can run locally (for testing)
+    conn = mariadb.connect(config.db.host, config.db.user, config.db.pw)
+
+    ########
+    
+    cursor = conn.cursor()
+    query = "USE " + database_name +";"
+
+    print(query)
+
+    cursor.execute(query)
+    query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, session_fit, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID " + like + " \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
+
+    print(query)
+
+    cursor.execute(query)
+    result = cursor.fetchall()
+    col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "session_fit", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
+    return result, col_names 
+
 
 #########################
     
 if __name__ == '__main__':
 
-    #############
-    # original: #
-    #############
-    #args = parseFunc()
-    #main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
+    """
+    # original:
+    args = parseFunc()
+    main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
+    """
 
-    ###########
-    # testing #
-    ###########
+    main(config.args.station, config.db.name, config.args.start, config.args.stop,
+         config.args.output, config.args.search, config.args.reverse_search)
 
-    start_mjd = utc2mjd(Time.now())
-    stop_mjd = utc2mjd(Time.now() - timedelta(days=90days))
+    """
+    NOTE:
+    - these times aren't actually mjd, this to yday format...
 
-    extractStationData(hb, auscopeDB, mjd_start, mjd_stop)
+    """

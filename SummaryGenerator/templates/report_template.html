@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        {{ css|safe }}
+    </style>
+</head>
+<body>
+    <div class="report">
+        <header>
+            <h1>{{ title }}</h1>
+        </header>
+        <main>
+            <div class="summary">
+                <!-- <h2>Summary</h2> -->
+                <p>{{ intro }}</p>
+                <div class="stats">
+                    <p>Total number of {{ station }} sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
+                    <p>Total number of {{ station }} observations across all sessions in this time range: <strong>{{ total_observations }}</strong></p>
+                </div>
+                <div class="analysis">
+                    <h3>Wrms Analysis</h3>
+                    <p>{{ wrms_analysis }}</p>
+                    <h3>Performance Analysis</h3>
+                    <p>{{ performance_analysis }}</p>
+                </div>
+
+                <div class="detection-rates">
+                    <h3>Detection Rates</h3>
+                    <h4>X Band:</h4>
+                    <p>{{ detectX_str }}</p>
+                    <h4>S Band:</h4>
+                    <p>{{ detectS_str }}</p>
+                </div>
+            </div>
+
+            <div class="page-break"></div>
+
+            <!-- the figures section should really be broken down into sub sections
+            eg
+                performance 
+                detections 
+                positions
+                comparision
+            -->
+            <div class="figures section">
+                <h2>Figures</h2>
+            
+                {% for image in images %}
+                    {% if forloop.first or forloop.counter0|divisibleby:2 %}
+                        <div class="figure-pair">
+                    {% endif %}
+                    
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ image.image_base64 }}" 
+                             alt="{{ image.alt }}" width="300">
+                        <figcaption class="comment">
+                            <p>{{ image.caption }}</p>
+                        </figcaption>
+                    </figure>
+                    
+                    {% if forloop.counter|divisibleby:2 or forloop.last %}
+                        </div>
+                        <div class="page-break"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="page-break"></div>
+
+            <div class="more-info">
+                <p>{{ more_info }}</p>
+            </div>
+
+            <div class="about">
+                <h3>About:</h3>
+                <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please comment or alert the creators of any apparent issues at the following address <a href="">email</a>.</p>
+                <p>More information on this project as well as the source code may be found at the following link <a href="">link</a>.</p>
+            </div>
+
+        </div>
+
+
+        </main>
+</body>
+</html>
