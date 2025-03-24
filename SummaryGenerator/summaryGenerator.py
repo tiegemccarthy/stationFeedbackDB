@@ -16,9 +16,85 @@ from io import BytesIO
 from adjustText import adjust_text
 import textwrap
 import pandas as pd
+from dataclasses import dataclass
 
 from program_parameters import *
 from createReport import *
+
+###########
+# classes #
+###########
+
+class ImgVar:
+    def __init__(self):
+        self.name
+        self.img_b64
+        self.caption
+
+@dataclass
+class StationSummariser:
+    station: str
+    start_time: datetime
+    stop_time: datetime
+    table: Table
+    total_sessions: int = 0
+    total_observations: int = 0
+    wrms_analysis: str = ""
+    performance_analysis: str = ""
+    detectX_str: str = ""
+    detectS_str: str = ""
+    wrms_img: str = ""
+    perf_img: str = ""
+    detectS_img: str = ""
+    detectX_img: str = ""
+    E_pos_img: str = ""
+    N_pos_img: str = ""
+    U_pos_img: str = ""
+    more_info: str = "Additional info..."
+    reported_issues: str = "Issues reported..."
+    problems: str = ""
+    table_data: str = ""
+
+    def __post_init__(self):
+
+        self.start_time = self.start_time.iso
+        self.stop_time = self.stop_time.iso
+
+        table = self.table                  # fix me later
+
+        self.total_sessions = len(table['ExpID'])
+        self.total_observations = int(np.nansum(table['Total_Obs'].astype(float)))
+
+        self.wrms_analysis, self.wrms_img = wRmsAnalysis(table)
+        self.performance_analysis, self.perf_img = performanceAnalysis(table)
+        self.detectX_str, self.detectX_img = detectRate(table, 'X')
+        # here, like above, also, strings should be templated...
+
+        try:
+            self.detectS_str, self.detectS_img = detectRate(table, 'S')
+        except Exception:
+            self.detectS_str = "No S-band data present..."
+            fig = plt.figure()
+            plt.savefig('S_detect_rate.png', bbox_inches="tight")
+            plt.close(fig)
+
+        # Store Base64-encoded images from position analysis
+        self.E_pos_img = posAnalysis(table, 'E')[1]
+        self.N_pos_img = posAnalysis(table, 'N')[1]
+        self.U_pos_img = posAnalysis(table, 'U')[1]
+
+        #
+        self.problems = problemExtract(table)
+        print(f"PROBLEMS:\n{self.problems}")
+
+        #
+        columns_to_remove = ['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Performance_UsedVsRecov']
+        self.table = self.table.to_pandas()
+        table = self.table.drop(columns=columns_to_remove)
+        self.table_data = table.to_html(classes='table table-bordered table-striped', index=False)
+
+
+###
 
 def parseFunc():
     """
@@ -52,9 +128,6 @@ def parseFunc():
     args = parser.parse_args()
     return args
 
-"""
-every function that saves a figure needs to return it as a base64 variabls
-"""
 
 def wRmsAnalysis(table_input):
     table = table_input.copy()
@@ -88,13 +161,8 @@ def wRmsAnalysis(table_input):
     #plt.savefig('wRMS.png', bbox_inches="tight")
 
     ### save
-    buffer = BytesIO()
-    plt.savefig(buffer, format="png", bbox_inches="tight")
-    buffer.seek(0)
     img_filename = "wRMS.png"
-    with open(img_filename, "wb") as f:
-        f.write(buffer.getvalue())
-    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
 
     return wrms_med_str, img_b64
@@ -124,13 +192,8 @@ def performanceAnalysis(table_input):
     ax.tick_params(axis='x', labelrotation=45)
     #plt.savefig('performance.png', bbox_inches="tight")
     ### save
-    buffer = BytesIO()
-    plt.savefig(buffer, format="png", bbox_inches="tight")
-    buffer.seek(0)
     img_filename = "performance.png"
-    with open(img_filename, "wb") as f:
-        f.write(buffer.getvalue())
-    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
 
     return perf_str, img_b64
@@ -173,24 +236,11 @@ def posAnalysis(table_input, coord):
     # these ticks should probably be 45 degrees
 
     ### save
-    buffer = BytesIO()
-    plt.savefig(buffer, format="png", bbox_inches="tight")
-    buffer.seek(0)
     img_filename = f"{coord}_pos.png"
-    with open(img_filename, "wb") as f:
-        f.write(buffer.getvalue())
-    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
+
     return img_filename, img_b64
-
-
-#####################
-
-class ImgVar:
-    def __init__(self):
-        self.name
-        self.img_b64
-        self.caption
 
 #####################
 
@@ -250,17 +300,24 @@ def detectRate(table_input, band):
     #adjust_text(texts, only_move={'points':'y', 'texts':'y'}, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
     #plt.savefig(band + '_detect_rate.png', bbox_inches="tight")
 
-    ### save
-    # this could be a little function which is passed plt...
+    img_filename = f"{band}_detect_rate.png"
+    img_b64 = save_plt(plt, img_filename)
+    plt.close(fig)
+    return rate_str, img_b64
+
+###
+
+def save_plt(plt, img_filename):
+    """
+    """
+
     buffer = BytesIO()
     plt.savefig(buffer, format="png", bbox_inches="tight")
     buffer.seek(0)
-    img_filename = f"{band}_detect_rate.png"
-    with open(img_filename, "wb") as f:
-        f.write(buffer.getvalue())
+    #with open(img_filename, "wb") as f:
+    #    f.write(buffer.getvalue())
     img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    plt.close(fig)
-    return rate_str, img_b64
+    return img_b64
 
 ###
 
@@ -286,83 +343,7 @@ def problemExtract(table_input):
     return problem_list
 
 
-###########################
-
-# WE'RE GOING TO REPLACE THIS
-
-"""
-FIGURES:
-wRMS
-performance
-X_detect_rate
-S_detect_rate
-U_pos
-E_pos
-N_pos
-"""
-
-def generatePDF(pdf_name, start, stop, station, str2, str3, str4, str5, problem_string, table):
-    # Page 1
-    report = Canvas(pdf_name)
-    report.setFont('Helvetica-Bold', 20)
-    report.drawString(50, 780, station + ' station report (' + start.iso + ' - ' + stop.iso + ')' )
-    t1 = report.beginText()
-    t1.setFont('Helvetica-Bold', 10)
-    t1.setTextOrigin(50, 750)
-    t1.textLines(str2 + str3 + "\n" + str4 + "\n" + str5) 
-    report.drawText(t1)
-    report.drawInlineImage( 'wRMS.png', 100, 285, width=320, preserveAspectRatio=True)
-    report.drawInlineImage( 'performance.png', 100, -50, width=320, preserveAspectRatio=True)
-    report.showPage()
-    # Page 2
-    report.drawInlineImage( 'X_detect_rate.png', 100, 285, width=320, preserveAspectRatio=True)
-    report.drawInlineImage( 'S_detect_rate.png', 100, -50, width=320, preserveAspectRatio=True)
-    report.showPage()
-    # Page 3
-    report.drawInlineImage( 'U_pos.png', 100, 480, width=380, preserveAspectRatio=True)
-    report.drawInlineImage( 'E_pos.png', 100, 250, width=380, preserveAspectRatio=True)
-    report.drawInlineImage( 'N_pos.png', 100, 20, width=380, preserveAspectRatio=True)
-    report.showPage()
-    # Page 4
-    report.setFont('Helvetica-Bold', 12)
-    report.drawString(50, 780, "Reported issues (as extracted from correlation reports)")
-    t2 = report.beginText()
-    t2.setTextOrigin(50, 750)
-    t2.setFont('Helvetica', 6)
-    for line in problem_string:
-        t2.textLines(line)
-    report.drawText(t2)
-    report.showPage()
-    # Page 5
-    report.setFont('Helvetica-Bold', 12)
-    report.drawString(50, 780, "Tabulated data")
-    t3 = report.beginText()
-    t3.setTextOrigin(50, 750)
-    t3.setFont('Courier', 6)
-    for line in table:
-        t3.textLines(line)
-    report.drawText(t3)
-    report.showPage()
-    report.save()
-
-def text_plotter(x_data, y_data, text_positions, axis,txt_width,txt_height):
-    for x,y,t in zip(x_data, y_data, text_positions):
-        axis.text(x - .03, 1.02*t, '%d'%int(y),rotation=0, color='blue', fontsize=13)
-        if y != t:
-            axis.arrow(x, t+20,0,y-t, color='blue',alpha=0.2, width=txt_width*0.0,
-                        head_width=.02, head_length=txt_height*0.5,
-                        zorder=0,length_includes_head=True)
-
-
-######################################
-
-
-"""
-"""
-
-
 ##############################
-
 
 """
 def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
@@ -456,40 +437,6 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
 """
 #########################
 
-class StationSummariser:
-    def __init__(self, stat_code, start_time, stop_time, table):
-        self.stat_code = stat_code
-        self.start_time = start_time.iso
-        self.stop_time = stop_time.iso
-
-        # put this str into the html & load in the variables
-        self.intro_str = f"{stat_code} data extracted for time range: {self.start_time} through {self.stop_time}"
-
-        self.total_sessions = len(table['ExpID'])
-        self.total_observations = int(np.nansum(table['Total_Obs'].astype(float)))
-
-        self.wrms_analysis, self.wrms_img = wRmsAnalysis(table)
-        self.performance_analysis, self.perf_img = performanceAnalysis(table)
-        self.detectX_str, self.detectX_img = detectRate(table, 'X')
-        # here, above, also, strings should be templated...
-
-        try:
-            self.detectS_str, self.detectS_img = detectRate(table, 'S')
-        except Exception:
-            self.detectS_str = "No S-band data present..."
-            fig = plt.figure()
-            plt.savefig('S_detect_rate.png', bbox_inches="tight")
-            plt.close(fig)
-
-        # Store Base64-encoded images from position analysis
-        self.E_pos_img = posAnalysis(table, 'E')[1]
-        self.N_pos_img = posAnalysis(table, 'N')[1]
-        self.U_pos_img = posAnalysis(table, 'U')[1]
-
-
-    def to_json(self):
-        return json.dumps(self.__dict__, indent=4)
-
 
 def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
 
@@ -520,24 +467,25 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
     stat_sum = StationSummariser(stat_code, start_time, stop_time, table)
 
     # Print the JSON representation of the StationSummariser object
-    print(stat_sum.to_json())
+    # print(stat_sum.to_json())
 
     ## TODO
 
     # Make the PDF report
     print('Generating PDF report...')
-
-    problems = problemExtract(table)
-
+    """
     del table['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Performance_UsedVsRecov']
     # A disgustingly hacky way to get a formatted table that I can write with reportlab, should revise to remove the need to generate a txt file.
     ascii.write(table, 'table.tmp', format='fixed_width', overwrite=True)
     with open('table.tmp', 'r') as f:
         table_data = f.readlines()
 
+    # still need to deal with this table in the station summary
+    """
     ###############
 
     create_report(stat_sum)
+
     #generatePDF(output_name, start_time, stop_time, stat_code, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems, table_data)
     
     #####################
@@ -545,9 +493,7 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
     plt.close('all')
     return
 
-def createReport(station_summary):
-    print("todo")
-
+#
 
 def extractStationData(station_code, database_name, mjd_start, mjd_stop, search='%', like_or_notlike=0):
     if float(like_or_notlike) == 1:
@@ -587,8 +533,7 @@ if __name__ == '__main__':
     main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
     """
 
-    main(config.args.station, config.db.name, config.args.start, config.args.stop,
-         config.args.output, config.args.search, config.args.reverse_search)
+    main(config.args.station, config.db.name, config.args.start, config.args.stop, config.args.output, config.args.search, config.args.reverse_search)
 
     """
     NOTE:

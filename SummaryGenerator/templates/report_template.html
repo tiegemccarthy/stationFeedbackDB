@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>{{ filename }}</title>
     <style>
         {{ css|safe }}
     </style>
@@ -11,12 +11,12 @@
 <body>
     <div class="report">
         <header>
-            <h1>{{ title }}</h1>
+            <h1>{{ station }} Data</h1>
         </header>
         <main>
             <div class="summary">
-                <!-- <h2>Summary</h2> -->
-                <p>{{ intro }}</p>
+                <p>{{ station }} data extracted for time range: {{ start_time }} through {{ stop_time }}</p>
+                <p>{{ more_info }}</p>
                 <div class="stats">
                     <p>Total number of {{ station }} sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
                     <p>Total number of {{ station }} observations across all sessions in this time range: <strong>{{ total_observations }}</strong></p>
@@ -39,51 +39,109 @@
 
             <div class="page-break"></div>
 
-            <!-- the figures section should really be broken down into sub sections
-            eg
-                performance 
-                detections 
-                positions
-                comparision
-            -->
             <div class="figures section">
                 <h2>Figures</h2>
-            
-                {% for image in images %}
-                    {% if forloop.first or forloop.counter0|divisibleby:2 %}
-                        <div class="figure-pair">
-                    {% endif %}
-                    
-                    <figure class="image">
-                        <img src="data:image/png;base64,{{ image.image_base64 }}" 
-                             alt="{{ image.alt }}" width="300">
-                        <figcaption class="comment">
-                            <p>{{ image.caption }}</p>
-                        </figcaption>
-                    </figure>
-                    
-                    {% if forloop.counter|divisibleby:2 or forloop.last %}
-                        </div>
-                        <div class="page-break"></div>
-                    {% endif %}
-                {% endfor %}
+                
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ wrms_img }}" alt="Wrms Image" width="300">
+                    <figcaption class="comment">
+                        <p>W_rms</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ perf_img }}" alt="Performance Image" width="300">
+                    <figcaption class="comment">
+                        <p>Performance metric against time.</p>
+                    </figcaption>
+                </figure>
+
             </div>
 
             <div class="page-break"></div>
+
+            <div class="detection-images section">
+                <h2>Detection Images</h2>
+
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ detectS_img }}" alt="S Band Detections" width="300">
+                    <figcaption class="comment">
+                        <p>S band detections.</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ detectX_img }}" alt="X Band Detections" width="300">
+                    <figcaption class="comment">
+                        <p>X band detections.</p>
+                    </figcaption>
+                </figure>
+
+            </div>
+
+            <div class="page-break"></div>
+
+            <div class="position-images section">
+                <h2>Position Images</h2>
+
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ E_pos_img }}" alt="East Position" width="300">
+                    <figcaption class="comment">
+                        <p>East Position</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ N_pos_img }}" alt="North Position" width="300">
+                    <figcaption class="comment">
+                        <p>North Position</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ U_pos_img }}" alt="Up Position" width="300">
+                    <figcaption class="comment">
+                        <p>Up Position</p>
+                    </figcaption>
+                </figure>
+
+            </div>
+
+            <div class="page-break"></div>
+
+            <div class="table-section">
+                <h2>Data Table</h2>
+                <div class="table-container">
+                    {{ table_data|safe }}
+                </div>
+            </div>
+
+            <div class="page-break"></div>
+
+            <div class="problems-list">
+                <p>Reported issues (as extracted from correlation reports):</p>
+                <ul>
+                    {% for problem in problems %}
+                    <li>{{ problem|linebreaksbr|safe }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            
 
             <div class="more-info">
                 <p>{{ more_info }}</p>
             </div>
 
+            <div class="page-break"></div>
+
             <div class="about">
                 <h3>About:</h3>
-                <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please comment or alert the creators of any apparent issues at the following address <a href="">email</a>.</p>
-                <p>More information on this project as well as the source code may be found at the following link <a href="">link</a>.</p>
+                <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please comment or alert the creators of any apparent issues at the following address <a href="mailto:email@example.com">email</a>.</p>
+                <p>More information on this project as well as the source code may be found at the following <a href="http://example.com">link</a>.</p>
             </div>
 
         </div>
-
-
-        </main>
+    </main>
 </body>
 </html>

@@ -15,3 +15,7 @@
 ## TODO
 - create requirements to run in a venv
 - use a proper logger
+
+## What have I done?
+- moved the report creation into a seperate file
+- 

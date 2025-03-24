@@ -1,170 +1,223 @@
-        /* Set the page size and margins for the PDF */
-        @page {
-            size: A4;
-        }
+@page {
+    size: A4;
+}
 
-        /* Page break class for forcing new pages */
-        .page-break {
-            page-break-before: always;
-            margin-top: 20px;  /* Space before a new page */
-            margin-bottom: 20px;
-        }
+.page-break {
+    page-break-before: always;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
 
-        /* Prevent body and html from exceeding the content area */
-        html, body {
-            height: auto;
-            font-family: 'Arial', sans-serif;
-            background-color: #fff;
-            color: #333;
-            line-height: 1.6;
-            font-size: 16px;
-        }
+/*** general ***/
 
-        /* Prevent table rows and images from breaking awkwardly */
-        table {
-            page-break-inside: auto;
-            border-collapse: collapse;
-            width: 100%;
-        }
+html, body {
+    height: auto;
+    font-family: 'Arial', sans-serif;
+    background-color: #fff;
+    color: #333;
+    line-height: 1.6;
+    font-size: 16px;
+}
 
-        tr, img {
-            page-break-inside: avoid;
-        }
+.report {
+    max-width: 800px;
+    margin: auto;
+    background-color: #fff;
+    padding: 20px;
+}
 
-        /****** Report Layout ******/
+/*** headings ***/
 
-        .report {
-            max-width: 800px;
-            margin: auto;
-            background-color: #fff;
-            padding: 20px;
-        }
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #d4edda;
+    padding: 20px;
+    border-bottom: 3px solid #a3d4ab;
+}
 
-        /****** Header Section ******/
+header h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #155724;
+}
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #d4edda;  /* Light green */
-            padding: 20px;
-            border-bottom: 3px solid #a3d4ab;
-        }
+.logo {
+    height: 50px;
+}
 
-        header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #155724; /* Dark green */
-        }
+h1, h2, h3 {
+    color: #154734;
+    text-align: center;
+}
 
-        /* Logo */
-        .logo {
-            height: 50px;
-        }
+h2 {
+    font-size: 20px;
+    border-bottom: 2px solid #a3d4ab;
+    padding-bottom: 5px;
+    margin-top: 30px;
+}
 
-        /****** Headings ******/
+h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+}
 
-        h1, h2, h3 {
-            color: #154734; /* Deep green */
-            text-align: center;
-        }
+/*** table stuff ***/
 
-        h2 {
-            font-size: 20px;
-            border-bottom: 2px solid #a3d4ab;
-            padding-bottom: 5px;
-            margin-top: 30px;
-        }
+.table-container {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+}
 
-        h3 {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
+table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    page-break-inside: auto;
+}
 
-        /****** Content Sections ******/
+th {
+    background-color: #f2f2f2;
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
 
-        .summary, .figures, .more-info {
-            margin-bottom: 30px;
-            padding: 10px;
-        }
+td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
 
-        /* Stats & Analysis */
-        .stats, .analysis, .detection-rates {
-            padding: 0.5rem;
-            background: #f8f9fa; /* Light grey background */
-            border-radius: 2px;
-            /* border-left: 4px solid #a3d4ab; */
-        }
+.table {
+    font-size: 12px;
+    margin-top: 20px;
+    overflow: hidden;
+}
 
-        /****** Images & Figures ******/
+tr, td, th {
+    page-break-inside: avoid;
+    font-size: 10px;
+}
 
-        .images {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 20px;
-        }
+td {
+    word-wrap: break-word;
+    padding: 2px 5px;
+}
+
+th {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+table {
+    page-break-inside: auto;
+    border-collapse: collapse;
+    width: 100%;
+
+}
+
+tr, img {
+    page-break-inside: avoid;
+}
+
+/**** problems list ****/
+
+.problems-list {
+    background-color: #f8d7da;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+.problems-list p {
+    font-weight: bold;
+}
+
+.problems-list ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+/*
+.problems-list li {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #721c24;
+}
+*/
+
+/*** sections ***/
+
+.summary, .figures, .more-info {
+    margin-bottom: 30px;
+    padding: 10px;
+}
+
+.stats, .analysis, .detection-rates {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 2px;
+}
+
+.section {
+    margin-top: 50px;
+}
+
+.about {
+    text-align: center;
+    font-size: 0.8rem;
+    padding: 20px;
+    border-top: 2px solid #a3d4ab;
+}
 
 
-        /* Image Styling */
+/*** images ***/
 
-        /* Image Caption */
-        .comment {
-            font-style: italic;
-            color: #555;
-            margin-top: 5px;
-            font-size: 0.8rem;
-        }
+.images {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+}
 
-        /* Container for figure pairs */
-        .figure-pair {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            margin: 30px;
-            page-break-inside: avoid;
-            height: auto;
-        }
+.comment {
+    font-style: italic;
+    color: #555;
+    margin-top: 5px;
+    font-size: 0.8rem;
+}
 
-        .image img {
-            width: 100%; /* Forces all images to take the full container width */
-            height: 300px; /* Fixed height for consistency */
-            object-fit: contain; /* Ensures the entire image fits without cropping */
-            border-radius: 5px;
-        }
+.image-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+}
 
-        /* Individual Figure */
-        .image {
-            text-align: center;
-            width: 350px;
-            height: auto;
-            page-break-inside: avoid;
-            border: 1px solid #ccc;
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 2px;
-        }
+.image-section .image {
+    width: 350px;
+    height: auto;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
 
-        /* Ensure at least two figures stay together */
-        .figure-pair:nth-child(odd) {
-            break-before: avoid;  /* Avoid breaking before an odd-numbered pair */
-        }
-
-        .figures h2 {
-            margin-top: 50px;  /* Space before section header */
-        }
-
-        /* Ensures each section doesn't stick to previous content */
-        .section {
-            margin-top: 50px;
-        }
-
-        .about {
-            text-align: center;
-            font-size: 0.8rem;
-            padding: 20px;
-            border-top: 2px solid #a3d4ab;
-        }
+.image img {
+    width: 100%;
+    height: 300px;
+    object-fit: contain;
+    border-radius: 5px;
+}

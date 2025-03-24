@@ -59,4 +59,4 @@ class Config:
 config = Config()
 
 print("Default config:")
-print(json.dumps(config.__dict__, config=lambda o: o.__dict__, indent=4))
+print(json.dumps(config.__dict__, default=lambda o: o.__dict__, indent=4))

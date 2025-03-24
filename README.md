@@ -7,3 +7,9 @@ Current pre-requisites:
 1. MariaDB setup with user 'auscope' (easily changed)
 2. Python3 with mysqlclient, numpy, astropy and ftplib packages
 
+
+## TODO
+
+- requirements.txt
+- example pipeline/cron
+- 
