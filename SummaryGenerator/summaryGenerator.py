@@ -12,11 +12,12 @@ from datetime import datetime, timedelta
 from pprint import pprint
 import base64
 from io import BytesIO
+import re
 
 from adjustText import adjust_text
 import textwrap
 import pandas as pd
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from program_parameters import *
 from createReport import *
@@ -52,24 +53,17 @@ class StationSummariser:
     table: Table
     total_sessions: int = 0
     total_observations: int = 0
-    wrms_analysis: str = ""
-    performance_analysis: str = ""
-    detectX_str: str = ""
-    detectS_str: str = ""
+    wrms_analysis: str = ""             # this should be value not string
+    performance_analysis: str = ""      # this should be value not string
+    detectX_str: str = ""               # this should be value not string
+    detectS_str: str = ""               # this should be value not string
     wrms_img: str = ""
     perf_img: str = ""
-    detectS_img: str = ""
-    detectX_img: str = ""
-    E_pos_img: str = ""
-    N_pos_img: str = ""
-    U_pos_img: str = ""
-    X_pos_img: str = ""
-    Y_pos_img: str = ""
-    Z_pos_img: str = ""
-    more_info: str = "Additional info..."
-    reported_issues: str = "Issues reported..."
+    detect_images: dict[str, str] = field(default_factory=dict)
+    pos_images: dict[str, str] = field(default_factory=dict)
     problems: str = ""
     table_data: str = ""
+    more_info: str = ""
 
     def __post_init__(self):
 
@@ -86,38 +80,28 @@ class StationSummariser:
 
         self.wrms_analysis, self.wrms_img = wRmsAnalysis(table)
         self.performance_analysis, self.perf_img = performanceAnalysis(table)
-        self.detectX_str, self.detectX_img = detectRate(table, 'X')
+
+        # detections
+
+        self.detectX_str, self.detect_images['X'] = detectRate(table, 'X')
         # here, like above, also, strings should be templated...
-
-
         try:
-            self.detectS_str, self.detectS_img = detectRate(table, 'S')
+            self.detectS_str, self.detect_images['S'] = detectRate(table, 'S')
         except Exception:
             self.detectS_str = "No S-band data present..."
-            fig = plt.figure()
-            plt.savefig('S_detect_rate.png', bbox_inches="tight")
-            plt.close(fig)
+            self.detect_images['S'] = ""
 
-        # for the time being lets use the u, e & n coords...
-        self.E_pos_img = posAnalysis(table, 'E')[1]
-        self.N_pos_img = posAnalysis(table, 'N')[1]
-        self.U_pos_img = posAnalysis(table, 'U')[1]
-
-        # convert date.iso to fractional form
-        start_fractional = datetime_to_fractional_year(self.start_time)
-        print(f"fractional start time: {start_fractional}")
-        stop_fractional = datetime_to_fractional_year(self.stop_time)
-        print(f"fractional stop time: {stop_fractional}")
+        # position
 
         try:
-            fX, axX, fY, axY, fZ, axZ = get_station_positions("HOBART12", start_fractional)
+            pos_fig_dict = get_station_positions("HOBART12", datetime_to_fractional_year(self.start_time))
 
-            self.X_pos_img = save_plt(fX)
-            self.Y_pos_img = save_plt(fY)
-            self.Z_pos_img = save_plt(fZ)
+            self.pos_images = {coord: save_plt(fig) for coord, fig in pos_fig_dict.items()}
 
         except ValueError as ve:
             print(ve)
+
+        # problems
 
         # the list of issues from the correlation reports
         self.problems = problemExtract(table)
@@ -381,6 +365,33 @@ def detectRate(table_input, band):
 
 
 def problemExtract(table_input):
+    """
+    no line wrapping, let the css handle this.
+    swapped replace with regex to catch the rogue ';'
+    """
+
+    table = table_input.copy()
+    problem_flag = ['pcal', 'phase', 'bad', 'lost', 'clock', 
+                    'error', ' late ', 'issue', 'sensitivity',
+                    'minus', 'removed']
+    bad_data = []
+    for i in range(0, len(table['Notes'])):
+        if table['Notes'][i] == '' or table['Notes'][i] is None:
+            bad_data.append(i)
+    table.remove_rows(bad_data)
+
+    problem_list = []
+    for j in range(0, len(table['Notes'])):
+        problem = table['ExpID'][j].upper() + ': ' + table['Notes'][j]
+        
+        problem = re.sub(r"Applied manual phase calibration;?", "", problem)
+
+        if any(element in problem.lower() for element in problem_flag): 
+            problem_list.append(problem)
+
+    return problem_list
+
+def problemExtract_v1(table_input):
 
     table = table_input.copy()
     problem_flag = ['pcal', 'phase', 'bad', 'lost', 'clock', 

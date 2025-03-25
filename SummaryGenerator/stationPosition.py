@@ -25,7 +25,12 @@ def parseFunc():
     return args
 
 def downloadFile(STATION_NAME):
-    wget.download('https://ivsopar.obspm.fr/stations/series/' + STATION_NAME + '.txt')
+    file_name = f"{STATION_NAME}.txt"
+
+    if not os.path.exists(file_name):
+        wget.download(f"https://ivsopar.obspm.fr/stations/series/{file_name}")
+
+        # careful here!
 
 def file2DF(STATION_NAME):
     dataframe_colnames = ['date', 'X', 'dX', 'Y', 'dY', 'Z', 'dZ', 'U', 'dU', 'E', 'dE', 'N', 'dN', 'station', 'vgosDB']
@@ -72,11 +77,13 @@ def get_station_positions(STATION_NAME, start_date):
     coords = ['X', 'Y', 'Z', 'U', 'E', 'N']
     downloadFile(STATION_NAME)
     pos_df = file2DF(STATION_NAME)
-    fX, axX = plotPos(pos_df, start_date, 500, 'X')
-    fY, axY = plotPos(pos_df, start_date, 500, 'Y')
-    fZ, axZ = plotPos(pos_df, start_date, 500, 'Z')
-
-    return fX, axX, fY, axY, fZ, axZ
+    
+    fig_dict = {}
+    for coord in coords:
+        fig, ax = plotPos(pos_df, start_date, 500, coord)
+        fig_dict[coord] = fig
+        
+    return fig_dict
 
 if __name__ == '__main__':
     args = parseFunc()

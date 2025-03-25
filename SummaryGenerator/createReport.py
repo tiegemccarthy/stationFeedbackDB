@@ -27,16 +27,6 @@ def create_report(summary):
     django.setup()
 
     #########################
-    # Example data as json
-    # the json should be constructed in the main function
-    # then passed into the report generator script
-    # (of which this is a proof concept)
-
-    report = asdict(summary)
-    # can eventually even remove this step i think
-    # and just get straight from the summary dataclass
-
-    #########################
     # load up the templates
 
     # Read the HTML template from file
@@ -74,6 +64,12 @@ def create_report(summary):
 
     # Render the HTML content with dynamic data
     template = Template(html_template)
+
+    context = Context({**asdict(summary), 'css': css_content})
+
+    """
+    report = asdict(summary)
+
     context = Context({
         'station': report['station'],
         'start_time': report['start_time'],
@@ -100,13 +96,14 @@ def create_report(summary):
         'table_data': report['table_data'],
         'css': css_content
     })
+    """
 
     # TODO
     # the correlator comments section
 
     html_content = template.render(context)
 
-    filename =  f"{report['station']}_summary_report.pdf"
+    filename =  f"{summary.station}_summary_report.pdf"
 
     if save_html:
         html_output_path = os.path.join(reports_dir, filename.replace('.pdf', '.html'))

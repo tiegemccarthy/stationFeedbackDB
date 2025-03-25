@@ -1,21 +1,24 @@
 @page {
     size: A4;
+    margin: 2mm 2mm;
 }
 
 .page-break {
     page-break-before: always;
     margin-top: 20px;
     margin-bottom: 20px;
+    display: block;
+    height: 10px;
 }
 
 /*** general ***/
 
 html, body {
     height: auto;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Helvetica', sans-serif;
     background-color: #fff;
     color: #333;
-    line-height: 1.6;
+    line-height: 1.2;                       /** adjust this **/
     font-size: 16px;
 }
 
@@ -26,7 +29,7 @@ html, body {
     padding: 20px;
 }
 
-/*** headings ***/
+/** title bar **/
 
 header {
     display: flex;
@@ -44,8 +47,10 @@ header h1 {
 }
 
 .logo {
-    height: 50px;
+    height: 50px;                               /** to do **/
 }
+
+/*** headings ***/
 
 h1, h2, h3 {
     color: #154734;
@@ -55,14 +60,24 @@ h1, h2, h3 {
 h2 {
     font-size: 20px;
     border-bottom: 2px solid #a3d4ab;
-    padding-bottom: 5px;
+    padding-bottom: 10px;
     margin-top: 30px;
 }
 
 h3 {
     font-size: 18px;
     font-weight: bold;
-    margin-top: 20px;
+    margin-top: 30px;
+}
+
+h3::after {
+    content: "";
+    display: block;
+    width: 33%;
+    max-width: 200px;
+    height: 2px;
+    background-color:  #a3d4ab;
+    margin: 8px auto 0;
 }
 
 /*** table stuff ***/
@@ -73,12 +88,18 @@ h3 {
     border-radius: 5px;
 }
 
-table {
+.table {
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
     margin-bottom: 20px;
     page-break-inside: auto;
+    font-size: 12px;
+    margin-top: 20px;
+    overflow: hidden;
+    page-break-inside: auto;
+    border-collapse: collapse;
+    width: 100%;
 }
 
 th {
@@ -86,45 +107,22 @@ th {
     padding: 8px;
     text-align: left;
     border: 1px solid #ddd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 td {
     padding: 8px;
     border: 1px solid #ddd;
     text-align: left;
-}
-
-.table {
-    font-size: 12px;
-    margin-top: 20px;
-    overflow: hidden;
+    word-wrap: break-word;
+    padding: 2px 5px;
 }
 
 tr, td, th {
     page-break-inside: avoid;
     font-size: 10px;
-}
-
-td {
-    word-wrap: break-word;
-    padding: 2px 5px;
-}
-
-th {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-table {
-    page-break-inside: auto;
-    border-collapse: collapse;
-    width: 100%;
-
-}
-
-tr, img {
-    page-break-inside: avoid;
 }
 
 /**** problems list ****/
@@ -141,17 +139,18 @@ tr, img {
 }
 
 .problems-list ul {
-    list-style-type: disc;
+    list-style-type: none;
     padding-left: 20px;
 }
 
-/*
 .problems-list li {
-    font-size: 14px;
+    font-size: 12px;
     margin-bottom: 10px;
     color: #721c24;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    margin-bottom: 10px;
 }
-*/
 
 /*** sections ***/
 
@@ -160,70 +159,49 @@ tr, img {
     padding: 10px;
 }
 
-.stats, .analysis, .detection-rates {
+.intro, .analysis, .detection-rates {
     padding: 0.5rem;
     background: #f8f9fa;
     border-radius: 2px;
 }
 
-.section {
-    margin-top: 50px;
-}
-
 .about {
     text-align: center;
     font-size: 0.8rem;
-    padding: 20px;
-    border-top: 2px solid #a3d4ab;
+    padding: 10px;
 }
-
 
 /*** images ***/
 
-.images {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 20px;
+.image {
+    page-break-inside: avoid;
+    margin-bottom: 2px;
 }
 
-.comment {
+figcaption {
     font-style: italic;
     color: #555;
-    margin-top: 5px;
     font-size: 0.8rem;
+    text-align: center;
+    margin-top: -10px;
+    padding-top: 0;
+    display: block;
 }
 
-.image-section {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 20px;
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-}
-
-.image-section .image {
-    width: 350px;
-    height: auto;
-    padding: 10px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
 
 .image img {
     width: 100%;
     height: 300px;
     object-fit: contain;
     border-radius: 5px;
+    page-break-inside: avoid;
+    margin-bottom: 0px;
 }
 
-figcaption {
-    text-align: center;
-    display: block;
-    margin-top: 5px;
+
+.position-images img {
+    height: 200px;
+    object-fit: contain;
 }
+
+/*** hmmmm ***/
