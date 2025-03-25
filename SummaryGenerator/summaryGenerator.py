@@ -22,6 +22,14 @@ from program_parameters import *
 from createReport import *
 from stationPosition import get_station_positions
 
+########
+# TODO #
+########
+#
+# should only add elements if they are successfully created...
+# how to get e.g. "HOBART12" from the station code 'Hb'...?
+# clean up the file structure...
+
 ###########
 # classes #
 ###########
@@ -35,16 +43,6 @@ class ImgVar:
         self.img_b64
         self.caption
 """
-
-def datetime_to_fractional_year(date):
-    dt = datetime.strptime(date, "%Y-%m-%d")
-    year = dt.year
-    start_of_year = datetime(year, 1, 1)
-    end_of_year = datetime(year + 1, 1, 1)
-    
-    fraction = (dt - start_of_year).total_seconds() / (end_of_year - start_of_year).total_seconds()
-    
-    return f"{year + fraction:.6f}"
 
 @dataclass
 class StationSummariser:
@@ -91,7 +89,6 @@ class StationSummariser:
         self.detectX_str, self.detectX_img = detectRate(table, 'X')
         # here, like above, also, strings should be templated...
 
-        ###
 
         try:
             self.detectS_str, self.detectS_img = detectRate(table, 'S')
@@ -101,18 +98,10 @@ class StationSummariser:
             plt.savefig('S_detect_rate.png', bbox_inches="tight")
             plt.close(fig)
 
-        # Store Base64-encoded images from position analysis
-
         # for the time being lets use the u, e & n coords...
         self.E_pos_img = posAnalysis(table, 'E')[1]
         self.N_pos_img = posAnalysis(table, 'N')[1]
         self.U_pos_img = posAnalysis(table, 'U')[1]
-
-        # and add the x, y & z (if they succeed)
-        # buttt...
-        # - ydays need to be converted to year.fraction
-        # - how does the function return the plots...
-        # - the plots need ot be saved as vars
 
         # convert date.iso to fractional form
         start_fractional = datetime_to_fractional_year(self.start_time)
@@ -130,21 +119,48 @@ class StationSummariser:
         except ValueError as ve:
             print(ve)
 
-
-
-        ####
-
+        # the list of issues from the correlation reports
         self.problems = problemExtract(table)
         print(f"PROBLEMS:\n{self.problems}")
 
-        #
+        # now onto the table
         columns_to_remove = ['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Performance_UsedVsRecov']
         self.table = self.table.to_pandas()
         table = self.table.drop(columns=columns_to_remove)
         self.table_data = table.to_html(classes='table table-bordered table-striped', index=False)
 
+#############
+# utilities #
+#############
 
-###
+def datetime_to_fractional_year(date):
+    dt = datetime.strptime(date, "%Y-%m-%d")
+    year = dt.year
+    start_of_year = datetime(year, 1, 1)
+    end_of_year = datetime(year + 1, 1, 1)
+    
+    fraction = (dt - start_of_year).total_seconds() / (end_of_year - start_of_year).total_seconds()
+
+    return f"{year + fraction:.6f}"
+
+
+def save_plt(plt, img_filename=""):
+    """
+    we leave the vestigal filename defaulting to none
+    & the commented out section below, as i suspect
+    we might want to reintroduce this functionality one day
+    """
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png", bbox_inches="tight")
+    buffer.seek(0)
+    #with open(img_filename, "wb") as f:
+    #    f.write(buffer.getvalue())
+    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    return img_b64
+
+
+###############
 
 def parseFunc():
     """
@@ -292,20 +308,22 @@ def posAnalysis(table_input, coord):
 
     return img_filename, img_b64
 
-#####################
-
 # THIS ONE, Doesn't save a fig? Or at least not used in report
 def usedVsRecoveredAnalysis(table_input):
     table = table_input.copy()
     # filter sessions with 0% data
     bad_data = []
+
     for i in range(0, len(table['Performance_UsedVsRecov'])):
         if table['Performance_UsedVsRecov'][i] == 0 or table['Performance_UsedVsRecov'][i] == None:
             bad_data.append(i)
+
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
+
     #print("Number of sessions: " + str(len(table['col4'])))
     #print("Median used vs recovered observations: " + str(np.median(table['col4'])))
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(time_data, table['v'], color='k', s=5)
@@ -316,8 +334,11 @@ def usedVsRecoveredAnalysis(table_input):
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
 
-# 
+
 def detectRate(table_input, band):
+    """
+    """
+
     table = table_input.copy()
     if band == 'X':
         col_name = 'Detect_Rate_X'
@@ -325,9 +346,11 @@ def detectRate(table_input, band):
         col_name = 'Detect_Rate_S'
     # filter sessions with 0% data
     bad_data = []
+
     for i in range(0, len(table[col_name])):
         if table[col_name][i] == 0 or table[col_name][i] == None:
             bad_data.append(i)
+
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
     rate_str = "Median " + band + "-band detection rate: " + str(np.median(table[col_name]))
@@ -342,6 +365,7 @@ def detectRate(table_input, band):
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
+
     # session labels
     #for i, txt in enumerate(table['col0']):
     #    ax.text(time_data[i], table[col_name][i], txt, rotation=90, verticalalignment='top', fontsize=6)
@@ -355,24 +379,9 @@ def detectRate(table_input, band):
     plt.close(fig)
     return rate_str, img_b64
 
-###
 
-def save_plt(plt, img_filename=""):
-    """
-    """
-
-    buffer = BytesIO()
-    plt.savefig(buffer, format="png", bbox_inches="tight")
-    buffer.seek(0)
-    #with open(img_filename, "wb") as f:
-    #    f.write(buffer.getvalue())
-    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    return img_b64
-
-###
-
-# this needs to be cleared up
 def problemExtract(table_input):
+
     table = table_input.copy()
     problem_flag = ['pcal', 'phase', 'bad', 'lost', 'clock', 
                     'error', ' late ', 'issue', 'sensitivity',
@@ -383,6 +392,7 @@ def problemExtract(table_input):
             bad_data.append(i)
     table.remove_rows(bad_data)
     problem_list = []
+
     for j in range(0,len(table['Notes'])):
         problem = table['ExpID'][j].upper() + ': ' + table['Notes'][j]
         problem = problem.replace("Applied manual phase calibration", "")
@@ -390,176 +400,22 @@ def problemExtract(table_input):
             #if not "manual phase calibration" in problem.lower(): # filter out the generic manual pcal notes
             problem = textwrap.wrap(problem, 160)
             problem_list.append(problem)
+
     return problem_list
 
 
-##############################
-
-"""
-def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
-
-    start_time = Time(start, format='yday', out_subfmt='date')
-    stop_time = Time(stop, format='yday', out_subfmt='date')
-
-    # extract the table data
-    result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
-
-    # now once we have this we can produce the report elements that summirise this...
-
-    # so maybe this should form the first aspect of our stationSummary object...
-
-    print("result:")
-    pprint(result)
-    print("col_names:")
-    pprint(col_names)
-
-    print(f"Number of columns in result: {len(result[0])}")
-    print(f"Number of column names: {len(col_names)}")
-
-    if len(result[0]) != len(col_names):
-        raise ValueError("Mismatched names to data columns.")
-
-    #####################
-
-    table = Table(rows=result, names=col_names)
-    #time_data = Column(table['col1'], dtype=Time)
-
-    ####
-
-    intro_str = stat_code + ' data extracted for time range: ' + start_time.iso + " through " + stop_time.iso
-    tot_sess_str = "\nTotal number of " + str(stat_code) + " sessions found in database for this time range: " + str(len(table['ExpID']))
-    tot_obs_str = "\nTotal number of " + str(stat_code) + " observations across all sessions in this time range: " + str(np.nansum(table['Total_Obs'].astype(float)).astype(int))
-    print(intro_str + tot_sess_str + tot_obs_str)
-
-    wrms_str, wrms_img = wRmsAnalysis(table)
-    
-    perf_str, perf_img = performanceAnalysis(table)
-
-    ###
-
-    detectX_str, detectX_img = detectRate(table, 'X')
-
-    try:
-        detectS_str, detectS_img = detectRate(table, 'S')
-    except:
-        # hmmmmmm
-        print("No S-band data present...")
-        fig = plt.figure()
-        plt.savefig('S_detect_rate.png', bbox_inches="tight")
-
-    
-    #ax_five,  = detectRate(result, 'S')
-    #ax_six = posAnalysis(result, 'X')
-    #ax_seven = posAnalysis(result, 'Y')
-    #ax_eight = posAnalysis(result, 'Z')
-
-    ### get position analysis images as variables
-
-    E_pos_img = posAnalysis(table, 'E')[1]
-    N_pos_img = posAnalysis(table, 'N')[1]
-    U_pos_img = posAnalysis(table, 'U')[1]
-
-    #print(f"DEBUG: E_pos_img: {E_pos_img}")
-
-    ###
-
-    # Make the PDF report
-    print('Generating PDF report...')
-
-
-    problems = problemExtract(table)
-
-    del table['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Performance_UsedVsRecov']
-    # A disgustingly hacky way to get a formatted table that I can write with reportlab, should revise to remove the need to generate a txt file.
-    ascii.write(table, 'table.tmp', format='fixed_width', overwrite=True)
-    with open('table.tmp', 'r') as f:
-        table_data = f.readlines()
-
-    ###############
-
-
-    generatePDF(output_name, start_time, stop_time, stat_code, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems, table_data)
-    
-    #####################
-
-    plt.close('all')
-    return
-"""
-#########################
-
-
-def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
-
-    start_time = Time(start, format='yday', out_subfmt='date')
-    stop_time = Time(stop, format='yday', out_subfmt='date')
-
-    #print(f"start: {start_time}")
-    #print(f"stop: {stop_time}")
-
-    # extract the table data
-    result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
-
-    # now once we have this we can produce the report elements that summirise this...
-
-    print("result:")
-    pprint(result)
-    print("col_names:")
-    pprint(col_names)
-
-    print(f"Number of columns in result: {len(result[0])}")
-    print(f"Number of column names: {len(col_names)}")
-
-    if len(result[0]) != len(col_names):
-        raise ValueError("Mismatched names to data columns.")
-
-    #####################
-    # create the info table which will be used to generate the rest of it...
-    table = Table(rows=result, names=col_names)
-
-    ####
-    stat_sum = StationSummariser(stat_code, start_time, stop_time, table)
-
-    # Print the JSON representation of the StationSummariser object
-    # print(stat_sum.to_json())
-
-    ## TODO
-
-    # Make the PDF report
-    print('Generating PDF report...')
-    """
-    del table['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Performance_UsedVsRecov']
-    # A disgustingly hacky way to get a formatted table that I can write with reportlab, should revise to remove the need to generate a txt file.
-    ascii.write(table, 'table.tmp', format='fixed_width', overwrite=True)
-    with open('table.tmp', 'r') as f:
-        table_data = f.readlines()
-
-    # still need to deal with this table in the station summary
-    """
-    ###############
-
-    create_report(stat_sum)
-
-    #generatePDF(output_name, start_time, stop_time, stat_code, tot_sess_str, tot_obs_str, wrms_str, perf_str, problems, table_data)
-    
-    #####################
-
-    plt.close('all')
-    return
-
-#
-
 def extractStationData(station_code, database_name, mjd_start, mjd_stop, search='%', like_or_notlike=0):
+
     if float(like_or_notlike) == 1:
         like = "NOT LIKE"
     else:
         like = "LIKE"
     
-    ########
+    # NOTE
     # added a remote host here so can run locally (for testing)
+    # not sure what we'll do here in the final version
     conn = mariadb.connect(config.db.host, config.db.user, config.db.pw)
 
-    ########
-    
     cursor = conn.cursor()
     query = "USE " + database_name +";"
 
@@ -576,8 +432,39 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     return result, col_names 
 
 
-#########################
-    
+def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
+
+    start_time = Time(start, format='yday', out_subfmt='date')
+    stop_time = Time(stop, format='yday', out_subfmt='date')
+
+    # create the info table which will be used to generate the rest of it...
+    result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
+    # turn this into an astropy table datastructure
+    table = Table(rows=result, names=col_names)
+    # once we have this we can produce the report elements that sumirise this...
+
+    if config.ctrl.debug:
+        print("result:")
+        pprint(result)
+        print("col_names:")
+        pprint(col_names)
+
+        print(f"Number of columns in result: {len(result[0])}")
+        print(f"Number of column names: {len(col_names)}")
+
+        if len(result[0]) != len(col_names):
+            raise ValueError("Mismatched names to data columns.")
+
+    # create the dataclass that contains the summary data
+    stat_sum = StationSummariser(stat_code, start_time, stop_time, table)
+
+    # create the PDF report
+    print('Generating PDF report...')
+    create_report(stat_sum)
+
+    return
+
+
 if __name__ == '__main__':
 
     """
@@ -587,9 +474,3 @@ if __name__ == '__main__':
     """
 
     main(config.args.station, config.db.name, config.args.start, config.args.stop, config.args.output, config.args.search, config.args.reverse_search)
-
-    """
-    NOTE:
-    - these times aren't actually mjd, this to yday format...
-
-    """
