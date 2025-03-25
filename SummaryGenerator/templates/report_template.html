@@ -27,13 +27,15 @@
                 {% if wrms_analysis or performance_analysis %}
                     <div class="analysis">
                         {% if wrms_analysis %}
-                            <h3>Wrms Analysis</h3>
+                            <h3>WRMS Analysis</h3>
+                            <p>This is a measure of the station's contribution to the weighted RMS of the delay measurement.</p>
                             <p>{{ wrms_analysis }}</p>
                         {% endif %}
                     </div>
                     <div class="analysis">
                         {% if performance_analysis %}
                             <h3>Performance Analysis</h3>
+                            <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.</p>
                             <p>{{ performance_analysis }}</p>
                         {% endif %}
                     </div>
@@ -41,6 +43,7 @@
                 {% if detectX_img or detectS_str %}
                     <div class="detection-rates">
                         <h3>Detection Rates</h3>
+                        <p>Detection rates are measured as the ratio between number of successful detections (with quality code > 6) versus the number of correlated observations.</p>
                         {% if detectX_str %}
                             <h4>X Band:</h4>
                             <p>{{ detectX_str }}</p>
@@ -129,7 +132,7 @@
                         {{ table_data|safe }}
                     </div>
                     <div class="about">
-                        <p>An online version of this table may be found at the following <a href="http://example.com">site</a>.</p>
+                        <p>An online version of this table may be found at the following <a href="">site</a>.</p>
                     </div>
                 </div>
             {% endif %}
@@ -143,7 +146,7 @@
             <div class="about">
                 <h3>About</h3>
                 <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please comment or alert the creators of any apparent issues at the following address <a href="mailto:email@example.com">email</a>.</p>
-                <p>More information on this project as well as the source code may be found at the following <a href="http://example.com">link</a>.</p>
+                <p>More information on this project as well as the source code may be found at the following <a href="">link</a>.</p>
             </div>
         </div>
     </main>

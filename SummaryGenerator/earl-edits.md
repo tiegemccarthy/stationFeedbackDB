@@ -16,6 +16,10 @@
 - create requirements to run in a venv
 - use a proper logger
 
+- extract core info from strings (and put the strings into the templates)
+- performace metric, is used vs recovered or not?
+
+
 ## What have I done?
 - moved the report creation into a seperate file
 - 
