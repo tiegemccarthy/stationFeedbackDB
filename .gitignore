@@ -6,3 +6,6 @@
 **.tmp
 **junk
 **.pdf
+**.txt
+**.test
+Pipfile

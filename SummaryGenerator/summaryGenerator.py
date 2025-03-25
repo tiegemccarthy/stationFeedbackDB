@@ -20,16 +20,31 @@ from dataclasses import dataclass
 
 from program_parameters import *
 from createReport import *
+from stationPosition import get_station_positions
 
 ###########
 # classes #
 ###########
 
+"""
+# this could be a good idea?
+# but not sure to translate into the final dict for the context
 class ImgVar:
     def __init__(self):
         self.name
         self.img_b64
         self.caption
+"""
+
+def datetime_to_fractional_year(date):
+    dt = datetime.strptime(date, "%Y-%m-%d")
+    year = dt.year
+    start_of_year = datetime(year, 1, 1)
+    end_of_year = datetime(year + 1, 1, 1)
+    
+    fraction = (dt - start_of_year).total_seconds() / (end_of_year - start_of_year).total_seconds()
+    
+    return f"{year + fraction:.6f}"
 
 @dataclass
 class StationSummariser:
@@ -50,6 +65,9 @@ class StationSummariser:
     E_pos_img: str = ""
     N_pos_img: str = ""
     U_pos_img: str = ""
+    X_pos_img: str = ""
+    Y_pos_img: str = ""
+    Z_pos_img: str = ""
     more_info: str = "Additional info..."
     reported_issues: str = "Issues reported..."
     problems: str = ""
@@ -59,6 +77,9 @@ class StationSummariser:
 
         self.start_time = self.start_time.iso
         self.stop_time = self.stop_time.iso
+
+        print(f"start: {self.start_time}")
+        print(f"stop: {self.stop_time}")
 
         table = self.table                  # fix me later
 
@@ -70,6 +91,8 @@ class StationSummariser:
         self.detectX_str, self.detectX_img = detectRate(table, 'X')
         # here, like above, also, strings should be templated...
 
+        ###
+
         try:
             self.detectS_str, self.detectS_img = detectRate(table, 'S')
         except Exception:
@@ -79,11 +102,38 @@ class StationSummariser:
             plt.close(fig)
 
         # Store Base64-encoded images from position analysis
+
+        # for the time being lets use the u, e & n coords...
         self.E_pos_img = posAnalysis(table, 'E')[1]
         self.N_pos_img = posAnalysis(table, 'N')[1]
         self.U_pos_img = posAnalysis(table, 'U')[1]
 
-        #
+        # and add the x, y & z (if they succeed)
+        # buttt...
+        # - ydays need to be converted to year.fraction
+        # - how does the function return the plots...
+        # - the plots need ot be saved as vars
+
+        # convert date.iso to fractional form
+        start_fractional = datetime_to_fractional_year(self.start_time)
+        print(f"fractional start time: {start_fractional}")
+        stop_fractional = datetime_to_fractional_year(self.stop_time)
+        print(f"fractional stop time: {stop_fractional}")
+
+        try:
+            fX, axX, fY, axY, fZ, axZ = get_station_positions("HOBART12", start_fractional)
+
+            self.X_pos_img = save_plt(fX)
+            self.Y_pos_img = save_plt(fY)
+            self.Z_pos_img = save_plt(fZ)
+
+        except ValueError as ve:
+            print(ve)
+
+
+
+        ####
+
         self.problems = problemExtract(table)
         print(f"PROBLEMS:\n{self.problems}")
 
@@ -307,7 +357,7 @@ def detectRate(table_input, band):
 
 ###
 
-def save_plt(plt, img_filename):
+def save_plt(plt, img_filename=""):
     """
     """
 
@@ -442,6 +492,9 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
 
     start_time = Time(start, format='yday', out_subfmt='date')
     stop_time = Time(stop, format='yday', out_subfmt='date')
+
+    #print(f"start: {start_time}")
+    #print(f"stop: {stop_time}")
 
     # extract the table data
     result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)

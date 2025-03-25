@@ -221,3 +221,9 @@ tr, img {
     object-fit: contain;
     border-radius: 5px;
 }
+
+figcaption {
+    text-align: center;
+    display: block;
+    margin-top: 5px;
+}

@@ -15,10 +15,9 @@
         </header>
         <main>
             <div class="summary">
-                <p>{{ station }} data extracted for time range: {{ start_time }} through {{ stop_time }}</p>
-                <p>{{ more_info }}</p>
+                <p><strong>{{ station }}</strong> data extracted for time range: <strong>{{ start_time }}</strong> through <strong>{{ stop_time }}</strong></p>
                 <div class="stats">
-                    <p>Total number of {{ station }} sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
+                    <p>Total number of <strong>{{ station }}</strong> sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
                     <p>Total number of {{ station }} observations across all sessions in this time range: <strong>{{ total_observations }}</strong></p>
                 </div>
                 <div class="analysis">
@@ -105,15 +104,29 @@
                     </figcaption>
                 </figure>
 
-            </div>
+                <!---  X, Y, Z from ...  -->
 
-            <div class="page-break"></div>
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ X_pos_img }}" alt="East Position" width="300">
+                    <figcaption class="comment">
+                        <p>X Position</p>
+                    </figcaption>
+                </figure>
 
-            <div class="table-section">
-                <h2>Data Table</h2>
-                <div class="table-container">
-                    {{ table_data|safe }}
-                </div>
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ Y_pos_img }}" alt="North Position" width="300">
+                    <figcaption class="comment">
+                        <p>Y Position</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="image">
+                    <img src="data:image/png;base64,{{ Z_pos_img }}" alt="Up Position" width="300">
+                    <figcaption class="comment">
+                        <p>Z Position</p>
+                    </figcaption>
+                </figure>
+
             </div>
 
             <div class="page-break"></div>
@@ -126,8 +139,15 @@
                     {% endfor %}
                 </ul>
             </div>
-            
-            
+
+            <div class="page-break"></div>
+
+            <div class="table-section">
+                <h2>Data Table</h2>
+                <div class="table-container">
+                    {{ table_data|safe }}
+                </div>
+            </div>
 
             <div class="more-info">
                 <p>{{ more_info }}</p>
