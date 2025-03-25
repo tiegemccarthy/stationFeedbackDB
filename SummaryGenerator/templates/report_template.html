@@ -17,23 +17,39 @@
             <div class="summary">
                 <p><strong>{{ station }}</strong> data extracted for time range: <strong>{{ start_time }}</strong> through <strong>{{ stop_time }}</strong></p>
                 <div class="stats">
-                    <p>Total number of <strong>{{ station }}</strong> sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
-                    <p>Total number of {{ station }} observations across all sessions in this time range: <strong>{{ total_observations }}</strong></p>
+                    {% if total_sessions %}
+                        <p>Total number of <strong>{{ station }}</strong> sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
+                    {% endif %}
+                    {% if total_observations %}
+                        <p>Total number of {{ station }} observations across all sessions in this time range: <strong>{{ total_observations }}</strong></p>
+                    {% endif %}
                 </div>
-                <div class="analysis">
-                    <h3>Wrms Analysis</h3>
-                    <p>{{ wrms_analysis }}</p>
-                    <h3>Performance Analysis</h3>
-                    <p>{{ performance_analysis }}</p>
-                </div>
+                {% if wrms_analysis or performance_analysis %}
+                    <div class="analysis">
+                        {% if wrms_analysis %}
+                            <h3>Wrms Analysis</h3>
+                            <p>{{ wrms_analysis }}</p>
+                        {% endif %}
+                        {% if performance_analysis %}
+                            <h3>Performance Analysis</h3>
+                            <p>{{ performance_analysis }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
 
-                <div class="detection-rates">
-                    <h3>Detection Rates</h3>
-                    <h4>X Band:</h4>
-                    <p>{{ detectX_str }}</p>
-                    <h4>S Band:</h4>
-                    <p>{{ detectS_str }}</p>
-                </div>
+                {% if detectX_img or detectS_str %}
+                    <div class="detection-rates">
+                        <h3>Detection Rates</h3>
+                        {% if detectX_str %}
+                            <h4>X Band:</h4>
+                            <p>{{ detectX_str }}</p>
+                        {% endif %}
+                        {% if detectS_str%}
+                            <h4>S Band:</h4>
+                            <p>{{ detectS_str }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
 
             <div class="page-break"></div>
@@ -41,117 +57,134 @@
             <div class="figures section">
                 <h2>Figures</h2>
                 
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ wrms_img }}" alt="Wrms Image" width="300">
-                    <figcaption class="comment">
-                        <p>W_rms</p>
-                    </figcaption>
-                </figure>
+                {% if wrms_img %}
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ wrms_img }}" alt="Wrms Image" width="300">
+                        <figcaption class="comment">
+                            <p>W_rms</p>
+                        </figcaption>
+                    </figure>
+                {% endif %}
 
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ perf_img }}" alt="Performance Image" width="300">
-                    <figcaption class="comment">
-                        <p>Performance metric against time.</p>
-                    </figcaption>
-                </figure>
+                {% if perf_img %}
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ perf_img }}" alt="Performance Image" width="300">
+                        <figcaption class="comment">
+                            <p>Performance metric against time.</p>
+                        </figcaption>
+                    </figure>
+                {% endif %}
 
-            </div>
+                <div class="page-break"></div>
 
-            <div class="page-break"></div>
+                <div class="detection-images section">
+                
+                    {% if detectS_img %}
+                        <figure class="image">
+                            <img src="data:image/png;base64,{{ detectS_img }}" alt="S Band Detections" width="300">
+                            <figcaption class="comment">
+                                <p>S band detections.</p>
+                            </figcaption>
+                        </figure>
+                    {% endif %}
 
-            <div class="detection-images section">
-                <h2>Detection Images</h2>
+                    {% if detectX_img %}
+                        <figure class="image">
+                            <img src="data:image/png;base64,{{ detectX_img }}" alt="X Band Detections" width="300">
+                            <figcaption class="comment">
+                                <p>X band detections.</p>
+                            </figcaption>
+                        </figure>
+                    {% endif %}
 
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ detectS_img }}" alt="S Band Detections" width="300">
-                    <figcaption class="comment">
-                        <p>S band detections.</p>
-                    </figcaption>
-                </figure>
-
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ detectX_img }}" alt="X Band Detections" width="300">
-                    <figcaption class="comment">
-                        <p>X band detections.</p>
-                    </figcaption>
-                </figure>
-
-            </div>
-
-            <div class="page-break"></div>
-
-            <div class="position-images section">
-                <h2>Position Images</h2>
-
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ E_pos_img }}" alt="East Position" width="300">
-                    <figcaption class="comment">
-                        <p>East Position</p>
-                    </figcaption>
-                </figure>
-
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ N_pos_img }}" alt="North Position" width="300">
-                    <figcaption class="comment">
-                        <p>North Position</p>
-                    </figcaption>
-                </figure>
-
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ U_pos_img }}" alt="Up Position" width="300">
-                    <figcaption class="comment">
-                        <p>Up Position</p>
-                    </figcaption>
-                </figure>
-
-                <!---  X, Y, Z from ...  -->
-
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ X_pos_img }}" alt="East Position" width="300">
-                    <figcaption class="comment">
-                        <p>X Position</p>
-                    </figcaption>
-                </figure>
-
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ Y_pos_img }}" alt="North Position" width="300">
-                    <figcaption class="comment">
-                        <p>Y Position</p>
-                    </figcaption>
-                </figure>
-
-                <figure class="image">
-                    <img src="data:image/png;base64,{{ Z_pos_img }}" alt="Up Position" width="300">
-                    <figcaption class="comment">
-                        <p>Z Position</p>
-                    </figcaption>
-                </figure>
-
-            </div>
-
-            <div class="page-break"></div>
-
-            <div class="problems-list">
-                <p>Reported issues (as extracted from correlation reports):</p>
-                <ul>
-                    {% for problem in problems %}
-                    <li>{{ problem|linebreaksbr|safe }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            <div class="page-break"></div>
-
-            <div class="table-section">
-                <h2>Data Table</h2>
-                <div class="table-container">
-                    {{ table_data|safe }}
                 </div>
+
+            <div class="page-break"></div>
+
+                <div class="position-images section">
+                    <h2>Position Images</h2>
+
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ E_pos_img }}" alt="East Position" width="300">
+                        <figcaption class="comment">
+                            <p>East Position</p>
+                        </figcaption>
+                    </figure>
+
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ N_pos_img }}" alt="North Position" width="300">
+                        <figcaption class="comment">
+                            <p>North Position</p>
+                        </figcaption>
+                    </figure>
+
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ U_pos_img }}" alt="Up Position" width="300">
+                        <figcaption class="comment">
+                            <p>Up Position</p>
+                        </figcaption>
+                    </figure>
+
+                    <!---  X, Y, Z from ...  -->
+
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ X_pos_img }}" alt="East Position" width="300">
+                        <figcaption class="comment">
+                            <p>X Position</p>
+                        </figcaption>
+                    </figure>
+
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ Y_pos_img }}" alt="North Position" width="300">
+                        <figcaption class="comment">
+                            <p>Y Position</p>
+                        </figcaption>
+                    </figure>
+
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ Z_pos_img }}" alt="Up Position" width="300">
+                        <figcaption class="comment">
+                            <p>Z Position</p>
+                        </figcaption>
+                    </figure>
+
+                </div>
+
             </div>
 
-            <div class="more-info">
-                <p>{{ more_info }}</p>
-            </div>
+            <div class="page-break"></div>
+
+            {% if problems %}
+                <div class="issues">
+                    <h2>Reported issues:</h2>
+                    <div class="problems-list">
+                        <p> The following are extracted from correlation reports.</p>
+                        <ul>
+                            {% for problem in problems %}
+                            <li>{{ problem|linebreaksbr|safe }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+
+
+            <div class="page-break"></div>
+
+            {% if table_data %}
+                <div class="table-section">
+                    <h2>Data Table</h2>
+                    <div class="table-container">
+                        {{ table_data|safe }}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if more_info %}
+                <div class="more-info">
+                    <p>{{ more_info }}</p>
+                </div>
+            {% endif %}
 
             <div class="page-break"></div>
 
