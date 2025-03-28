@@ -202,3 +202,10 @@ figcaption {
     height: 200px;
     object-fit: contain;
 }
+
+.glovdh-image {
+    margin-right: 8rem;
+    margin-top: 2rem;
+    padding: 2rem;
+    padding-right: 4rem;
+}

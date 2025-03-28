@@ -16,12 +16,6 @@ import argparse
 import requests
 from datetime import datetime
 
-# pandas print configuration
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', None)
-
 ################################
 
 def parse_func():
@@ -103,18 +97,18 @@ def plot_pie_chart(data, labels, title, filename):
 
     cmap = plt.get_cmap("coolwarm")   # "coolwarm", "PiYG", "cividis", "Pastel1"
 
-    plt.rcParams['font.family'] = 'Courier New'  # 'Consolas'
+    plt.rcParams['font.family'] = 'monospace'  # 'Courier New', 'Consolas'
     plt.rcParams['font.weight'] = 'bold'
 
     num_colors = len(data)
     colors = [cmap(i / num_colors) for i in range(num_colors)]
 
-    plt.figure(figsize=(9, 9))
+    fig, ax = plt.subplots(figsize=(9, 9))
 
-    wedges, texts, autotexts = plt.pie(
+    wedges, texts, autotexts = ax.pie(
         data,
         labels=labels,
-        autopct='%1.1f%%',
+        autopct='%1.2f%%',
         pctdistance=0.75,
         labeldistance=1.05,
         startangle=140,
@@ -124,24 +118,23 @@ def plot_pie_chart(data, labels, title, filename):
     )
 
     for text in texts:
-        text.set_fontsize(10)
+        text.set_fontsize(14)
         text.set_fontweight("bold")
         text.set_color("#222222")
 
     for autotext in autotexts:
-        autotext.set_fontsize(10)
+        autotext.set_fontsize(14)
         autotext.set_fontweight("bold")
         autotext.set_color("#000000")
 
-    plt.ylabel('')
-    plt.title(title)
+    ax.set_ylabel('')
+    ax.set_title(title, fontsize=18)
 
-    legend_labels = [f"{label}: {percent:.1f}%" for label, percent in zip(labels, 100 * data / sum(data))]
-    plt.legend(legend_labels, bbox_to_anchor=(0.15, 0.2), fontsize=12, frameon=True)
-    plt.tight_layout()
-    plt.savefig(filename, dpi=400)
-    plt.show()
+    legend_labels = [f"{label}: {percent:.2f}%" for label, percent in zip(labels, 100 * data / sum(data))]
+    ax.legend(legend_labels, bbox_to_anchor=(-0.2, 0.4), fontsize=14, frameon=True)
+    fig.tight_layout()
 
+    return fig
 
 def plot_sessions(args, data):
     """
@@ -163,7 +156,7 @@ def plot_sessions(args, data):
 
     session_counts = df_filtered.groupby('program')['session_id'].count()
 
-    plot_pie_chart(session_counts, session_counts.index,
+    return plot_pie_chart(session_counts, session_counts.index,
                    f'Session Distribution for {args.station} '
                    f'({datetime.strptime(args.start_time, "%Y:%j").strftime("%j.%Y")}'
                    f' to {datetime.strptime(args.stop_time, "%Y:%j").strftime("%j.%Y")})',
@@ -191,7 +184,6 @@ def plot_scans_and_observations(args, station_data, stats_data):
     start = datetime.strptime(args.start_time, "%Y:%j")
     stop = datetime.strptime(args.stop_time, "%Y:%j")
 
-
     df_filtered = df[(df['time_start'] >= start) & (df['time_start'] <= stop)]
 
     for x in ['scans', 'observations']:
@@ -203,6 +195,72 @@ def plot_scans_and_observations(args, station_data, stats_data):
                        f'({datetime.strptime(args.start_time, "%Y:%j").strftime("%j.%Y")}'
                        f' to {datetime.strptime(args.stop_time, "%Y:%j").strftime("%j.%Y")})',
                        f"{args.station.lower()}_yearly_{x}.png")
+
+################################
+
+def process_n_plot(station, start_time, stop_time, stat_type):
+
+    print(f"In process_and_plot w/ args = {station}, {start_time}, {stop_time}, {stat_type}")
+
+    start = datetime.strptime(start_time, "%Y-%m-%d")
+    stop = datetime.strptime(stop_time, "%Y-%m-%d")
+
+    station_data = get_station_data(station)
+    df = pd.DataFrame(station_data['sessions']['rows'],
+                            columns=station_data['sessions']['columns'])
+
+    if stat_type in ['scans', 'observations']:
+
+        stats_data = get_station_statistics(station)
+        stats_df = pd.DataFrame(stats_data['rows'], columns=stats_data['columns'])
+        df = pd.merge(stats_df, df, on='session_id')
+        
+    df['time_start'] = pd.to_datetime(df['time_start']).dt.tz_localize(None)
+    df_filtered = df[(df['time_start'] >= start) & (df['time_start'] <= stop)]
+
+    # sessions
+
+    if stat_type == 'sessions':
+
+        session_counts = df_filtered.groupby('program')['session_id'].count()
+
+        return plot_pie_chart(session_counts, session_counts.index,
+                    f'Session Distribution for {station} '
+                    f'({start.strftime("%j.%Y")}'
+                    f' to {stop.strftime("%j.%Y")})',
+                    f"{station.lower()}_session_piechart.png")
+    
+    elif stat_type in ['scans', 'observations']:
+
+        program_counts = df_filtered.groupby('program')[stat_type].sum()
+
+        return plot_pie_chart(program_counts, program_counts.index,
+                       f'{stat_type.capitalize()} Distribution for {station} '
+                       f'({start.strftime("%j.%Y")}'
+                       f' to {stop.strftime("%j.%Y")})',
+                       f"{station.lower()}_yearly_{stat_type}.png")
+
+def get_glovdh_charts(station, start, stop):
+    """
+    where
+    :param station: str
+    :param start_time: datetime
+    :param stop_time: datetime
+
+    :return: dict of plots
+    """
+
+    print(f"Getting (& creating) Glovdh Api charts for {station} between {start} - {stop}")
+
+    stat_info = ['sessions', 'scans', 'observations']
+
+    fig_dict = {}
+    for stat_type in stat_info:
+        fig = process_n_plot(station, start, stop, stat_type)
+        fig_dict[stat_type] = fig
+
+    print(f"glovdh fig dict: {fig_dict}")
+    return fig_dict
 
 
 ################################
@@ -220,7 +278,6 @@ def main(args):
 
     stats_data = get_station_statistics(args.station)
     station_data = get_station_data(args.station)
-
     plot_sessions(args, station_data)
     plot_scans_and_observations(args, station_data, stats_data)
 

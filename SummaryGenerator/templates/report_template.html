@@ -109,6 +109,26 @@
                         {% endfor %}
                     </div>
                 {% endif %}
+                <div class="page-break"></div>
+                {% if glovdh_images %}
+                    <div class="glovdh-images section">
+                        <h3>GLOVDH API Schedule Breakdown</h3>
+                        <p>The following figures are produced using the API of <a href="https://glovdh.ethz.ch/general">link</a>https://glovdh.ethz.ch/</p>
+                        {% for stat_type, img in glovdh_images.items %}
+                            {% if img %}
+                                {% if forloop.counter0|divisibleby:3 and not forloop.first %}
+                                    <div class="page-break"></div>
+                                {% endif %}
+                                <figure class="image glovdh-image">
+                                    <img src="data:image/png;base64,{{ img }}" alt="{{ stat_type }} ..." width="300">
+                                    <figcaption>
+                                        <p>{{ stat_type }} ...</p>
+                                    </figcaption>
+                                </figure>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
             <div class="page-break"></div>
             {% if problems %}

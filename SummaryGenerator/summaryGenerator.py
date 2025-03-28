@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from program_parameters import *
 from createReport import *
 from stationPosition import get_station_positions
+from scheduleStatistics import get_glovdh_charts
 
 ########
 # TODO #
@@ -61,6 +62,7 @@ class StationSummariser:
     perf_img: str = ""
     detect_images: dict[str, str] = field(default_factory=dict)
     pos_images: dict[str, str] = field(default_factory=dict)
+    glovdh_images: dict[str, str] = field(default_factory=dict)
     problems: str = ""
     table_data: str = ""
     more_info: str = ""
@@ -95,11 +97,18 @@ class StationSummariser:
 
         try:
             pos_fig_dict = get_station_positions("HOBART12", datetime_to_fractional_year(self.start_time))
-
-            self.pos_images = {coord: save_plt(fig) for coord, fig in pos_fig_dict.items()}
-
+            self.pos_images = {coord: save_plt(fig)
+                    for coord, fig in pos_fig_dict.items()}
         except ValueError as ve:
             print(ve)
+
+        try:
+            glovdh_dict =  get_glovdh_charts(self.station, self.start_time,
+                                        self.stop_time)
+            self.glovdh_images = {stat_type: save_plt(fig) 
+                    for stat_type, fig in glovdh_dict.items()}
+        except Error as e:
+            print(e)
 
         # problems
 
