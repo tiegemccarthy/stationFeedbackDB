@@ -10,11 +10,18 @@ import numpy as np
 # https://scc.ms.unimelb.edu.au/resources/data-visualisation-and-exploration/no_pie-charts
 #
 
+# TODO
+#   - remove intensives
+#   - filter by VGOS
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 import requests
 from datetime import datetime
+import pytz
+import os
+import time
 
 ################################
 
@@ -240,7 +247,7 @@ def process_n_plot(station, start_time, stop_time, stat_type):
                        f' to {stop.strftime("%j.%Y")})',
                        f"{station.lower()}_yearly_{stat_type}.png")
 
-def get_glovdh_charts(station, start, stop):
+def get_glovdh_piecharts(station, start, stop):
     """
     where
     :param station: str
@@ -252,7 +259,8 @@ def get_glovdh_charts(station, start, stop):
 
     print(f"Getting (& creating) Glovdh Api charts for {station} between {start} - {stop}")
 
-    stat_info = ['sessions', 'scans', 'observations']
+    #stat_info = ['sessions', 'scans', 'observations']
+    stat_info = ['sessions', 'scans']
 
     fig_dict = {}
     for stat_type in stat_info:
@@ -261,6 +269,152 @@ def get_glovdh_charts(station, start, stop):
 
     print(f"glovdh fig dict: {fig_dict}")
     return fig_dict
+
+################################
+
+def getAllStations(api_url):
+    # get all stations in api's db
+
+    resp = requests.get(api_url + 'list-stations')
+    resp.raise_for_status()
+    data = resp.json()
+    df = pd.DataFrame(data['rows'], columns=data['columns'])
+    return df['code'].to_list()
+
+
+def get_glovdh_barchart(station, time_start, time_stop):
+
+    BASEURL = 'https://glovdh.ethz.ch/api/v1/'
+
+    CACHE_FILE = "glovdh_api_cached_sessions.csv"
+    cache_age_threshold = 7 # days
+
+    # change format & introduce timezone info
+    start = datetime.strptime(time_start, "%Y-%m-%d").replace(tzinfo=pytz.UTC)
+    stop = datetime.strptime(time_stop, "%Y-%m-%d").replace(tzinfo=pytz.UTC)
+
+    print(f"Time range: start = {start}, stop = {stop}, formatted.")
+
+    ###
+
+    if os.path.exists(CACHE_FILE) and (time.time() - os.path.getmtime(CACHE_FILE)) < cache_age_threshold * 24 * 60 * 60:
+        print("Loading cached data...")
+        stat_sessions_df = pd.read_csv(CACHE_FILE)
+    else:
+        print("Cache is missing or outdated. Dowloading...")
+
+        stations = getAllStations(BASEURL)
+
+        stat_sessions = []
+
+        for station in stations:
+
+            resp = requests.get(f'{BASEURL}station/{station}')
+            resp.raise_for_status()
+            data = resp.json()
+
+            df = pd.DataFrame(data['sessions']['rows'], columns=data['sessions']['columns'])
+
+            ###
+            # convert the df col to a datetime (includes tz info.)
+            df['time_start'] = pd.to_datetime(df['time_start'])
+            if df['time_start'].dt.tz is None:
+                df['time_start'] = df['time_start'].dt.tz_localize('UTC')
+            else:
+                df['time_start'] = df['time_start'].dt.tz_convert('UTC')
+
+            ###
+
+            in_time_df = df[(df['time_start'] >= start) & (df['time_start'] <= stop)]
+            total_sessions = in_time_df.shape[0]
+
+            print(f"Total number of sessions scheduled for {station} = {total_sessions}.")
+
+            if total_sessions > 0:
+                stat_sessions.append([station, total_sessions])
+        
+        print(f"Stations and sessions (if non zero) = {stat_sessions}")
+
+        stat_sessions_df = pd.DataFrame(stat_sessions, columns=['station', 'total_sessions'])
+        stat_sessions_df.to_csv(CACHE_FILE, index=False)
+        print(f"Data cached to {CACHE_FILE}")
+
+    print(stat_sessions_df)
+
+    average_sessions = np.mean(stat_sessions_df['total_sessions'])
+    print(f"Average number of sessions: {average_sessions:.2f}")
+
+    top_station_num = 30
+    top_stations = stat_sessions_df.sort_values(by='total_sessions', ascending=False).head(top_station_num)
+    print(f"Top 30 stations by number of sessions:\n{top_stations}")
+
+    #####
+
+    if station not in stat_sessions_df['station'].values:
+        print(f"Warning: {station} not found in station data.")
+        return None
+    elif station not in top_stations['station'].values:
+        print(f"Warning: {station} not found in top {top_station_num} stations.")
+        return None
+    else:
+        sorted_df = top_stations.sort_values(by='total_sessions', ascending=False)
+
+    title = f"Scheduled Sessions for {station} within Top {top_station_num} Stations"
+
+    return plot_bar_char(sorted_df, station, start, stop, title)
+
+def plot_bar_char(df, station, start, stop, title):
+
+    #plt.figure(figsize=(12, 6))
+
+    plt.rcParams['font.family'] = 'monospace'  # 'Courier New', 'Consolas'
+    plt.rcParams['font.weight'] = 'bold'
+    
+    fig, ax = plt.subplots(figsize=(12,8))
+    
+    bars = plt.bar(df['station'], df['total_sessions'], color='gray')
+
+    # now colour and annotate the station's bar:
+    idx = df[df['station'] == station].index[0]
+
+    bar_position = df.index.get_loc(idx)
+    bars[bar_position].set_color('red')
+
+    our_station_sessions = df.loc[idx, 'total_sessions']
+
+    ax.text(
+        bar_position,
+        our_station_sessions + 2,
+        f"{our_station_sessions}",
+        ha='center',
+        fontsize=12,
+        fontweight='bold',
+        color='red'
+    )
+
+    ###
+
+    ax.set_xlabel("Station", fontsize=14, fontweight="bold")
+
+    ax.set_ylabel(f'Sessions between {start.strftime("%Y.%j")} and {stop.strftime("%Y.%j")}', fontsize=14, fontweight="bold")
+
+    ax.set_title(title, fontsize=18)
+
+    ax.set_xticks(range(len(df)))
+    ax.set_xticklabels(
+        [label if label == station else '' for label in df['station']],
+        fontsize=12, fontweight="bold"
+    )
+
+    fig.tight_layout()
+
+    return fig
+
+
+################################
+# get the station comparison bar graph...
+
+# will need the cache, as it useable for all sites, and will significantly decrease the load time.
 
 
 ################################

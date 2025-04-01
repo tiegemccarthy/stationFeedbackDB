@@ -10,8 +10,6 @@ import argparse
 from reportlab.pdfgen.canvas import Canvas
 from datetime import datetime, timedelta
 from pprint import pprint
-import base64
-from io import BytesIO
 import re
 
 from adjustText import adjust_text
@@ -22,7 +20,8 @@ from dataclasses import dataclass, field
 from program_parameters import *
 from createReport import *
 from stationPosition import get_station_positions
-from scheduleStatistics import get_glovdh_charts
+from scheduleStatistics import get_glovdh_piecharts, get_glovdh_barchart
+from utilities import datetime_to_fractional_year, save_plt, stationParse
 
 ########
 # TODO #
@@ -30,25 +29,13 @@ from scheduleStatistics import get_glovdh_charts
 #
 # should only add elements if they are successfully created...
 # how to get e.g. "HOBART12" from the station code 'Hb'...?
+# also, add stop time to get station positions
 # clean up the file structure...
-
-###########
-# classes #
-###########
-
-"""
-# this could be a good idea?
-# but not sure to translate into the final dict for the context
-class ImgVar:
-    def __init__(self):
-        self.name
-        self.img_b64
-        self.caption
-"""
 
 @dataclass
 class StationSummariser:
     station: str
+    vgos: bool
     start_time: datetime
     stop_time: datetime
     table: Table
@@ -84,6 +71,7 @@ class StationSummariser:
         self.performance_analysis, self.perf_img = performanceAnalysis(table)
 
         # detections
+        ############
 
         self.detectX_str, self.detect_images['X'] = detectRate(table, 'X')
         # here, like above, also, strings should be templated...
@@ -93,24 +81,48 @@ class StationSummariser:
             self.detectS_str = "No S-band data present..."
             self.detect_images['S'] = ""
 
-        # position
+        # station position
+        ##################
+        
+        # handle the fractional time format expected of this:
+
+        start_fractional = datetime_to_fractional_year(self.start_time)
+        stop_fractional = datetime_to_fractional_year(self.stop_time)
+        print("DEBUG")
+        print(f"{self.start_time} as fraction is {start_fractional}")
+        print(f"{self.stop_time} as fraction is {stop_fractional}")
+
+        # create a dictionary associating the station code names with the full names
+        # we have been using the codename but this function requires the full name
+
+        station_dict = dict(zip(*stationParse('../stations-reports.config')))
+        station_name = station_dict.get(self.station)
 
         try:
-            pos_fig_dict = get_station_positions("HOBART12", datetime_to_fractional_year(self.start_time))
+            pos_fig_dict = get_station_positions(station_name, start_fractional, stop_fractional)
             self.pos_images = {coord: save_plt(fig)
                     for coord, fig in pos_fig_dict.items()}
         except ValueError as ve:
             print(ve)
 
+        # station schedules
+        ###################
+
         try:
-            glovdh_dict =  get_glovdh_charts(self.station, self.start_time,
+            glovdh_dict =  get_glovdh_piecharts(self.station, self.start_time,
                                         self.stop_time)
             self.glovdh_images = {stat_type: save_plt(fig) 
                     for stat_type, fig in glovdh_dict.items()}
-        except Error as e:
+        except Exception as e:
             print(e)
 
-        # problems
+        try:
+            self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(self.station, self.start_time, self.stop_time))})
+        except Exception as e:
+            print(e)
+
+        # station problems
+        ##################
 
         # the list of issues from the correlation reports
         self.problems = problemExtract(table)
@@ -121,36 +133,6 @@ class StationSummariser:
         self.table = self.table.to_pandas()
         table = self.table.drop(columns=columns_to_remove)
         self.table_data = table.to_html(classes='table table-bordered table-striped', index=False)
-
-#############
-# utilities #
-#############
-
-def datetime_to_fractional_year(date):
-    dt = datetime.strptime(date, "%Y-%m-%d")
-    year = dt.year
-    start_of_year = datetime(year, 1, 1)
-    end_of_year = datetime(year + 1, 1, 1)
-    
-    fraction = (dt - start_of_year).total_seconds() / (end_of_year - start_of_year).total_seconds()
-
-    return f"{year + fraction:.6f}"
-
-
-def save_plt(plt, img_filename=""):
-    """
-    we leave the vestigal filename defaulting to none
-    & the commented out section below, as i suspect
-    we might want to reintroduce this functionality one day
-    """
-
-    buffer = BytesIO()
-    plt.savefig(buffer, format="png", bbox_inches="tight")
-    buffer.seek(0)
-    #with open(img_filename, "wb") as f:
-    #    f.write(buffer.getvalue())
-    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    return img_b64
 
 
 ###############
@@ -184,6 +166,10 @@ def parseFunc():
     parser.add_argument('reverse_search',
                         default=0,
                         help="""Change SQL search string clause from 'LIKE' to 'NOT LIKE.'""")
+    # if reverse_search = 0 then  VGOS only
+    # else if reverse_search =1 then LEGACY (R....)
+    # Isn't this backwards given that the sql_search = v%
+    #
     args = parser.parse_args()
     return args
 
@@ -198,7 +184,8 @@ def wRmsAnalysis(table_input):
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
     #print("Number of sessions: " + str(len(table['col5'])))
-    wrms_med_str = "Median station W.RMS over period: " + str(np.median(table['W_RMS_del'])) + " ps"
+    #wrms_med_str = "Median station W.RMS over period: " + str(np.median(table['W_RMS_del'])) + " ps"
+    wrms_med_str = str(np.median(table['W_RMS_del']))
     print(wrms_med_str)
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -213,6 +200,7 @@ def wRmsAnalysis(table_input):
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
+
     #for i, label in enumerate(table['ExpID']):
     #    ax.annotate(label, (time_data[i], table['W_RMS_del'][i]), alpha=0.6, fontsize=7)
     #ax = [ax.annotate(label, (time_data[i], table['W_RMS_del'][i]), alpha=0.6, fontsize=7) for i, label in enumerate(table['ExpID'])]
@@ -236,7 +224,10 @@ def performanceAnalysis(table_input):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
-    perf_str = "Median station 'Performance' (used/scheduled) over period: " + str(np.median(table['Performance']))
+
+    #perf_str = "Median station 'Performance' (used/scheduled) over period: " + str(np.median(table['Performance']))
+
+    perf_str = str(np.median(table['Performance']))
     print(perf_str)
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -346,8 +337,9 @@ def detectRate(table_input, band):
 
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
-    rate_str = "Median " + band + "-band detection rate: " + str(np.median(table[col_name]))
-    print(rate_str)
+    #rate_str = "Median " + band + "-band detection rate: " + str(np.median(table[col_name]))
+    rate_str = str(np.median(table[col_name]))
+    print(band, rate_str)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(time_data, table[col_name], color='k', s=5)
@@ -400,6 +392,7 @@ def problemExtract(table_input):
 
     return problem_list
 
+
 def problemExtract_v1(table_input):
 
     table = table_input.copy()
@@ -434,7 +427,9 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     # NOTE
     # added a remote host here so can run locally (for testing)
     # not sure what we'll do here in the final version
-    conn = mariadb.connect(config.db.host, config.db.user, config.db.pw)
+    #conn = mariadb.connect(config.db.host, config.db.user, config.db.pw)
+
+    conn = = mariadb.connect(cuser='auscope', passwd='password')
 
     cursor = conn.cursor()
     query = "USE " + database_name +";"
@@ -457,6 +452,13 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
     start_time = Time(start, format='yday', out_subfmt='date')
     stop_time = Time(stop, format='yday', out_subfmt='date')
 
+    vgos = None
+
+    if search == 'v%' and reverse_search == '0':
+        vgos = True
+    elif search == 'v%' and reverse_search == '1':
+        vgos = False
+
     # create the info table which will be used to generate the rest of it...
     result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
     # turn this into an astropy table datastructure
@@ -476,7 +478,7 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
             raise ValueError("Mismatched names to data columns.")
 
     # create the dataclass that contains the summary data
-    stat_sum = StationSummariser(stat_code, start_time, stop_time, table)
+    stat_sum = StationSummariser(stat_code, vgos, start_time, stop_time, table)
 
     # create the PDF report
     print('Generating PDF report...')
@@ -487,10 +489,10 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
 
 if __name__ == '__main__':
 
-    """
     # original:
+
     args = parseFunc()
     main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
-    """
 
-    main(config.args.station, config.db.name, config.args.start, config.args.stop, config.args.output, config.args.search, config.args.reverse_search)
+    # test
+    # main(config.args.station, config.db.name, config.args.start, config.args.stop, config.args.output, config.args.search, config.args.reverse_search)

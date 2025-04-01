@@ -9,7 +9,11 @@ import django
 from django.template import Template, Context
 from django.conf import settings
 
+from datetime import datetime
+
 from dataclasses import asdict
+
+from utilities import load_png
 
 # control
 save_html = True
@@ -31,6 +35,7 @@ def create_report(summary):
 
     # Read the HTML template from file
     template_path = os.path.join(os.path.dirname(__file__), 'templates/report_template.html')
+
     with open(template_path, 'r') as file:
         html_template = file.read()
 
@@ -47,7 +52,7 @@ def create_report(summary):
         await browser.close()
 
     #########################
-    # preliminary check of output directory
+    # Preliminaries:
 
     # Ensure the reports directory exists
     reports_dir = os.path.join(os.path.dirname(__file__), 'reports')
@@ -56,7 +61,7 @@ def create_report(summary):
     #########################
     # Generate the actual reports
 
-    # load the css
+    # Load the css
     css_path = os.path.join(os.path.dirname(__file__), 'templates', 'styles.css')
 
     with open(css_path, 'r') as css_file:
@@ -65,41 +70,13 @@ def create_report(summary):
     # Render the HTML content with dynamic data
     template = Template(html_template)
 
-    context = Context({**asdict(summary), 'css': css_content})
+    # Load in the ivs logo png
+    ivs_logo = load_png('resources/ivs_logo_2019_square_final.png')
 
-    """
-    report = asdict(summary)
+    # Stamp the time of the report generation
+    ts = datetime.utcnow().strftime("%Y-%j")
 
-    context = Context({
-        'station': report['station'],
-        'start_time': report['start_time'],
-        'stop_time': report['stop_time'],
-        'total_sessions': report['total_sessions'],
-        'total_observations': report['total_observations'],
-        'wrms_analysis': report['wrms_analysis'],
-        'performance_analysis': report['performance_analysis'],
-        'detectX_str': report['detectX_str'],
-        'detectS_str': report['detectS_str'],
-        'wrms_img': report['wrms_img'],
-        'perf_img': report['perf_img'],
-        'detectX_img': report['detectX_img'],
-        'detectS_img': report['detectS_img'],
-        'E_pos_img': report['E_pos_img'],
-        'N_pos_img': report['N_pos_img'],
-        'U_pos_img': report['U_pos_img'],
-        'X_pos_img': report['X_pos_img'],
-        'Y_pos_img': report['Y_pos_img'],
-        'Z_pos_img': report['Z_pos_img'],
-        'more_info': report['more_info'],
-        'reported_issues': report['reported_issues'],
-        'problems': report['problems'],
-        'table_data': report['table_data'],
-        'css': css_content
-    })
-    """
-
-    # TODO
-    # the correlator comments section
+    context = Context({**asdict(summary), 'ivs_logo': ivs_logo, 'report_ts': ts, 'css': css_content})
 
     html_content = template.render(context)
 

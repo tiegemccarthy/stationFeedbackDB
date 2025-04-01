@@ -11,11 +11,15 @@
 <body>
     <div class="report">
         <header>
-            <h1>{{ station }} Data</h1>
+            <div class="heading">
+                <h1>{{ station }} Summary Report</h1>
+                <h4><samp>{{ start_time }}</samp> -> <samp>{{ stop_time }}</samp></h4>
+                <p>Report generated: <samp>{{ report_ts }}</samp></p>
+            </div>
+            <div class="logo"> <img src="data:image/png;base64,{{ ivs_logo }}" alt="IVS logo" width="100"></div>
         </header>
         <main>
             <div class="summary">
-                <p><strong>{{ station }}</strong> data extracted for time range: <strong>{{ start_time }}</strong> through <strong>{{ stop_time }}</strong></p>
                 <div class="intro">
                     {% if total_sessions %}
                         <p>Total number of <strong>{{ station }}</strong> sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
@@ -29,14 +33,14 @@
                         {% if wrms_analysis %}
                             <h3>WRMS Analysis</h3>
                             <p>This is a measure of the station's contribution to the weighted RMS of the delay measurement.</p>
-                            <p>{{ wrms_analysis }}</p>
+                            <p>Median station W.RMS over period: {{ wrms_analysis }} ps</p>
                         {% endif %}
                     </div>
                     <div class="analysis">
                         {% if performance_analysis %}
                             <h3>Performance Analysis</h3>
                             <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.</p>
-                            <p>{{ performance_analysis }}</p>
+                            <p>Median station 'Performance' (used/scheduled) over period: {{ performance_analysis }}</p>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -46,11 +50,11 @@
                         <p>Detection rates are measured as the ratio between number of successful detections (with quality code > 6) versus the number of correlated observations.</p>
                         {% if detectX_str %}
                             <h4>X Band:</h4>
-                            <p>{{ detectX_str }}</p>
+                            <p>Median X-band detection rate: {{ detectX_str }}</p>
                         {% endif %}
                         {% if detectS_str%}
                             <h4>S Band:</h4>
-                            <p>{{ detectS_str }}</p>
+                            <p>Median S-band detection rate: {{ detectS_str }}</p>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -112,8 +116,8 @@
                 <div class="page-break"></div>
                 {% if glovdh_images %}
                     <div class="glovdh-images section">
-                        <h3>GLOVDH API Schedule Breakdown</h3>
-                        <p>The following figures are produced using the API of <a href="https://glovdh.ethz.ch/general">link</a>https://glovdh.ethz.ch/</p>
+                        <h3>Schedule Breakdown</h3>
+                        <p>The following figures are produced using the API of <a href="https://glovdh.ethz.ch/general">https://glovdh.ethz.ch/</a></p>
                         {% for stat_type, img in glovdh_images.items %}
                             {% if img %}
                                 {% if forloop.counter0|divisibleby:3 and not forloop.first %}
@@ -122,7 +126,7 @@
                                 <figure class="image glovdh-image">
                                     <img src="data:image/png;base64,{{ img }}" alt="{{ stat_type }} ..." width="300">
                                     <figcaption>
-                                        <p>{{ stat_type }} ...</p>
+                                        <p></p>
                                     </figcaption>
                                 </figure>
                             {% endif %}
@@ -166,6 +170,8 @@
             <div class="about">
                 <h3>About</h3>
                 <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please comment or alert the creators of any apparent issues at the following address <a href="mailto:email@example.com">email</a>.</p>
+                <p>The schedule breakdown section presents data taken from the API developed and offered by ETH Zurich.</p>
+                <p>This report was developed by the AuScope VLBI project, which is managed by the University of Tasmania, contracted through Geoscience Australia.</p>
                 <p>More information on this project as well as the source code may be found at the following <a href="">link</a>.</p>
             </div>
         </div>

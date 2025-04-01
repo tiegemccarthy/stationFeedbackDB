@@ -4,7 +4,7 @@ from astropy.time import Time
 from datetime import datetime, timedelta
 import sys
 from astropy.io import ascii
-import summaryGenerator as sg
+from SummaryGenerator import summaryGenerator
 import os
 
 dirname = os.path.dirname(__file__)
@@ -35,11 +35,11 @@ def main(database_name):
         output_name_legacy = dirname + '/reports/' + station + '_legacy_' + today_date.strftime("%Y%m%d") + '.pdf'
         output_name_vgos = dirname + '/reports/' + station + '_VGOS_' + today_date.strftime("%Y%m%d") + '.pdf'
         try:
-            sg.main(station, database_name, start_date, end_date, output_name_legacy, "v%", 1)
+            summaryGenerator.main(station, database_name, start_date, end_date, output_name_legacy, "v%", 1)
         except:
             print("Unable to generate legacy performance report for " + str(station) + ". Check whether sufficient data is available.")
         try:
-            sg.main(station, database_name, start_date, end_date, output_name_vgos, "v%", 0)
+            summaryGenerator.main(station, database_name, start_date, end_date, output_name_vgos, "v%", 0)
         except:
             print("Unable to generate VGOS performance report for " + str(station) + ". Check whether sufficient data is available.")
 

@@ -7,9 +7,27 @@ Current pre-requisites:
 1. MariaDB setup with user 'auscope' (easily changed)
 2. Python3 with mysqlclient, numpy, astropy and ftplib packages
 
+## Pipeline:
+
+Example crontab:
+```
+# m h  dom mon dow   command
+0 5 * * 1 ~/software/stationFeedbackDB/databaseCore.py master2024.txt auscopeDB
+0 7 * * 1 ~/software/stationFeedbackDB/databaseCore.py master2025.txt auscopeDB
+0 9 * * 1 ~/software/stationFeedbackDB/updateReports.py auscopeDB
+```
+
+### databaseCore.py
+
+Create or fill the database (hardcoded parameters) with entries processed from the
+
+### updateReports.py
+
+
 
 ## TODO
 
-- requirements.txt
-- example pipeline/cron
-- 
+- requirements.txt, test in a virtual environment
+- regarding the pipeline/cron:
+    - look into looping through past master schedules as required
+    - i would put the command line args as parameters in a config file...
