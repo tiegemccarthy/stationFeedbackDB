@@ -118,6 +118,7 @@
                     <div class="glovdh-images section">
                         <h3>Schedule Breakdown</h3>
                         <p>The following figures are produced using the API of <a href="https://glovdh.ethz.ch/general">https://glovdh.ethz.ch/</a></p>
+                        <p>Note that the following data set shows the scheduled participation of a station, correlated or not.</p>
                         {% for stat_type, img in glovdh_images.items %}
                             {% if img %}
                                 {% if forloop.counter0|divisibleby:3 and not forloop.first %}

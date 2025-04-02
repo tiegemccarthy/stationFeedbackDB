@@ -205,7 +205,7 @@ def plot_scans_and_observations(args, station_data, stats_data):
 
 ################################
 
-def process_n_plot(station, start_time, stop_time, stat_type):
+def process_n_plot(station, start_time, stop_time, stat_type, is_vgos):
 
     print(f"In process_and_plot w/ args = {station}, {start_time}, {stop_time}, {stat_type}")
 
@@ -224,6 +224,9 @@ def process_n_plot(station, start_time, stop_time, stat_type):
         
     df['time_start'] = pd.to_datetime(df['time_start']).dt.tz_localize(None)
     df_filtered = df[(df['time_start'] >= start) & (df['time_start'] <= stop)]
+
+    # this removes everything:
+    # df_filtered = filter_by_session_type(df_filtered, is_vgos)
 
     # sessions
 
@@ -247,7 +250,7 @@ def process_n_plot(station, start_time, stop_time, stat_type):
                        f' to {stop.strftime("%j.%Y")})',
                        f"{station.lower()}_yearly_{stat_type}.png")
 
-def get_glovdh_piecharts(station, start, stop):
+def get_glovdh_piecharts(station, start, stop, is_vgos):
     """
     where
     :param station: str
@@ -264,7 +267,7 @@ def get_glovdh_piecharts(station, start, stop):
 
     fig_dict = {}
     for stat_type in stat_info:
-        fig = process_n_plot(station, start, stop, stat_type)
+        fig = process_n_plot(station, start, stop, stat_type, is_vgos)
         fig_dict[stat_type] = fig
 
     print(f"glovdh fig dict: {fig_dict}")
@@ -281,8 +284,25 @@ def getAllStations(api_url):
     df = pd.DataFrame(data['rows'], columns=data['columns'])
     return df['code'].to_list()
 
+def filter_by_session_type(df, is_vgos):
+    """
+    filter out sessions we are not interested in.
+    Seems not to work for the picharts
+    Assumes dataframe has label 'session'
+    """
 
-def get_glovdh_barchart(station, time_start, time_stop):
+    # either keep or delete the vgos sessions
+    if is_vgos:
+        df = df[df['session'].str.startswith('v', na=False)]
+    else:
+        df = df[~df['session'].str.startswith('v', na=False)]
+
+    # remove the intensives
+    df = df[~df['session'].str.contains('int', case=False, na=False)]
+
+    return df
+
+def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
 
     BASEURL = 'https://glovdh.ethz.ch/api/v1/'
 
@@ -322,8 +342,8 @@ def get_glovdh_barchart(station, time_start, time_stop):
                 df['time_start'] = df['time_start'].dt.tz_localize('UTC')
             else:
                 df['time_start'] = df['time_start'].dt.tz_convert('UTC')
-
-            ###
+            
+            df = filter_by_session_type(df, is_vgos)
 
             in_time_df = df[(df['time_start'] >= start) & (df['time_start'] <= stop)]
             total_sessions = in_time_df.shape[0]

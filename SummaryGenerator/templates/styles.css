@@ -130,6 +130,7 @@ td {
     text-align: left;
     word-wrap: break-word;
     padding: 2px 5px;
+    font-size: 10px;
 }
 
 tr, td, th {

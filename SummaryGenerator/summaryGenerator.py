@@ -110,14 +110,15 @@ class StationSummariser:
 
         try:
             glovdh_dict =  get_glovdh_piecharts(self.station, self.start_time,
-                                        self.stop_time)
+                                        self.stop_time, self.vgos)
             self.glovdh_images = {stat_type: save_plt(fig) 
                     for stat_type, fig in glovdh_dict.items()}
         except Exception as e:
             print(e)
 
+        # tack on the barchart comparising the scheduled session counts
         try:
-            self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(self.station, self.start_time, self.stop_time))})
+            self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(self.station, self.start_time, self.stop_time, self.vgos))})
         except Exception as e:
             print(e)
 
@@ -427,9 +428,12 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     # NOTE
     # added a remote host here so can run locally (for testing)
     # not sure what we'll do here in the final version
+
+    # test
     #conn = mariadb.connect(config.db.host, config.db.user, config.db.pw)
 
-    conn = = mariadb.connect(cuser='auscope', passwd='password')
+    # deploy, running on same machine hosting the database
+    conn = mariadb.connect(cuser='auscope', passwd='password')
 
     cursor = conn.cursor()
     query = "USE " + database_name +";"
@@ -491,8 +495,11 @@ if __name__ == '__main__':
 
     # original:
 
+    # deploy, will be called by updateReports
     args = parseFunc()
     main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
 
+    """
     # test
-    # main(config.args.station, config.db.name, config.args.start, config.args.stop, config.args.output, config.args.search, config.args.reverse_search)
+    main(config.args.station, config.db.name, config.args.start, config.args.stop, config.args.output, config.args.search, config.args.reverse_search)
+    """
