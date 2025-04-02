@@ -102,11 +102,11 @@ class StationSummariser:
 
         try:
             pos_fig_dict = get_station_positions(station_name, start_fractional, stop_fractional)
-            self.pos_images = {coord: save_plt(fig)
-                    for coord, fig in pos_fig_dict.items()}
+            self.pos_images = {coord: save_plt(fig) for coord, fig in pos_fig_dict.items()}
         except ValueError as ve:
-            print(ve)
-
+            print(f"Error creating the station position plots. Bad values, bad. More info: {ve}")
+        except Exception as e:
+            print(f"Error creating station position plots. Are you sure the API endpoint is correct? More info: {e}")
         # station schedules
         ###################
 

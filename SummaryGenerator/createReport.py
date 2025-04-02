@@ -22,13 +22,15 @@ def create_report(summary, output_path):
 
     #########################
     # Set up django to use the templating funcitonality only
-    settings.configure(
-        TEMPLATES=[{
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [os.path.join(os.path.dirname(__file__), 'templates')],
-        }]
-    )
-    django.setup()
+    if not settings.configured:
+        settings.configure(
+            TEMPLATES=[{
+                'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                'DIRS': [os.path.join(os.path.dirname(__file__), 'templates')],
+            }]
+        )
+
+        django.setup()
 
     #########################
     # load up the templates
@@ -44,12 +46,15 @@ def create_report(summary, output_path):
 
     # Function to generate a PDF
     async def generate_pdf(html_content, output_path):
-        browser = await launch()
-        page = await browser.newPage()
-        await page.setContent(html_content)
-        await page.emulateMedia("screen") # screen or print
-        await page.pdf({'path': output_path, 'format': 'A4', 'printBackground': True})
-        await browser.close()
+        try:
+            browser = await launch()
+            page = await browser.newPage()
+            await page.setContent(html_content)
+            await page.emulateMedia("screen") # screen or print
+            await page.pdf({'path': output_path, 'format': 'A4', 'printBackground': True})
+            await browser.close()
+        except Exception as e:
+            raise Exception(f"Couldnn't generate the report") from e
 
     #########################
     # Preliminaries:
@@ -71,8 +76,9 @@ def create_report(summary, output_path):
     template = Template(html_template)
 
     # Load in the ivs logo png
-    ivs_logo = load_png('resources/ivs_logo_2019_square_final.png')
-
+    ivs_logo_path = os.path.join(os.path.dirname(__file__),'resources/ivs_logo_2019_square_final.png')
+    ivs_logo = load_png(ivs_logo_path)
+    
     # Stamp the time of the report generation
     ts = datetime.utcnow().strftime("%Y-%j")
 

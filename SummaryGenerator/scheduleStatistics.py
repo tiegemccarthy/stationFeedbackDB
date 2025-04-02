@@ -306,7 +306,13 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
 
     BASEURL = 'https://glovdh.ethz.ch/api/v1/'
 
-    CACHE_FILE = "glovdh_api_cached_sessions.csv"
+    #CACHE_FILE = "glovdh_api_cached_sessions.csv"
+    
+    CACHE_DIR = os.path.join(os.path.dirname(__file__), 'cache')
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    CACHE_FILE = os.path.join(CACHE_DIR, "glovdh_api_cached_sessions.csv")
+
+
     cache_age_threshold = 7 # days
 
     # change format & introduce timezone info
@@ -321,9 +327,12 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
         print("Loading cached data...")
         stat_sessions_df = pd.read_csv(CACHE_FILE)
     else:
-        print("Cache is missing or outdated. Dowloading...")
-
-        stations = getAllStations(BASEURL)
+        print("Cache is missing or outdated. Downloading...")
+    
+        try:
+            stations = getAllStations(BASEURL)
+        except Exception as e:
+            raise Exception('Unable to access the api...') from e
 
         stat_sessions = []
 
@@ -429,13 +438,6 @@ def plot_bar_char(df, station, start, stop, title):
     fig.tight_layout()
 
     return fig
-
-
-################################
-# get the station comparison bar graph...
-
-# will need the cache, as it useable for all sites, and will significantly decrease the load time.
-
 
 ################################
 
