@@ -41,7 +41,7 @@ def main(database_name):
         try:
             summaryGenerator.main(station, database_name, start_date, end_date, output_name_vgos, "v%", 0)
         except Exception as e:
-            print(f"Unable to generate VGOS performance report for {str(station)}.\nException {e} Check whether sufficient data is available.")
+            print(f"Unable to generate VGOS performance report for {str(station)}.\nException: {e}\nCheck whether sufficient data is available.")
 
 if __name__ == '__main__':
     main(sys.argv[1])

@@ -95,7 +95,9 @@ class StationSummariser:
         # create a dictionary associating the station code names with the full names
         # we have been using the codename but this function requires the full name
 
-        station_dict = dict(zip(*stationParse('../stations-reports.config')))
+        # heck, what should be the location of the config file in this?
+        # not '../stations-reports.config' apparently
+        station_dict = dict(zip(*stationParse()))
         station_name = station_dict.get(self.station)
 
         try:
@@ -486,7 +488,7 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
 
     # create the PDF report
     print('Generating PDF report...')
-    create_report(stat_sum)
+    create_report(stat_sum, output_name)
 
     return
 

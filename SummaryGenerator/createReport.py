@@ -18,7 +18,7 @@ from SummaryGenerator.utilities import load_png
 # control
 save_html = True
 
-def create_report(summary):
+def create_report(summary, output_path):
 
     #########################
     # Set up django to use the templating funcitonality only
@@ -92,8 +92,8 @@ def create_report(summary):
 
     
     # Define the output path for the PDF
-    output_path = os.path.join(reports_dir, filename)
-    
+    #output_path = os.path.join(reports_dir, filename)
+
     # Generate the PDF
     asyncio.run(generate_pdf(html_content, output_path))
 
