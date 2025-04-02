@@ -1,13 +1,20 @@
+# stupid mac/finder files
 **._*
+# pycharm config stuff
 **__pycache__**
+# the actual final reports
 **reports/
+**.pdf
+# various test stuff
 **_v1*
 **_v2*
 **.tmp
 **junk
-**.pdf
 **.txt
 **.test
+# the pipenv config
 Pipfile
+# the glovdh api cache
 **.csv
+# a set of parameters need for testing only (at this stage)
 **program_parameters*
