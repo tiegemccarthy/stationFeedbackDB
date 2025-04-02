@@ -16,5 +16,3 @@
 Pipfile
 # the glovdh api cache
 **.csv
-# a set of parameters need for testing only (at this stage)
-**program_parameters*
