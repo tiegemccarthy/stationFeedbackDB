@@ -98,7 +98,11 @@ class StationSummariser:
 
         # heck, what should be the location of the config file in this?
         # not '../stations-reports.config' apparently
+<<<<<<< HEAD
         station_dict = dict(zip(*stationParse(os.path.join(os.path.dirname(os.path.abspath(__file__))))))
+=======
+        station_dict = dict(zip(*stationParse(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'stations_config'))))
+>>>>>>> 8f753d1c55feb6331aff105ec9daf632a00ce18f
         station_name = station_dict.get(self.station)
 
         try:
