@@ -17,11 +17,11 @@ import textwrap
 import pandas as pd
 from dataclasses import dataclass, field
 
-from program_parameters import *
-from createReport import *
-from stationPosition import get_station_positions
-from scheduleStatistics import get_glovdh_piecharts, get_glovdh_barchart
-from utilities import datetime_to_fractional_year, save_plt, stationParse
+from SummaryGenerator.program_parameters import *
+from SummaryGenerator.createReport import *
+from SummaryGenerator.stationPosition import get_station_positions
+from SummaryGenerator.scheduleStatistics import get_glovdh_piecharts, get_glovdh_barchart
+from SummaryGenerator.utilities import datetime_to_fractional_year, save_plt, stationParse
 
 ########
 # TODO #
@@ -433,7 +433,7 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     #conn = mariadb.connect(config.db.host, config.db.user, config.db.pw)
 
     # deploy, running on same machine hosting the database
-    conn = mariadb.connect(cuser='auscope', passwd='password')
+    conn = mariadb.connect(user='auscope', passwd='password')
 
     cursor = conn.cursor()
     query = "USE " + database_name +";"

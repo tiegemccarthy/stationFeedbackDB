@@ -36,12 +36,12 @@ def main(database_name):
         output_name_vgos = dirname + '/reports/' + station + '_VGOS_' + today_date.strftime("%Y%m%d") + '.pdf'
         try:
             summaryGenerator.main(station, database_name, start_date, end_date, output_name_legacy, "v%", 1)
-        except:
-            print("Unable to generate legacy performance report for " + str(station) + ". Check whether sufficient data is available.")
+        except Exception as e:
+            print(f"Unable to generate legacy performance report for {str(station)}.\nException: {e}\nCheck whether sufficient data is available.")
         try:
             summaryGenerator.main(station, database_name, start_date, end_date, output_name_vgos, "v%", 0)
-        except:
-            print("Unable to generate VGOS performance report for " + str(station) + ". Check whether sufficient data is available.")
+        except Exception as e:
+            print(f"Unable to generate VGOS performance report for {str(station)}.\nException {e} Check whether sufficient data is available.")
 
 if __name__ == '__main__':
     main(sys.argv[1])

@@ -13,7 +13,7 @@ from datetime import datetime
 
 from dataclasses import asdict
 
-from utilities import load_png
+from SummaryGenerator.utilities import load_png
 
 # control
 save_html = True
