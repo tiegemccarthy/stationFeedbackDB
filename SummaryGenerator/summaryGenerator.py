@@ -98,11 +98,18 @@ class StationSummariser:
 
         # heck, what should be the location of the config file in this?
         # not '../stations-reports.config' apparently
-<<<<<<< HEAD
-        station_dict = dict(zip(*stationParse(os.path.join(os.path.dirname(os.path.abspath(__file__))))))
-=======
         station_dict = dict(zip(*stationParse(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'stations_config'))))
->>>>>>> 8f753d1c55feb6331aff105ec9daf632a00ce18f
+
+        #debug
+        dirname = os.path.dirname(__file__)
+        print(f"dir: {dirname}")
+        dirname_abs = os.path.dirname(os.path.abspath(__file__))
+        print(f"dir abs: {dirname_abs}")
+        stat_conf_file_path = os.path.join(dirname, '..', 'stations_config')
+        print(f"file: {stat_conf_file_path}")
+
+        station_dict = dict(zip(*stationParse()))
+>>>>>>> e06a78b5b1155307057aebe294d773194aa98138
         station_name = station_dict.get(self.station)
 
         try:
