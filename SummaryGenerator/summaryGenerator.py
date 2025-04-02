@@ -11,6 +11,7 @@ from reportlab.pdfgen.canvas import Canvas
 from datetime import datetime, timedelta
 from pprint import pprint
 import re
+import os
 
 from adjustText import adjust_text
 import textwrap
@@ -97,7 +98,7 @@ class StationSummariser:
 
         # heck, what should be the location of the config file in this?
         # not '../stations-reports.config' apparently
-        station_dict = dict(zip(*stationParse()))
+        station_dict = dict(zip(*stationParse(os.path.join(os.path.dirname(os.path.abspath(__file__))))))
         station_name = station_dict.get(self.station)
 
         try:
