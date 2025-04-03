@@ -31,3 +31,4 @@ Create or fill the database (hardcoded parameters) with entries processed from t
 - regarding the pipeline/cron:
     - look into looping through past master schedules as required
     - i would put the command line args as parameters in a config file...
+- use a proper logger

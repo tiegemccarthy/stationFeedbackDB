@@ -28,10 +28,8 @@ from SummaryGenerator.utilities import datetime_to_fractional_year, save_plt, st
 # TODO #
 ########
 #
-# should only add elements if they are successfully created...
-# how to get e.g. "HOBART12" from the station code 'Hb'...?
-# also, add stop time to get station positions
 # clean up the file structure...
+#
 
 @dataclass
 class StationSummariser:
@@ -93,8 +91,10 @@ class StationSummariser:
         print(f"{self.start_time} as fraction is {start_fractional}")
         print(f"{self.stop_time} as fraction is {stop_fractional}")
 
+        # we have been using the codename but this function requires the full name so 
         # create a dictionary associating the station code names with the full names
-        # we have been using the codename but this function requires the full name
+        # this dict will be useful in other parts of the code
+        # and ought to be created at a higher level
 
         conf_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'stations-reports.config'))
         station_dict = dict(zip(*stationParse(conf_file)))
@@ -116,13 +116,13 @@ class StationSummariser:
             self.glovdh_images = {stat_type: save_plt(fig) 
                     for stat_type, fig in glovdh_dict.items()}
         except Exception as e:
-            print(e)
+            print(f"Problem creating the piecharts:\n{e}")
 
         # tack on the barchart comparising the scheduled session counts
         try:
             self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(self.station, self.start_time, self.stop_time, self.vgos))})
         except Exception as e:
-            print(e)
+            print(f"Problem creating the bargraphs:\n{e}")
 
         # station problems
         ##################
@@ -477,11 +477,11 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
         print("col_names:")
         pprint(col_names)
 
-        print(f"Number of columns in result: {len(result[0])}")
-        print(f"Number of column names: {len(col_names)}")
+    print(f"Number of columns in result: {len(result[0])}")
+    print(f"Number of column names: {len(col_names)}")
 
-        if len(result[0]) != len(col_names):
-            raise ValueError("Mismatched names to data columns.")
+    if len(result[0]) != len(col_names):
+        raise ValueError("Mismatched names to data columns.")
 
     # create the dataclass that contains the summary data
     stat_sum = StationSummariser(stat_code, vgos, start_time, stop_time, table)

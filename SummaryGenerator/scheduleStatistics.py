@@ -352,7 +352,8 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
             else:
                 df['time_start'] = df['time_start'].dt.tz_convert('UTC')
             
-            df = filter_by_session_type(df, is_vgos)
+            # this also breaks this....
+            # df = filter_by_session_type(df, is_vgos)
 
             in_time_df = df[(df['time_start'] >= start) & (df['time_start'] <= stop)]
             total_sessions = in_time_df.shape[0]

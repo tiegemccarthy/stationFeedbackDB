@@ -7,7 +7,6 @@
 import json
 from pprint import pprint
 
-
 class Config:
 
         class Args:

@@ -29,10 +29,16 @@ def parseFunc():
 
 
 def downloadFile(STATION_NAME):
-    file_name = f"{STATION_NAME}.txt"
+    
+    # these files all have the same number of characters buffered by underscores
+    stat_name_buffered = STATION_NAME.ljust(8, '_')
+    file_name = f"{stat_name_buffered}.txt"
 
     if not os.path.exists(file_name):
-        wget.download(f"https://ivsopar.obspm.fr/stations/series/{file_name}")
+        try:
+            wget.download(f"https://ivsopar.obspm.fr/stations/series/{file_name}")
+        except Exception as e:
+           print(f"wget exception:\n{e}")
 
         # careful here!
 
