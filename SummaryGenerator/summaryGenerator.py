@@ -429,7 +429,6 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     
     # NOTE
     # added a remote host here so can run locally (for testing)
-    # not sure what we'll do here in the final version
 
     # test
     #conn = mariadb.connect(config.db.host, config.db.user, config.db.pw)
@@ -455,20 +454,33 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
 
 def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
 
+    print("##########################################")
+    print(f"Generating Summary for Station {stat_code}.")
+
+
     start_time = Time(start, format='yday', out_subfmt='date')
     stop_time = Time(stop, format='yday', out_subfmt='date')
 
     vgos = None
 
-    if search == 'v%' and reverse_search == '0':
+    if search == 'v%' and reverse_search == 0:
         vgos = True
-    elif search == 'v%' and reverse_search == '1':
+    elif search == 'v%' and reverse_search == 1:
         vgos = False
+
+    print(f"Report range: {start_time} -> {stop_time}.")
+    print(f"Report type: {'VGOS' if vgos else 'Legacy'}.")
+    print("##########################################")
 
     # create the info table which will be used to generate the rest of it...
     result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
     # turn this into an astropy table datastructure
-    table = Table(rows=result, names=col_names)
+    try:
+        table = Table(rows=result, names=col_names)
+    except Exception as e:
+        raise Exception("Error creating Table (astropy).\n{e}") from e
+        # i think this fails for the Ht VGOS case...
+
     # once we have this we can produce the report elements that sumirise this...
 
     if config.ctrl.debug:
