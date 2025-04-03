@@ -28,11 +28,7 @@ def parseFunc():
     return args
 
 
-def downloadFile(STATION_NAME):
-    
-    # these files all have the same number of characters buffered by underscores
-    stat_name_buffered = STATION_NAME.ljust(8, '_')
-    file_name = f"{stat_name_buffered}.txt"
+def downloadFile(file_name):
 
     if not os.path.exists(file_name):
         try:
@@ -43,9 +39,9 @@ def downloadFile(STATION_NAME):
         # careful here!
 
 
-def file2DF(STATION_NAME):
+def file2DF(file_name):
     dataframe_colnames = ['date', 'X', 'dX', 'Y', 'dY', 'Z', 'dZ', 'U', 'dU', 'E', 'dE', 'N', 'dN', 'station', 'vgosDB']
-    df = pandas.read_csv(STATION_NAME + '.txt', names=dataframe_colnames, header=0, skiprows=2, delimiter='\s+')
+    df = pandas.read_csv(file_name, names=dataframe_colnames, header=0, skiprows=2, delimiter='\s+')
 
     return df
 
@@ -109,8 +105,12 @@ def get_station_positions(STATION_NAME, start_date, stop_date):
     coords = ['U', 'E', 'N']
     y_lim = 100 # the y axis is the range (median +/- y_lim)
 
-    downloadFile(STATION_NAME)
-    pos_df = file2DF(STATION_NAME)
+    # these files all have the same number of characters buffered by underscores
+    stat_name_buffered = STATION_NAME.ljust(8, '_')
+    file_name = f"{stat_name_buffered}.txt"
+
+    downloadFile(file_name)
+    pos_df = file2DF(file_name)
     
     fig_dict = {}
     for coord in coords:

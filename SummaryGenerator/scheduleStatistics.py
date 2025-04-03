@@ -369,14 +369,13 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
         stat_sessions_df.to_csv(CACHE_FILE, index=False)
         print(f"Data cached to {CACHE_FILE}")
 
-    print(stat_sessions_df)
-
     average_sessions = np.mean(stat_sessions_df['total_sessions'])
     print(f"Average number of sessions: {average_sessions:.2f}")
 
     top_station_num = 30
     top_stations = stat_sessions_df.sort_values(by='total_sessions', ascending=False).head(top_station_num)
-    print(f"Top 30 stations by number of sessions:\n{top_stations}")
+    
+    #print(f"Top 30 stations by number of sessions:\n{top_stations}")
 
     #####
 
