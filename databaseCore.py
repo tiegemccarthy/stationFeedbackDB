@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 
-import re
 import os
 import MySQLdb as mariadb
-import sys
-import csv
 import argparse
 from astropy.io import ascii
 
 # Source other modules
 import databaseReportDownloader
-import parseCorrSkd
-import parseAnalysisSpool
+import parseFiles
 
 dirname = os.path.dirname(__file__)
 
@@ -25,7 +21,8 @@ def parseFunc():
                         help="""The name of the SQL database you would like to use, if it does not exist it will be created with the script under the hard-coded throwaway user.""")
     args = parser.parse_args()
     return args
-    
+
+
 def stationParse(stations_config='stations.config'):
     with open(stations_config) as file:
         station_contents = file.read()
@@ -38,8 +35,9 @@ def stationParse(stations_config='stations.config'):
         stationNamesLong = stationTable['full'][:]
     return stationNames, stationNamesLong
 
+   
 def main(master_schedule, db_name):
-    stationNames, stationNamesLong = stationParse()
+    stationNames, stationNamesLong = stationParse(dirname + '/stations.config')
     # Setup the directories for downloaded files
     if not os.path.exists(dirname + '/analysis_reports'):
         os.makedirs(dirname + '/analysis_reports')
@@ -72,26 +70,34 @@ def main(master_schedule, db_name):
     valid_experiments = databaseReportDownloader.validExpFinder(os.path.join(dirname, master_schedule), stationNames)
     existing_experiments = databaseReportDownloader.checkExistingData(str(db_name), stationNames)
     experiments_to_add = [x for x in valid_experiments if x.lower() not in existing_experiments]
-    print(experiments_to_add)
-    #experiments_to_add = valid_experiments
     for exp in experiments_to_add:
         exp = exp.lower()
         if os.path.isfile(dirname+'/analysis_reports/'+ exp +'_report.txt'):
             try:
-                parseAnalysisSpool.main(exp, db_name)
                 with open(dirname + '/analysis_reports/'+ exp +'_report.txt') as file:
-                    meta_data = parseAnalysisSpool.metaData(file.read(), exp)
+                    meta_data = parseFiles.metaData(file.read(), exp)
                 vgosDB = meta_data[4]
                 databaseReportDownloader.corrReportDL(exp, vgosDB)
+                station_data = parseFiles.main(exp)
+                # add station data to SQL database
+                for i in range(0, len(station_data)):
+                    station = station_data[i]
+                    sql_station = """INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, 
+                        W_RMS_del, session_fit, Analyser, vgosDB_tag, Manual_Pcal, Dropped_Chans, Total_Obs, Detect_Rate_X, Detect_Rate_S, Note_Bool, Notes) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""".format(station_data[i].name)
+                    data = [station.exp_id, station.performance, station.perf_uvr, station.date, station.date_mjd, station.posx, station.posy, station.posz, 
+                            station.posu, station.pose, station.posn, station.wrms_del, station.sess_fit, station.analyser, station.vgosdb, station.man_pcal,
+                            station.dropped_chans, station.total_obs, station.detect_rate_x, station.detect_rate_s, station.note_bool, station.notes]
+                    print(data)
+                    conn = mariadb.connect(user='auscope', passwd='password', db=str(db_name))
+                    cursor = conn.cursor()
+                    cursor.execute(sql_station, data)
+                    conn.commit()
+                    conn.close()
             except:
                 print('Error processing analysis report for session ' + exp + '...')
                 pass
-            try:
-                parseCorrSkd.main(exp, db_name)
-            except:
-                print('Error processing Corr/Skd files...')
-                pass
-   
+
 if __name__ == '__main__':
     args = parseFunc()
     main(args.master_schedule, args.sql_db_name)

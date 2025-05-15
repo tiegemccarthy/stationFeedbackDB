@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
 from ftplib import FTP_TLS
-import ftplib
 import re
 import os
 import MySQLdb as mariadb
-import sys
 import tarfile
 import argparse
 from astropy.io import ascii
@@ -37,6 +35,7 @@ def checkExistingData(db_name, stations):
     
     existing_experiments = [item for sublist in existing_experiments for item in sublist]
     unique_existing_experiments = set(existing_experiments)
+    
     return unique_existing_experiments
 
 def validExpFinder(master_schedule, station_names):
@@ -63,6 +62,7 @@ def validExpFinder(master_schedule, station_names):
                 participated = re.findall(station_regex,line[7],re.MULTILINE)
                 if len(participated) > 0:
                     valid_experiment.append(line[2].strip())
+
     return valid_experiment
 
 def corrReportDL(exp_id,vgos_tag):
@@ -113,7 +113,7 @@ def corrReportDL(exp_id,vgos_tag):
             print("Corr report not available for experiment " + exp_id + ".")
             return
 
-def stationParse(stations_config='stations.config'):
+def stationParse(stations_config=dirname + '/stations.config'):
     with open(stations_config) as file:
         station_contents = file.read()
     stationTable = ascii.read(station_contents, data_start=0, names=['2char', 'full'])
@@ -123,13 +123,14 @@ def stationParse(stations_config='stations.config'):
     else:
         stationNames = stationTable['2char'][:]
         stationNamesLong = stationTable['full'][:]
+
     return stationNames, stationNamesLong
 
 def main(master_schedule, db_name):
     stationNames, stationNamesLong = stationParse()
     schedule = str(master_schedule)
     ftps = FTP_TLS(host = 'gdc.cddis.eosdis.nasa.gov')
-    ftps.login(user='anonymous', passwd='tiegem@utas.edu.au')
+    ftps.login(user='anonymous', passwd='')
     ftps.prot_p()
     master_sched_filename = os.path.join(dirname, schedule)
     mf = open(master_sched_filename, "wb")
@@ -152,14 +153,12 @@ def main(master_schedule, db_name):
             print("Analysis report already exists for " + exp.lower() + ", skipping file downloads.")
             continue
         else:
-            #ftp = FTP('cddis.gsfc.nasa.gov')
             exp = exp.lower()
             print('Beginning file downloads for experiment ' + exp + ".")
             ftps = FTP_TLS(host = 'gdc.cddis.eosdis.nasa.gov')
-            ftps.login(user='anonymous', passwd='tiegem@utas.edu.au')
+            ftps.login(user='anonymous', passwd='')
             ftps.prot_p()
             # Download SKED file
-            print(year, exp)
             try:
                 filename_skd = []
                 ftps.retrlines('LIST /pub/vlbi/ivsdata/aux/'+str(year)+ '/' + exp + '/' + exp + '.skd', filename_skd.append)
