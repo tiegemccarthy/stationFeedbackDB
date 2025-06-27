@@ -5,6 +5,7 @@
 # the actual final reports
 **reports/
 **.pdf
+**_files
 # various test stuff
 **_v1*
 **_v2*
