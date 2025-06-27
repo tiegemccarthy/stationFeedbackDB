@@ -23,7 +23,8 @@ Create or fill the database (hardcoded parameters) with entries processed from t
 
 ### updateReports.py
 
-
+Database is currently working fine, but reports are broken due to the SQL table name change.
+Need to fix this, then probably split the reports side off into its own repository.
 
 ## TODO
 

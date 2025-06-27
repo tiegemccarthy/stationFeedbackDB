@@ -80,6 +80,8 @@ class StationSummariser:
         station_dict = dict(zip(*stationParse('../stations-reports.config')))
         station_name = station_dict.get(self.station)
 
+        print(self.station)
+
         try:
             pos_fig_dict = get_station_positions(station_name, start_fractional, stop_fractional)
             self.pos_images = {coord: save_plt(fig)

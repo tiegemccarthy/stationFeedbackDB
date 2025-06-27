@@ -22,8 +22,8 @@ def parseFunc():
                         help="Name of station, using 8 character name")
     parser.add_argument("start_date", 
                         help="Start date for plotting. Given in year fraction (e.g. 2024.5)")
-    parser.add_argument("stop_date", 
-                    help="Stop date for plotting. Given in year fraction.")
+    #parser.add_argument("stop_date", 
+    #                help="Stop date for plotting. Given in year fraction.")
     args = parser.parse_args()
     return args
 
