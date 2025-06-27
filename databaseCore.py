@@ -56,7 +56,7 @@ def main(master_schedule, db_name):
     query = "USE " + db_name
     cursor.execute(query)
     conn.commit()
-    for ant in stationNames:
+    for ant in stationNamesLong:
         query_content = """ (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, Performance decimal(4,3) NOT NULL, Performance_UsedVsRecov decimal(4,3), Date DATETIME , Date_MJD decimal(9,2), Pos_X decimal(14,2), Pos_Y decimal(14,2), 
             Pos_Z decimal(14,2), Pos_U decimal(14,2), Pos_E decimal(14,2), Pos_N decimal(14,2), W_RMS_del decimal(5,2), session_fit decimal(5,2), Total_Obs decimal(9,2),Detect_Rate_X decimal(5,3), Detect_Rate_S decimal(5,3), Manual_Pcal BIT(1), 
             Dropped_Chans VARCHAR(1500), Note_Bool BIT(1), Notes VARCHAR(500), Analyser VARCHAR(10) NOT NULL, vgosDB_tag VARCHAR(18));"""
@@ -68,7 +68,7 @@ def main(master_schedule, db_name):
     databaseReportDownloader.main(master_schedule, db_name) # comment this line out for troubleshooting downstream problems, otherwise this tries to redownload all the experiments with no files available.
     # Check for valid experiments, determine whether they are in the database already - add the data from the parsed files if they aren't.
     valid_experiments = databaseReportDownloader.validExpFinder(os.path.join(dirname, master_schedule), stationNames)
-    existing_experiments = databaseReportDownloader.checkExistingData(str(db_name), stationNames)
+    existing_experiments = databaseReportDownloader.checkExistingData(str(db_name), stationNamesLong)
     experiments_to_add = [x for x in valid_experiments if x.lower() not in existing_experiments]
     for exp in experiments_to_add:
         exp = exp.lower()

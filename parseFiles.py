@@ -432,7 +432,7 @@ def main(exp_code):
     station_objects = []
     for i in range(0,len(stationNames)):
         if performance[i] != None:
-            station = stationData(stationNames[i], exp_code)
+            station = stationData(stationNamesLong[i], exp_code)
             station.date = meta[2]
             station.date_mjd = meta[3]
             station.vgosdb = meta[4]

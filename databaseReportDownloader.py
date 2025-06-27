@@ -143,7 +143,7 @@ def main(master_schedule, db_name):
     else: # this is for v2
         year = schedule[6:10]
     valid_experiment = validExpFinder(os.path.join(dirname, schedule), stationNames)
-    existing_experiments = checkExistingData(str(db_name), stationNames)
+    existing_experiments = checkExistingData(str(db_name), stationNamesLong)
     if existing_experiments == None:
         experiments_to_download = valid_experiment
     else:
