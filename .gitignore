@@ -13,6 +13,7 @@
 **junk
 **.txt
 **.test
+**.ipynb
 # the pipenv config
 Pipfile
 # the glovdh api cache
