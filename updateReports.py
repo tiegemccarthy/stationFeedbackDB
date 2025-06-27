@@ -31,7 +31,7 @@ def main(database_name):
     print(start_date)
     # generate report
     stationNames, stationNamesLong = stationParse()
-    for station in stationNames:
+    for station in stationNamesLong:
         output_name_legacy = dirname + '/reports/' + station + '_legacy_' + today_date.strftime("%Y%m%d") + '.pdf'
         output_name_vgos = dirname + '/reports/' + station + '_VGOS_' + today_date.strftime("%Y%m%d") + '.pdf'
         try:
