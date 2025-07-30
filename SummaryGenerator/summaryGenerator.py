@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 
 from SummaryGenerator.program_parameters import *
 from SummaryGenerator.createReport import *
-from SummaryGenerator.stationPosition import get_station_positions
+from SummaryGenerator.stationPosition import get_station_positions, downloadFile, file2DF
 from SummaryGenerator.scheduleStatistics import get_glovdh_piecharts, get_glovdh_barchart
 from SummaryGenerator.utilities import datetime_to_fractional_year, save_plt, stationParse
 
@@ -61,7 +61,8 @@ class StationSummariser:
         print(f"start: {self.start_time}")
         print(f"stop: {self.stop_time}")
 
-        table = self.table                  # fix me later
+        table = self.table
+        print(table)             # fix me later
 
         self.total_sessions = len(table['ExpID'])
         self.total_observations = int(np.nansum(table['Total_Obs'].astype(float)))
@@ -97,11 +98,20 @@ class StationSummariser:
         # and ought to be created at a higher level
 
         conf_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'stations-reports.config'))
-        station_dict = dict(zip(*stationParse(conf_file)))
-        station_name = station_dict.get(self.station)
-
+        station_dict_temp = dict(zip(*stationParse(conf_file)))
+        station_dict_reverse = dict(zip(station_dict_temp.values(), station_dict_temp.keys()))
+        station_name_2char = station_dict_reverse.get(self.station)
+        
+        #print('DEBUG')
+        #print(station_dict)
+        #print(self.station)
+        #print(station_name)
+        stat_name_buffered = self.station.ljust(8, '_')
+        file_name = f"{stat_name_buffered}.txt"
+        downloadFile(file_name)
         try:
-            pos_fig_dict = get_station_positions(station_name, start_fractional, stop_fractional)
+            
+            pos_fig_dict = get_station_positions(self.station, start_fractional, stop_fractional)
             self.pos_images = {coord: save_plt(fig) for coord, fig in pos_fig_dict.items()}
         except ValueError as ve:
             print(f"Error creating the station position plots. Bad values, bad. More info: {ve}")
@@ -111,7 +121,7 @@ class StationSummariser:
         ###################
 
         try:
-            glovdh_dict =  get_glovdh_piecharts(self.station, self.start_time,
+            glovdh_dict =  get_glovdh_piecharts(station_name_2char, self.start_time,
                                         self.stop_time, self.vgos)
             self.glovdh_images = {stat_type: save_plt(fig) 
                     for stat_type, fig in glovdh_dict.items()}
@@ -120,7 +130,7 @@ class StationSummariser:
 
         # tack on the barchart comparising the scheduled session counts
         try:
-            self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(self.station, self.start_time, self.stop_time, self.vgos))})
+            self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(station_name_2char, self.start_time, self.stop_time, self.vgos))})
         except Exception as e:
             print(f"Problem creating the bargraphs:\n{e}")
 
@@ -481,7 +491,7 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
         raise Exception("Error creating Table (astropy).\n{e}") from e
         # i think this fails for the Ht VGOS case...
 
-    # once we have this we can produce the report elements that sumirise this...
+    # once we have this we can produce the report elements that sumarise this...
 
     if config.ctrl.debug:
         print("result:")

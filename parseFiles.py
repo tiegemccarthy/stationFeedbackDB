@@ -152,6 +152,7 @@ def extractRelevantSections(all_corr_sections, version):
     # number of sections and can cause the script to fail. This allows you to know exactly which section is which.
 
 def noteFinder(text_section, stations): 
+    print(text_section)
     note_bool = []
     note_string_list = []
     text_section = text_section.split("\n")
@@ -382,6 +383,7 @@ def main(exp_code):
         if len(relevant_section) < 4:
             print("Incompatible correlator report format.")
         # Determine what section contains what info - sometimes variable...
+        notes_section  = ' ' # Occasioanlly a corr report has no notes section, this could be cleaned up using a try later on, bit of a cludge
         for i in range(0, len(relevant_section)):
             if 'QCODES' in relevant_section[i].split()[0]:
                 qcode_section = relevant_section[i]
@@ -392,9 +394,8 @@ def main(exp_code):
             if 'MANUAL_PCAL' in relevant_section[i].split()[0]:
                 mpcal_section = relevant_section[i]
             if 'NOTES' in relevant_section[i].split()[0]:
-                notes_section = relevant_section[i]            
-            else:
-                notes_section = ' '
+                notes_section = relevant_section[i]
+        
         dropped_channels = droppedChannels(dropchans_section,stationNames)
         manual_pcal = manualPcal(mpcal_section,stationNames)
         antennas_corr_reference = antennaReference_CORR(stations_section,report_version)
@@ -424,6 +425,7 @@ def main(exp_code):
                 q_code_data_S.append([round(good_vs_bad_S[stat_index],3), round(good_vs_total_S[stat_index],3), round(total_obs_S[stat_index],3)])
             except:
                 q_code_data_S.append([None, None, None])
+        print(notes_section)
         notes_bool, notes = noteFinder(notes_section, stationNames)
     else:
         print("No correlator report available.") 

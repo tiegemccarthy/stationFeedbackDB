@@ -29,12 +29,14 @@ def parseFunc():
 
 
 def downloadFile(file_name):
+    # currently this always removes the old file and redownloads, probably add some logic in here to check when the file was downloaded.
+    if os.path.exists(file_name):
+        os.remove(file_name)
 
-    if not os.path.exists(file_name):
-        try:
-            wget.download(f"https://ivsopar.obspm.fr/stations/series/{file_name}")
-        except Exception as e:
-           print(f"wget exception:\n{e}")
+    try:
+        wget.download(f"https://ivsopar.obspm.fr/stations/series/{file_name}")
+    except Exception as e:
+        print(f"wget exception:\n{e}")
 
         # careful here!
 
@@ -108,9 +110,8 @@ def get_station_positions(STATION_NAME, start_date, stop_date):
     # these files all have the same number of characters buffered by underscores
     stat_name_buffered = STATION_NAME.ljust(8, '_')
     file_name = f"{stat_name_buffered}.txt"
-
-    downloadFile(file_name)
-    pos_df = file2DF(file_name)
+    # This is a bit of a cludge editing Earl's existing code, revist this + the download step in summaryGenerator
+    pos_df = file2DF(os.path.dirname( __file__ ) + '/../' + file_name)
     
     fig_dict = {}
     for coord in coords:
