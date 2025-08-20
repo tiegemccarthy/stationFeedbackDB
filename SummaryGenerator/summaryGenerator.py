@@ -189,10 +189,8 @@ def parseFunc():
                         default='auscopeDB',
                         help="""The name of the SQL database you would like to use.""")
     parser.add_argument('date_start', 
-                        default=utc2mjd(Time.now()),
                         help="""Start date (in MJD) of the time period.""")
     parser.add_argument('date_stop', 
-                        default=utc2mjd(Time.now()-timedelta(weeks=52)),
                         help="""The end date (in MJD) of the time period.""")
     parser.add_argument('output_name',
                         default='report.pdf',
