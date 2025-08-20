@@ -69,17 +69,11 @@
                 {% if wrms_img %}
                     <figure class="image">
                         <img src="data:image/png;base64,{{ wrms_img }}" alt="Wrms Image" width="300">
-                        <figcaption>
-                            <p>W_rms</p>
-                        </figcaption>
                     </figure>
                 {% endif %}
                 {% if perf_img %}
                     <figure class="image">
                         <img src="data:image/png;base64,{{ perf_img }}" alt="Performance Image" width="300">
-                        <figcaption>
-                            <p>Performance metric against time.</p>
-                        </figcaption>
                     </figure>
                 {% endif %}
                 <div class="page-break"></div>
@@ -90,9 +84,6 @@
                             {% if img %}
                                 <figure class="image">
                                     <img src="data:image/png;base64,{{ img }}" alt="{{ band }} Band Detections" width="300">
-                                    <figcaption>
-                                        <p>{{ band|upper }} band detections.</p>
-                                    </figcaption>
                                 </figure>
                             {% endif %}
                         {% endfor %}
@@ -112,7 +103,7 @@
                                     <div class="page-break"></div>
                                 {% endif %}
                                 <figure class="image benchmark-image">
-                                    <img src="data:image/png;base64,{{ img }}" alt="{{ stat_type }} ..." width="300">
+                                    <img src="data:image/png;base64,{{ img }}" alt="{{ stat_type }} ..." width="500">
                                     <figcaption>
                                         <p></p>
                                     </figcaption>

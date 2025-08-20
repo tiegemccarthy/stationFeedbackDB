@@ -224,10 +224,10 @@ def wRmsAnalysis(table_input):
     print(wrms_med_str)
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(time_data, table['W_RMS_del'], color='k', s=20)
-    ax.scatter(time_data, table['session_fit'], color='r', s=20)
-    ax.hlines(np.median(table['W_RMS_del']), np.min(time_data), np.max(time_data), linestyle='dashed', colors='k')
-    ax.hlines(np.median(table['session_fit']), np.min(time_data), np.max(time_data), linestyle='dashed', colors='r')
+    ax.scatter(time_data, table['W_RMS_del'], color='steelblue', s=20)
+    ax.scatter(time_data, table['session_fit'], color='firebrick', s=20)
+    ax.hlines(np.median(table['W_RMS_del']), np.min(time_data), np.max(time_data), linestyle='dashed', colors='steelblue')
+    ax.hlines(np.median(table['session_fit']), np.min(time_data), np.max(time_data), linestyle='dashed', colors='firebrick')
     ax.legend(['Station W.RMS delay', 'Session W.RMS delay', 'Median Station W.RMS delay' , 'Median Session W.RMS delay'])    
     ax.set_xlabel('Date')
     ax.set_ylabel('W.RMS (ps)')
@@ -267,7 +267,8 @@ def performanceAnalysis(table_input):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(time_data, table['Performance'], color='k', s=10, marker='s')
-    ax.fill_between(time_data, table['Performance'], alpha = 0.5)
+    ax.fill_between(time_data, table['Performance'],color='steelblue', alpha = 0.5)
+    ax.hlines(np.median(table['Performance']), np.min(time_data), np.max(time_data), linestyle='dashed', color='steelblue')
     #ax.plot(mjd_x, wrms_runavg, color='r')
     ax.set_title('Performance (used/scheduled) vs. Time')
     ax.set_xlabel('Date')
@@ -378,21 +379,14 @@ def detectRate(table_input, band):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(time_data, table[col_name], color='k', s=5)
-    ax.fill_between(time_data, table[col_name], alpha = 0.5)
+    ax.fill_between(time_data, table[col_name], color='steelblue', alpha = 0.5)
+    ax.hlines(np.median(table[col_name]), np.min(time_data), np.max(time_data), linestyle='dashed', color='steelblue')
     ax.set_title('Session ' + band + '-band Detection ratio')
     ax.set_ylabel('Fraction of usable obs. vs. correlated obs.')
     ax.set_xlabel('Date')
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
-
-    # session labels
-    #for i, txt in enumerate(table['col0']):
-    #    ax.text(time_data[i], table[col_name][i], txt, rotation=90, verticalalignment='top', fontsize=6)
-    #txt_height = 0.04*(plt.ylim()[1] - plt.ylim()[0])
-    #txt_width = 0.02*(plt.xlim()[1] - plt.xlim()[0])
-    #adjust_text(texts, only_move={'points':'y', 'texts':'y'}, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
-    #plt.savefig(band + '_detect_rate.png', bbox_inches="tight")
 
     img_filename = f"{band}_detect_rate.png"
     img_b64 = save_plt(plt, img_filename)
@@ -459,13 +453,6 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     else:
         like = "LIKE"
     
-    # NOTE
-    # added a remote host here so can run locally (for testing)
-
-    # test
-    #conn = mariadb.connect(config.db.host, config.db.user, config.db.pw)
-
-    # deploy, running on same machine hosting the database
     conn = mariadb.connect(user='auscope', passwd='password')
 
     cursor = conn.cursor()
@@ -591,7 +578,7 @@ def plotBenchObs(data, specific_station):
     specific_stat_index = np.where(data[:,0] == specific_station)[0]
 
     
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(7, 4.5))
 
     bars = ax.bar(data[0:10,0], data[0:10,1], color='steelblue', alpha=0.8) # Plot the 10 best performing stations
     bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1], color='firebrick', alpha=0.8) # Plot the 'target' station
@@ -616,7 +603,7 @@ def plotBenchSess(data, specific_station):
 
     specific_stat_index = np.where(data[:,0] == specific_station)[0]
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(7, 4.5))
     bars = ax.bar(data[0:10,0], data[0:10,1].astype(float), color='steelblue', alpha=0.8) # Plot the 10 best performing stations
     bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1].astype(float), color='firebrick', alpha=0.8) # Plot the 'target' station
 
@@ -632,7 +619,6 @@ def plotBenchSess(data, specific_station):
     ax.bar_label(bar_specific, label_type='edge')
 
     plt.xlabel('Stations')
-    #plt.ylabel('Number of sessions')
     plt.title('Total number of sessions')
 
     img_filename = "numsess_bench.png"
@@ -645,7 +631,7 @@ def plotBenchWRMS(data, specific_station):
 
     specific_stat_index = np.where(data[:,0] == specific_station)[0]
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(7, 4.5))
     bars = ax.bar(data[0:10,0], data[0:10,1], color='steelblue', alpha=0.8) # Plot the 10 best performing stations
     bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1], color='firebrick', alpha=0.8) # Plot the 'target' station
 
