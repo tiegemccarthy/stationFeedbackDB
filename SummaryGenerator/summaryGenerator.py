@@ -38,6 +38,7 @@ class StationSummariser:
     start_time: datetime
     stop_time: datetime
     table: Table
+    database: str
     total_sessions: int = 0
     total_observations: int = 0
     wrms_analysis: str = ""             # this should be value not string
@@ -47,6 +48,7 @@ class StationSummariser:
     wrms_img: str = ""
     perf_img: str = ""
     detect_images: dict[str, str] = field(default_factory=dict)
+    benchmark_images: dict[str, str] = field(default_factory=dict)
     pos_images: dict[str, str] = field(default_factory=dict)
     glovdh_images: dict[str, str] = field(default_factory=dict)
     problems: str = ""
@@ -80,6 +82,28 @@ class StationSummariser:
         except Exception:
             self.detectS_str = "No S-band data present..."
             self.detect_images['S'] = ""
+
+        # Benchmarking figures
+        ######################
+        if self.vgos == True:
+            search = 'v%'
+            reverse_search = 0
+        elif self.vgos == False:
+            search = 'v%'
+            reverse_search = 1   
+
+        print(self.start_time) 
+
+        stat_list = grabStations(self.database)
+        stat_tab_list, table_list = grabAllStationData(stat_list, self.database, self.start_time, self.stop_time, search, reverse_search)
+
+        bench_obs_list = sumTotalObsALL(table_list, stat_tab_list)
+        bench_numsess_list = numSessionsALL(table_list, stat_tab_list)
+        bench_wrms_list = medWRMSdelALL(table_list, stat_tab_list)
+
+        self.benchmark_images['numobs'] = plotBenchObs(bench_obs_list, self.station)
+        self.benchmark_images['numsess'] = plotBenchSess(bench_numsess_list, self.station)
+        self.benchmark_images['medwrms'] = plotBenchWRMS(bench_wrms_list, self.station)            
 
         # station position
         ##################
@@ -120,19 +144,19 @@ class StationSummariser:
         # station schedules
         ###################
 
-        try:
-            glovdh_dict =  get_glovdh_piecharts(station_name_2char, self.start_time,
-                                        self.stop_time, self.vgos)
-            self.glovdh_images = {stat_type: save_plt(fig) 
-                    for stat_type, fig in glovdh_dict.items()}
-        except Exception as e:
-            print(f"Problem creating the piecharts:\n{e}")
+        # try:
+        #     glovdh_dict =  get_glovdh_piecharts(station_name_2char, self.start_time,
+        #                                 self.stop_time, self.vgos)
+        #     self.glovdh_images = {stat_type: save_plt(fig) 
+        #             for stat_type, fig in glovdh_dict.items()}
+        # except Exception as e:
+        #     print(f"Problem creating the piecharts:\n{e}")
 
-        # tack on the barchart comparising the scheduled session counts
-        try:
-            self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(station_name_2char, self.start_time, self.stop_time, self.vgos))})
-        except Exception as e:
-            print(f"Problem creating the bargraphs:\n{e}")
+        # # tack on the barchart comparising the scheduled session counts
+        # try:
+        #     self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(station_name_2char, self.start_time, self.stop_time, self.vgos))})
+        # except Exception as e:
+        #     print(f"Problem creating the bargraphs:\n{e}")
 
         # station problems
         ##################
@@ -461,6 +485,193 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "session_fit", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
     return result, col_names 
 
+#### Functions specific to 'benchmarking' plots
+
+def grabStations(sqldb_name):
+    conn = mariadb.connect(user='auscope', passwd='password')
+    cursor = conn.cursor()
+    query1 = "USE " + sqldb_name +";"
+    cursor.execute(query1)
+    query2 = "SHOW TABLES;"
+    cursor.execute(query2)
+    result = cursor.fetchall()
+
+    return result
+
+def grabAllStationData(stat_list, db_name, start_time, stop_time, search, reverse_search):
+    start_time = Time(start_time) 
+    stop_time = Time(stop_time)
+    table_list = []
+    stat_in_tab_list = []
+    for code in stat_list:
+        result, col_names = extractStationData(code[0], db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
+        if len(result) > 0:
+            table = Table(rows=result, names=col_names)
+            table_list.append(table)
+            stat_in_tab_list.append(code[0])
+
+    return stat_in_tab_list, table_list
+
+def sumTotalObsALL(table_list, stat_tab_list):
+    temp_table_list = table_list.copy() 
+    col_name = 'Total_Obs'
+
+    # Filter out None values
+    for i in range(0, len(temp_table_list)):
+        bad_data = []
+        for j in range(0, len(temp_table_list[i][col_name])):
+            if temp_table_list[i][col_name][j] == None:
+                bad_data.append(j)
+
+        temp_table_list[i].remove_rows(bad_data)
+    
+    # Sum the total obs for all sessions in the table
+    sum_obs_list = []
+    for i in range(0, len(temp_table_list)):
+        sum_obs_list.append([stat_tab_list[i], np.sum(temp_table_list[i][col_name])])
+
+    sum_obs_list = np.array(sum_obs_list)
+
+    sorted_indices = sum_obs_list[:, 1].argsort()[::-1]
+    sum_obs_list = sum_obs_list[sorted_indices]
+
+    return sum_obs_list
+
+def medWRMSdelALL(table_list, stat_tab_list):
+    temp_table_list = table_list.copy() 
+    col_name = 'W_RMS_del'
+
+    # Filter out None values
+    for i in range(0, len(temp_table_list)):
+        bad_data = []
+        for j in range(0, len(temp_table_list[i][col_name])):
+            if temp_table_list[i][col_name][j] == -999 or temp_table_list[i][col_name][j] == None:
+                bad_data.append(j)
+
+        temp_table_list[i].remove_rows(bad_data)
+
+    # Sum the total obs for all sessions in the table
+    med_wrms_list = []
+    for i in range(0, len(temp_table_list)):
+        if len(temp_table_list[i]) > 0:
+            med_wrms_list.append([stat_tab_list[i], np.median(temp_table_list[i][col_name])])
+
+    med_wrms_list = np.array(med_wrms_list)
+
+    sorted_indices = med_wrms_list[:, 1].argsort()
+    med_wrms_list = med_wrms_list[sorted_indices]
+
+    return med_wrms_list
+
+def numSessionsALL(table_list, stat_tab_list):
+    temp_table_list = table_list.copy() 
+    col_name = 'Total_Obs'
+
+    # Filter out None values
+    for i in range(0, len(temp_table_list)):
+        bad_data = []
+        for j in range(0, len(temp_table_list[i][col_name])):
+            if temp_table_list[i][col_name][j] == 0 or temp_table_list[i][col_name][j] == None:
+                bad_data.append(j)
+
+        temp_table_list[i].remove_rows(bad_data)
+
+    # Sum the total sessions (with >0 observations) for all sessions in the table
+    data_list = []
+    for i in range(0, len(temp_table_list)):
+        data_list.append([stat_tab_list[i], len(temp_table_list[i][col_name])])
+
+    data_list = np.array(data_list)
+
+    sorted_indices = data_list[:, 1].astype(float).argsort()[::-1]
+    data_list = data_list[sorted_indices]
+
+    return data_list
+
+def plotBenchObs(data, specific_station):
+
+    specific_stat_index = np.where(data[:,0] == specific_station)[0]
+
+    
+    fig, ax = plt.subplots()
+
+    bars = ax.bar(data[0:10,0], data[0:10,1], color='steelblue', alpha=0.8) # Plot the 10 best performing stations
+    bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1], color='firebrick', alpha=0.8) # Plot the 'target' station
+
+    # Sort out labelling
+    if specific_stat_index > 9:
+        labels = np.append(data[0:10,0], data[specific_stat_index,0])
+        ax.set_xticklabels(labels, rotation='vertical')  
+    else:
+        ax.set_xticklabels(data[0:10,0], rotation='vertical')
+
+    plt.xlabel('Stations')
+    plt.title('Total observations')
+
+    img_filename = "numobs_bench.png"
+    img_b64 = save_plt(plt, img_filename)
+    plt.close(fig)
+    
+    return img_b64
+
+def plotBenchSess(data, specific_station):
+
+    specific_stat_index = np.where(data[:,0] == specific_station)[0]
+
+    fig, ax = plt.subplots()
+    bars = ax.bar(data[0:10,0], data[0:10,1].astype(float), color='steelblue', alpha=0.8) # Plot the 10 best performing stations
+    bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1].astype(float), color='firebrick', alpha=0.8) # Plot the 'target' station
+
+    # Sort out labelling
+    if specific_stat_index > 9:
+        labels = np.append(data[0:10,0], data[specific_stat_index,0])
+        ax.set_xticklabels(labels, rotation='vertical')  
+    else:
+        ax.set_xticklabels(data[0:10,0], rotation='vertical')
+
+    # Top of bar labels
+    ax.bar_label(bars, label_type='edge')
+    ax.bar_label(bar_specific, label_type='edge')
+
+    plt.xlabel('Stations')
+    #plt.ylabel('Number of sessions')
+    plt.title('Total number of sessions')
+
+    img_filename = "numsess_bench.png"
+    img_b64 = save_plt(plt, img_filename)
+    plt.close(fig)
+    
+    return img_b64
+
+def plotBenchWRMS(data, specific_station):
+
+    specific_stat_index = np.where(data[:,0] == specific_station)[0]
+
+    fig, ax = plt.subplots()
+    bars = ax.bar(data[0:10,0], data[0:10,1], color='steelblue', alpha=0.8) # Plot the 10 best performing stations
+    bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1], color='firebrick', alpha=0.8) # Plot the 'target' station
+
+    # Sort out labelling
+    if specific_stat_index > 9:
+        labels = np.append(data[0:10,0], data[specific_stat_index,0])
+        ax.set_xticklabels(labels, rotation='vertical')  
+    else:
+        ax.set_xticklabels(data[0:10,0], rotation='vertical')
+
+    # Top of bar labels
+    ax.bar_label(bars, label_type='edge')
+    ax.bar_label(bar_specific, label_type='edge')
+
+    plt.xlabel('Stations')
+    plt.title('Median station fit (ps)')
+
+    img_filename = "medwrms_bench.png"
+    img_b64 = save_plt(plt, img_filename)
+    plt.close(fig)
+    
+    return img_b64
+
+
 
 def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
 
@@ -506,7 +717,7 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
         raise ValueError("Mismatched names to data columns.")
 
     # create the dataclass that contains the summary data
-    stat_sum = StationSummariser(stat_code, vgos, start_time, stop_time, table)
+    stat_sum = StationSummariser(stat_code, vgos, start_time, stop_time, table, db_name)
 
     # create the PDF report
     print('Generating PDF report...')

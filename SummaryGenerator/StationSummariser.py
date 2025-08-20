@@ -92,18 +92,18 @@ class StationSummariser:
         # station schedules
         ###################
 
-        try:
-            glovdh_dict =  get_glovdh_piecharts(self.station, self.start_time,
-                                        self.stop_time)
-            self.glovdh_images = {stat_type: save_plt(fig) 
-                    for stat_type, fig in glovdh_dict.items()}
-        except Exception as e:
-            print(e)
+        # try:
+        #     glovdh_dict =  get_glovdh_piecharts(self.station, self.start_time,
+        #                                 self.stop_time)
+        #     self.glovdh_images = {stat_type: save_plt(fig) 
+        #             for stat_type, fig in glovdh_dict.items()}
+        # except Exception as e:
+        #     print(e)
 
-        try:
-            self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(self.station, self.start_time, self.stop_time))})
-        except Exception as e:
-            print(e)
+        # try:
+        #     self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(self.station, self.start_time, self.stop_time))})
+        # except Exception as e:
+        #     print(e)
 
         # station problems
         ##################

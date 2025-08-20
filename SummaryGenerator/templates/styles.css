@@ -222,3 +222,16 @@ figcaption {
     padding: 2rem;
     padding-right: 4rem;
 }
+
+
+/* Testing */
+.figure-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+}
+.figure-grid .image {
+    flex: 0 1 calc(50% - 20px); /* Two per row */
+    box-sizing: border-box;
+}

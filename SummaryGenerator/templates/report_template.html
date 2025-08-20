@@ -39,7 +39,9 @@
                     <div class="analysis">
                         {% if performance_analysis %}
                             <h3>Performance Analysis</h3>
-                            <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.</p>
+                            <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.
+                                Heavily affected by other station outages or maintenance and not necessarily indicative of issues at this station.
+                            </p>
                             <p>Median station 'Performance' (used/scheduled) over period: {{ performance_analysis }}</p>
                         {% endif %}
                     </div>
@@ -47,7 +49,9 @@
                 {% if detectX_img or detectS_str %}
                     <div class="detection-rates">
                         <h3>Detection Rates</h3>
-                        <p>Detection rates are measured as the ratio between number of successful detections (with quality code > 6) versus the number of correlated observations.</p>
+                        <p>Detection rates are measured as the ratio between number of successful detections (with quality code > 6) versus the number of correlated observations.
+                            Impacted by performance of baseline partner stations.
+                        </p>
                         {% if detectX_str %}
                             <h4>X Band:</h4>
                             <p>Median X-band detection rate: {{ detectX_str }}</p>
@@ -94,10 +98,34 @@
                         {% endfor %}
                     </div>
                 {% endif %}
+                {% if benchmark_images %}
+                <div class="page-break"></div>
+                    <div class="benchmark-images section">
+                        <h3>Benchmarking barcharts</h3>
+                        <p>
+                            The top 10 best performing stations are plotted, if this station is not in the top 10 it will be added to the right of the figure.
+                            Please note, only 24 hour sessions are included and our database may not necessarily be complete for all stations.
+                        </p>
+                        {% for param, img in benchmark_images.items %}
+                            {% if img %}
+                                {% if forloop.counter0|divisibleby:3 and not forloop.first %}
+                                    <div class="page-break"></div>
+                                {% endif %}
+                                <figure class="image benchmark-image">
+                                    <img src="data:image/png;base64,{{ img }}" alt="{{ stat_type }} ..." width="300">
+                                    <figcaption>
+                                        <p></p>
+                                    </figcaption>
+                                </figure>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
                 <div class="page-break"></div>
                 {% if pos_images %}
                     <div class="position-images section">
-                        <h3>Positions</h3>
+                        <h3>Station Position</h3>
+                        <p>Station position (East, North and Up) time series extracted from <a href="https://ivsopar.obspm.fr/stations/series/">https://ivsopar.obspm.fr/</a></p>
                         {% for coord, img in pos_images.items %}
                             {% if img %}
                                 {% if forloop.counter0|divisibleby:3 and not forloop.first %}
@@ -112,9 +140,9 @@
                             {% endif %}
                         {% endfor %}
                     </div>
-                {% endif %}
-                <div class="page-break"></div>
+                {% endif %}                
                 {% if glovdh_images %}
+                <div class="page-break"></div>
                     <div class="glovdh-images section">
                         <h3>Schedule Breakdown</h3>
                         <p>The following figures are produced using the API of <a href="https://glovdh.ethz.ch/general">https://glovdh.ethz.ch/</a></p>
