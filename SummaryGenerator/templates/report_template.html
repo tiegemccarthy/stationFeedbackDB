@@ -16,11 +16,18 @@
                 <h4><samp>{{ start_time }}</samp> -> <samp>{{ stop_time }}</samp></h4>
                 <p>Report generated: <samp>{{ report_ts }}</samp></p>
             </div>
-            <div class="logo"> <img src="data:image/png;base64,{{ ivs_logo }}" alt="IVS logo" width="100"></div>
+            <div class="logo"> <img src="data:image/png;base64,{{ ivs_logo }}" alt="IVS logo" width="140"></div>
         </header>
         <main>
             <div class="summary">
                 <div class="intro">
+                    <p>
+                        This is an automatically generated report for <strong>{{ station }}</strong>, based on data extracted from analysis and correlator reports from 24 hour IVS VLBI sessions between <strong>{{ start_time }}</strong> 
+                        and <strong>{{ stop_time }}</strong>.
+                    </p>
+                    <p>
+                        Please note that only processed (correlated and analysed) sessions are included in the values and figures presented in this report.
+                    </p>
                     {% if total_sessions %}
                         <p>Total number of <strong>{{ station }}</strong> sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
                     {% endif %}
@@ -31,34 +38,34 @@
                 {% if wrms_analysis or performance_analysis %}
                     <div class="analysis">
                         {% if wrms_analysis %}
-                            <h3>WRMS Analysis</h3>
+                            <h3><u>WRMS Analysis</u></h3>
                             <p>This is a measure of the station's contribution to the weighted RMS of the delay measurement.</p>
-                            <p>Median station W.RMS over period: {{ wrms_analysis }} ps</p>
+                            <p><strong>Median station W.RMS over period: {{ wrms_analysis }} ps</strong></p>
                         {% endif %}
                     </div>
                     <div class="analysis">
                         {% if performance_analysis %}
-                            <h3>Performance Analysis</h3>
+                            <h3><u>Performance Analysis</u></h3>
                             <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.
                                 Heavily affected by other station outages or maintenance and not necessarily indicative of issues at this station.
                             </p>
-                            <p>Median station 'Performance' (used/scheduled) over period: {{ performance_analysis }}</p>
+                            <p><strong>Median station 'Performance' (used/scheduled) over period: {{ performance_analysis }}</strong></p>
                         {% endif %}
                     </div>
                 {% endif %}
                 {% if detectX_img or detectS_str %}
                     <div class="detection-rates">
-                        <h3>Detection Rates</h3>
+                        <h3><u>Detection Rates</u></h3>
                         <p>Detection rates are measured as the ratio between number of successful detections (with quality code > 6) versus the number of correlated observations.
                             Impacted by performance of baseline partner stations.
                         </p>
                         {% if detectX_str %}
                             <h4>X Band:</h4>
-                            <p>Median X-band detection rate: {{ detectX_str }}</p>
+                            <p><strong>Median X-band detection rate: {{ detectX_str }}</strong></p>
                         {% endif %}
                         {% if detectS_str%}
                             <h4>S Band:</h4>
-                            <p>Median S-band detection rate: {{ detectS_str }}</p>
+                            <p><strong>Median S-band detection rate: {{ detectS_str }}</strong></p>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -79,7 +86,7 @@
                 <div class="page-break"></div>
                 {% if detect_images %}
                     <div class="detection-images section">
-                        <h3>Detections</h3>
+                        <h2>Detections</h2>
                         {% for band, img in detect_images.items %}
                             {% if img %}
                                 <figure class="image">
@@ -92,9 +99,9 @@
                 {% if benchmark_images %}
                 <div class="page-break"></div>
                     <div class="benchmark-images section">
-                        <h3>Benchmarking barcharts</h3>
+                        <h2>Benchmarking barcharts</h2>
                         <p>
-                            The top 10 best performing stations are plotted, if this station is not in the top 10 it will be added to the right of the figure.
+                            The top 10 best performing stations are plotted, if this station is not in the top 10 it will be added to the right hand side of the figure.
                             Please note, only 24 hour sessions are included and our database may not necessarily be complete for all stations.
                         </p>
                         {% for param, img in benchmark_images.items %}
@@ -115,7 +122,7 @@
                 <div class="page-break"></div>
                 {% if pos_images %}
                     <div class="position-images section">
-                        <h3>Station Position</h3>
+                        <h2>Station Position</h2>
                         <p>Station position (East, North and Up) time series extracted from <a href="https://ivsopar.obspm.fr/stations/series/">https://ivsopar.obspm.fr/</a></p>
                         {% for coord, img in pos_images.items %}
                             {% if img %}
@@ -135,7 +142,7 @@
                 {% if glovdh_images %}
                 <div class="page-break"></div>
                     <div class="glovdh-images section">
-                        <h3>Schedule Breakdown</h3>
+                        <h2>Schedule Breakdown</h2>
                         <p>The following figures are produced using the API of <a href="https://glovdh.ethz.ch/general">https://glovdh.ethz.ch/</a></p>
                         <p>Note that the following data set shows the scheduled participation of a station, correlated or not.</p>
                         {% for stat_type, img in glovdh_images.items %}
@@ -159,7 +166,7 @@
                 <div class="issues">
                     <h2>Reported Issues</h2>
                     <div class="problems-list">
-                        <p> The following are extracted from correlation reports.</p>
+                        <p> The following are extracted from correlation reports using keywords and are not necessarily a comprehensive list.</p>
                         <ul>
                             {% for problem in problems %}
                                 <li>{{ problem|linebreaksbr|safe }}</li>
@@ -176,7 +183,7 @@
                         {{ table_data|safe }}
                     </div>
                     <div class="about">
-                        <p>An online version of this table may be found at the following <a href="">site</a>.</p>
+                        <!-- <p>An online version of this table may be found at the following <a href="">site</a>.</p> -->
                     </div>
                 </div>
             {% endif %}
@@ -190,9 +197,9 @@
             <div class="about">
                 <h3>About</h3>
                 <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please comment or alert the creators of any apparent issues at the following address <a href="mailto:email@example.com">email</a>.</p>
-                <p>The schedule breakdown section presents data taken from the API developed and offered by ETH Zurich.</p>
+                <p>Station position figures are based on analysis output from the Paris Observatory Geodetic VLBI Center. The schedule breakdown section presents data taken from the API developed and offered by ETH Zurich. </p>
                 <p>This report was developed by the AuScope VLBI project, which is managed by the University of Tasmania, contracted through Geoscience Australia.</p>
-                <p>More information on this project as well as the source code may be found at the following <a href="">link</a>.</p>
+                <p>More information on this project as well as the source code may be found at the following <a href="https://github.com/tiegemccarthy/stationFeedbackDB">link</a>.</p>
             </div>
         </div>
     </main>

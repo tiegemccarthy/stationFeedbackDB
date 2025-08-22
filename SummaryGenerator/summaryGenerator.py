@@ -218,31 +218,23 @@ def wRmsAnalysis(table_input):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
-    #print("Number of sessions: " + str(len(table['col5'])))
-    #wrms_med_str = "Median station W.RMS over period: " + str(np.median(table['W_RMS_del'])) + " ps"
+    # Determine the median W.RMS delay
     wrms_med_str = str(np.median(table['W_RMS_del']))
     print(wrms_med_str)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    # Create the figure
+    fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(time_data, table['W_RMS_del'], color='steelblue', s=20)
     ax.scatter(time_data, table['session_fit'], color='firebrick', s=20)
     ax.hlines(np.median(table['W_RMS_del']), np.min(time_data), np.max(time_data), linestyle='dashed', colors='steelblue')
     ax.hlines(np.median(table['session_fit']), np.min(time_data), np.max(time_data), linestyle='dashed', colors='firebrick')
-    ax.legend(['Station W.RMS delay', 'Session W.RMS delay', 'Median Station W.RMS delay' , 'Median Session W.RMS delay'])    
+    ax.legend(['Station W.RMS delay', 'Session W.RMS delay', 'Median Station W.RMS delay' , 'Median Session W.RMS delay'],  loc='upper left')    
     ax.set_xlabel('Date')
     ax.set_ylabel('W.RMS (ps)')
     ax.set_title('Station W.RMS vs. Time')
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
-
-    #for i, label in enumerate(table['ExpID']):
-    #    ax.annotate(label, (time_data[i], table['W_RMS_del'][i]), alpha=0.6, fontsize=7)
-    #ax = [ax.annotate(label, (time_data[i], table['W_RMS_del'][i]), alpha=0.6, fontsize=7) for i, label in enumerate(table['ExpID'])]
-    #adjust_text(ax)
-    #plt.savefig('wRMS.png', bbox_inches="tight")
-
-    ### save
+    ### save figure
     img_filename = "wRMS.png"
     img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
@@ -259,25 +251,21 @@ def performanceAnalysis(table_input):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
-
-    #perf_str = "Median station 'Performance' (used/scheduled) over period: " + str(np.median(table['Performance']))
-
+    # Determine the median performance
     perf_str = str(np.median(table['Performance']))
     print(perf_str)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    # Create the figure
+    fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(time_data, table['Performance'], color='k', s=10, marker='s')
     ax.fill_between(time_data, table['Performance'],color='steelblue', alpha = 0.5)
     ax.hlines(np.median(table['Performance']), np.min(time_data), np.max(time_data), linestyle='dashed', color='steelblue')
-    #ax.plot(mjd_x, wrms_runavg, color='r')
     ax.set_title('Performance (used/scheduled) vs. Time')
     ax.set_xlabel('Date')
     ax.set_ylim([0, 1.0])
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
-    #plt.savefig('performance.png', bbox_inches="tight")
-    ### save
+    ### save figure
     img_filename = "performance.png"
     img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
@@ -286,6 +274,7 @@ def performanceAnalysis(table_input):
 
 #
 def posAnalysis(table_input, coord):
+    # Currently this function is not used in the report generation
     table = table_input.copy()
     if coord == 'X':
         col_name = 'Pos_X'
@@ -320,7 +309,6 @@ def posAnalysis(table_input, coord):
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.tick_params(axis='x', labelrotation=45)
     # these ticks should probably be 45 degrees
-
     ### save
     img_filename = f"{coord}_pos.png"
     img_b64 = save_plt(plt, img_filename)
@@ -328,24 +316,18 @@ def posAnalysis(table_input, coord):
 
     return img_filename, img_b64
 
-# THIS ONE, Doesn't save a fig? Or at least not used in report
 def usedVsRecoveredAnalysis(table_input):
+    # Currently this function is not used in the report generation
     table = table_input.copy()
     # filter sessions with 0% data
     bad_data = []
-
     for i in range(0, len(table['Performance_UsedVsRecov'])):
         if table['Performance_UsedVsRecov'][i] == 0 or table['Performance_UsedVsRecov'][i] == None:
             bad_data.append(i)
-
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
-
-    #print("Number of sessions: " + str(len(table['col4'])))
-    #print("Median used vs recovered observations: " + str(np.median(table['col4'])))
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    # Create the figure
+    fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(time_data, table['v'], color='k', s=5)
     ax.fill_between(time_data, table['Performance_UsedVsRecov'], alpha = 0.5)
     ax.set_title('Fractional Used/Recovered Observations vs. Time')
@@ -356,9 +338,7 @@ def usedVsRecoveredAnalysis(table_input):
 
 
 def detectRate(table_input, band):
-    """
-    """
-
+    # determine which band we are looking at
     table = table_input.copy()
     if band == 'X':
         col_name = 'Detect_Rate_X'
@@ -366,18 +346,16 @@ def detectRate(table_input, band):
         col_name = 'Detect_Rate_S'
     # filter sessions with 0% data
     bad_data = []
-
     for i in range(0, len(table[col_name])):
         if table[col_name][i] == 0 or table[col_name][i] == None:
             bad_data.append(i)
-
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
-    #rate_str = "Median " + band + "-band detection rate: " + str(np.median(table[col_name]))
+    # Determine the median detection rate
     rate_str = str(np.median(table[col_name]))
     print(band, rate_str)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    # Create the figure
+    fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(time_data, table[col_name], color='k', s=5)
     ax.fill_between(time_data, table[col_name], color='steelblue', alpha = 0.5)
     ax.hlines(np.median(table[col_name]), np.min(time_data), np.max(time_data), linestyle='dashed', color='steelblue')
@@ -387,10 +365,11 @@ def detectRate(table_input, band):
     ax.set_ylim([0, 1.0])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
-
+    # Save figure
     img_filename = f"{band}_detect_rate.png"
     img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
+
     return rate_str, img_b64
 
 
@@ -399,7 +378,6 @@ def problemExtract(table_input):
     no line wrapping, let the css handle this.
     swapped replace with regex to catch the rogue ';'
     """
-
     table = table_input.copy()
     problem_flag = ['pcal', 'phase', 'bad', 'lost', 'clock', 
                     'error', ' late ', 'issue', 'sensitivity',
@@ -454,23 +432,21 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
         like = "LIKE"
     
     conn = mariadb.connect(user='auscope', passwd='password')
-
     cursor = conn.cursor()
+    # Change to the correct database
     query = "USE " + database_name +";"
-
     print(query)
-
     cursor.execute(query)
+    # Extract the data from the database
     query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, session_fit, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID " + like + " \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
-
     print(query)
-
     cursor.execute(query)
     result = cursor.fetchall()
     col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "session_fit", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
+    
     return result, col_names 
 
-#### Functions specific to 'benchmarking' plots
+#### Functions specific to 'benchmarking' plots are below this point ####
 
 def grabStations(sqldb_name):
     conn = mariadb.connect(user='auscope', passwd='password')
@@ -589,6 +565,7 @@ def plotBenchObs(data, specific_station):
         ax.set_xticklabels(labels, rotation='vertical')  
     else:
         ax.set_xticklabels(data[0:10,0], rotation='vertical')
+    ax.tick_params(axis='x', labelrotation=45)
 
     plt.xlabel('Stations')
     plt.title('Total observations')
@@ -613,6 +590,7 @@ def plotBenchSess(data, specific_station):
         ax.set_xticklabels(labels, rotation='vertical')  
     else:
         ax.set_xticklabels(data[0:10,0], rotation='vertical')
+    ax.tick_params(axis='x', labelrotation=45)
 
     # Top of bar labels
     ax.bar_label(bars, label_type='edge')
@@ -638,9 +616,10 @@ def plotBenchWRMS(data, specific_station):
     # Sort out labelling
     if specific_stat_index > 9:
         labels = np.append(data[0:10,0], data[specific_stat_index,0])
-        ax.set_xticklabels(labels, rotation='vertical')  
+        ax.set_xticklabels(labels, rotation='vertical')
     else:
         ax.set_xticklabels(data[0:10,0], rotation='vertical')
+    ax.tick_params(axis='x', labelrotation=45)
 
     # Top of bar labels
     ax.bar_label(bars, label_type='edge')

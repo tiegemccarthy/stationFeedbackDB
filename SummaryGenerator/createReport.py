@@ -1,18 +1,12 @@
 import asyncio
-#
 import os
 import base64
-#
 from pyppeteer import launch
-#
 import django
 from django.template import Template, Context
 from django.conf import settings
-
 from datetime import datetime
-
 from dataclasses import asdict
-
 from SummaryGenerator.utilities import load_png
 
 # control
