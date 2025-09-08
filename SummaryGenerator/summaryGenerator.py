@@ -435,11 +435,11 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     cursor = conn.cursor()
     # Change to the correct database
     query = "USE " + database_name +";"
-    print(query)
+    #print(query)
     cursor.execute(query)
     # Extract the data from the database
     query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, session_fit, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID " + like + " \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
-    print(query)
+    #print(query)
     cursor.execute(query)
     result = cursor.fetchall()
     col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "session_fit", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
