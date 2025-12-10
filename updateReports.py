@@ -27,7 +27,7 @@ def main(database_name):
     # sort out date range...
     today_date = datetime.now()
     end_date = Time(today_date).to_value('yday', subfmt='date') 
-    start_date = (Time(today_date) - timedelta(days=180)).to_value('yday', subfmt='date') 
+    start_date = (Time(today_date) - timedelta(days=365)).to_value('yday', subfmt='date') 
     print(start_date)
     # generate report
     stationNames, stationNamesLong = stationParse()
