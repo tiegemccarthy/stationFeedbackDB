@@ -19,7 +19,7 @@ Example crontab:
 
 ### databaseCore.py
 
-Create or fill the database (hardcoded parameters) with entries processed from the
+Create or fill the database (hardcoded parameters) with entries processed from the various reports.
 
 ### updateReports.py
 
@@ -30,6 +30,5 @@ Need to fix this, then probably split the reports side off into its own reposito
 
 - requirements.txt, test in a virtual environment
 - regarding the pipeline/cron:
-    - look into looping through past master schedules as required
-    - i would put the command line args as parameters in a config file...
+- look into looping through past master schedules as required
 - use a proper logger
