@@ -59,7 +59,7 @@ def main(master_schedule, db_name):
     for ant in stationNamesLong:
         query_content = """ (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, Performance decimal(4,3) NOT NULL, Performance_UsedVsRecov decimal(4,3), Date DATETIME , Date_MJD decimal(9,2), Pos_X decimal(14,2), Pos_Y decimal(14,2), 
             Pos_Z decimal(14,2), Pos_U decimal(14,2), Pos_E decimal(14,2), Pos_N decimal(14,2), W_RMS_del decimal(5,2), session_fit decimal(5,2), Total_Obs decimal(9,2),Detect_Rate_X decimal(5,3), Detect_Rate_S decimal(5,3), Manual_Pcal BIT(1), 
-            Dropped_Chans VARCHAR(1500), Note_Bool BIT(1), Notes VARCHAR(500), Analyser VARCHAR(10) NOT NULL, vgosDB_tag VARCHAR(18));"""
+            Dropped_Chans VARCHAR(1500), Note_Bool BIT(1), Notes VARCHAR(500), Analyser VARCHAR(10) NOT NULL, vgosDB_tag VARCHAR(18), VGOS_Bool BIT(1));"""
         query = "CREATE TABLE IF NOT EXISTS "+ ant + query_content
         cursor.execute(query)
         conn.commit()
@@ -83,11 +83,11 @@ def main(master_schedule, db_name):
                 for i in range(0, len(station_data)):
                     station = station_data[i]
                     sql_station = """INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, 
-                        W_RMS_del, session_fit, Analyser, vgosDB_tag, Manual_Pcal, Dropped_Chans, Total_Obs, Detect_Rate_X, Detect_Rate_S, Note_Bool, Notes) 
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""".format(station_data[i].name)
+                        W_RMS_del, session_fit, Analyser, vgosDB_tag, Manual_Pcal, Dropped_Chans, Total_Obs, Detect_Rate_X, Detect_Rate_S, Note_Bool, Notes, VGOS_Bool) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""".format(station_data[i].name)
                     data = [station.exp_id, station.performance, station.perf_uvr, station.date, station.date_mjd, station.posx, station.posy, station.posz, 
                             station.posu, station.pose, station.posn, station.wrms_del, station.sess_fit, station.analyser, station.vgosdb, station.man_pcal,
-                            station.dropped_chans, station.total_obs, station.detect_rate_x, station.detect_rate_s, station.note_bool, station.notes]
+                            station.dropped_chans, station.total_obs, station.detect_rate_x, station.detect_rate_s, station.note_bool, station.notes, station.vgos_bool]
                     print(data)
                     conn = mariadb.connect(user='auscope', passwd='password', db=str(db_name))
                     cursor = conn.cursor()

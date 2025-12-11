@@ -334,6 +334,7 @@ class stationData(object):
         self.detect_rate_s = []
         self.note_bool = []
         self.notes = []
+        self.vgos_bool = []
 
 def main(exp_code):
     stationNames, stationNamesLong = stationParse()
@@ -341,10 +342,10 @@ def main(exp_code):
     file_analysis = dirname + '/analysis_reports/' + str(exp_code) + '_report.txt'
     file_spool = dirname + '/analysis_reports/' + str(exp_code) + '_spoolfile.txt'
     file_corr = dirname + '/corr_files/' + str(exp_code) + '.corr'
-    file_skd = dirname + '/analysis_reports/' + str(exp_code) + '.skd'
+    file_skd = dirname + '/skd_files/' + str(exp_code) + '.skd'
 
     # Read in analysis report
-    if os.path.isfile(file_spool): 
+    if os.path.isfile(file_analysis): 
         with open(file_analysis) as file:
             contents_report = file.read()
             sections = contents_report.split('-----------------------------------------')   
@@ -430,6 +431,19 @@ def main(exp_code):
     else:
         print("No correlator report available.") 
 
+    # Determine whether session is a VGOS/broadband session from skd file
+    # For some reason R1 sessions are the only S/X session that have content in this section, will need to filter that
+    vgos = False # Default assumption
+    if os.path.isfile(file_skd): 
+        with open(file_skd) as file:
+            contents_skd = file.read()
+            skd_section = contents_skd.split('$')
+        for sec in skd_section:
+            if 'BROADBAND' in sec:
+                if len(sec) > 10 and exp_code[0:2] != 'r1': # Check whether this section is longer than just the title and if R1
+                    vgos = True   # If content exists in the section, change vgos boolean
+                break
+
     # Create a data object for each station with the relevant data values - append present stations to list of objects
     station_objects = []
     for i in range(0,len(stationNames)):
@@ -459,6 +473,7 @@ def main(exp_code):
                 station.detect_rate_s = q_code_data_S[i][0]
                 station.note_bool = notes_bool[i]
                 station.notes = notes[i]
+                station.vgos_bool = vgos
             station_objects.append(station)
     
     return station_objects
