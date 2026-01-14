@@ -52,6 +52,14 @@
                             <p><strong>Median station 'Performance' (used/scheduled) over period: {{ performance_analysis }}</strong></p>
                         {% endif %}
                     </div>
+                    <div class="analysis">
+                        {% if ass_rate_str %}
+                            <h3><u>Assignment Rate</u></h3>
+                            <p>Assignment Rate is the fraction of observations this station was involved in compared to the station with the most observations.
+                            </p>
+                            <p><strong>Median station assignment rate over period: {{ ass_rate_str }}</strong></p>
+                        {% endif %}
+                    </div>
                 {% endif %}
                 {% if detectX_img or detectS_str %}
                     <div class="detection-rates">
@@ -83,6 +91,11 @@
                         <img src="data:image/png;base64,{{ perf_img }}" alt="Performance Image" width="300">
                     </figure>
                 {% endif %}
+                {% if ass_rate_img %}
+                    <figure class="image">
+                        <img src="data:image/png;base64,{{ ass_rate_img }}" alt="Assignment Rate Image" width="300">
+                    </figure>
+                {% endif %}
                 <div class="page-break"></div>
                 {% if detect_images %}
                     <div class="detection-images section">
@@ -101,8 +114,9 @@
                     <div class="benchmark-images section">
                         <h2>Benchmarking barcharts</h2>
                         <p>
-                            The top 10 best performing stations are plotted, if this station is not in the top 10 it will be added to the right hand side of the figure.
+                            The 10 stations with highest totals are plotted, if this station is not in the top 10 it will be added to the right hand side of the figure.
                             Please note, only 24 hour sessions are included and our database may not necessarily be complete for all stations.
+                            Also note that these values are raw totals and do not account for the number of sessions a station has participated in.
                         </p>
                         {% for param, img in benchmark_images.items %}
                             {% if img %}

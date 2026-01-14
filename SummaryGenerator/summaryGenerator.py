@@ -45,8 +45,10 @@ class StationSummariser:
     performance_analysis: str = ""      # this should be value not string
     detectX_str: str = ""               # this should be value not string
     detectS_str: str = ""               # this should be value not string
+    ass_rate_str: str = ""
     wrms_img: str = ""
     perf_img: str = ""
+    ass_rate_img: str = ""
     detect_images: dict[str, str] = field(default_factory=dict)
     benchmark_images: dict[str, str] = field(default_factory=dict)
     pos_images: dict[str, str] = field(default_factory=dict)
@@ -103,7 +105,11 @@ class StationSummariser:
 
         self.benchmark_images['numobs'] = plotBenchObs(bench_obs_list, self.station)
         self.benchmark_images['numsess'] = plotBenchSess(bench_numsess_list, self.station)
-        self.benchmark_images['medwrms'] = plotBenchWRMS(bench_wrms_list, self.station)            
+        self.benchmark_images['medwrms'] = plotBenchWRMS(bench_wrms_list, self.station)
+
+        # assignment rate plot
+        ass_rate_list = determineAssignmentRate(table_list, stat_tab_list, self.station)
+        self.ass_rate_str, self.ass_rate_img = plotAssignmentRate(ass_rate_list)     
 
         # station position
         ##################
@@ -447,6 +453,58 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     return result, col_names 
 
 #### Functions specific to 'benchmarking' plots are below this point ####
+
+def determineAssignmentRate(table_list, stat_tab_list, target_stat):
+    # Find station index
+    try:
+        station_index = np.where(np.array(stat_tab_list) == target_stat)[0][0]
+    except IndexError:
+        print("Station code not found in the data.")
+        return None
+    # Calculate assignment rate for each experiment for a given station
+    assignment_rate_list = []
+    for exp in table_list[station_index]['ExpID']:
+        exp_date = table_list[station_index]['Date'][table_list[station_index]['ExpID'] == exp][0]
+        target_stat_obs = table_list[station_index]['Total_Obs'][table_list[station_index]['ExpID'] == exp][0]
+        # Now find the station with the highest observations for that experiment
+        max_obs = target_stat_obs
+        for i in range(0, len(table_list)):
+            if exp in table_list[i]['ExpID']:
+                station_obs = table_list[i]['Total_Obs'][table_list[i]['ExpID'] == exp][0]
+                if 'max_obs' not in locals():
+                    max_obs = station_obs
+                elif station_obs > max_obs:
+                    max_obs = station_obs
+        assignment_rate_list.append([exp, exp_date, target_stat_obs / max_obs])
+
+    return assignment_rate_list
+
+def plotAssignmentRate(ass_rate):
+    # Convert to numpy array for easier plotting
+    ass_rate_array = np.array(ass_rate)
+    median_ass_rate = np.median(ass_rate_array[:,2])
+    # Setup the plots
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    # Plot assignment rate time series
+    ax.scatter(ass_rate_array[:,1], ass_rate_array[:,2], color='k', s=5)
+    ax.fill_between(ass_rate_array[:,1], ass_rate_array[:,2], color='steelblue', alpha = 0.5)
+    ax.hlines(median_ass_rate, np.min(ass_rate_array[:,1]), np.max(ass_rate_array[:,1]), linestyle='dashed', color='steelblue')
+    ax.set_title('Assignment rate')
+    ax.set_ylabel('Fraction of max observations')
+    ax.set_xlabel('Date')
+    ax.set_ylim([0, 1.0])
+    ax.set_xlim([np.min(ass_rate_array[:,1]), np.max(ass_rate_array[:,1])])
+    ax.tick_params(axis='x', labelrotation=45)
+
+    for i, txt in enumerate(ass_rate_array[:,0]):
+        ax.annotate(txt, (ass_rate_array[i,1], ass_rate_array[i,2]), rotation=90, fontsize=5, xytext=(0, -20), textcoords='offset points')
+
+    img_filename = "assignment_rate_timeseries.png"
+    img_b64 = save_plt(plt, img_filename)
+    plt.close(fig)
+    
+    return str(round(median_ass_rate, 2)), img_b64
+
 
 def grabStations(sqldb_name):
     conn = mariadb.connect(user='auscope', passwd='password')

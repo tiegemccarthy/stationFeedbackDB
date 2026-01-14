@@ -177,6 +177,7 @@ tr, td, th {
     padding: 0.5rem;
     background: #f8f9fa;
     border-radius: 2px;
+    margin-bottom: -20px;
 }
 
 .about {
