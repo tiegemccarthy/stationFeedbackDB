@@ -23,12 +23,10 @@ Create or fill the database (hardcoded parameters) with entries processed from t
 
 ### updateReports.py
 
-Database is currently working fine, but reports are broken due to the SQL table name change.
-Need to fix this, then probably split the reports side off into its own repository.
+Reports are working, but currently can only be generated with this script which isn't very flexible
+Need to add some flexibility then probably split the reports side off into its own repository.
 
 ## TODO
+- Update the report scripts to use the new VGOS boolean value in the database
 
-- requirements.txt, test in a virtual environment
-- regarding the pipeline/cron:
-- look into looping through past master schedules as required
-- use a proper logger
+
