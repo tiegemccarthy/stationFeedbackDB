@@ -114,9 +114,8 @@
                     <div class="benchmark-images section">
                         <h2>Benchmarking barcharts</h2>
                         <p>
-                            The 10 stations with highest totals are plotted, if this station is not in the top 10 it will be added to the right hand side of the figure.
+                            The 10 stations with highest totals in database are plotted, if this station is not in the top 10 it will be added to the right hand side of the figure.
                             Please note, only 24 hour sessions are included and our database may not necessarily be complete for all stations.
-                            Also note that these values are raw totals and do not account for the number of sessions a station has participated in.
                         </p>
                         {% for param, img in benchmark_images.items %}
                             {% if img %}
@@ -124,7 +123,7 @@
                                     <div class="page-break"></div>
                                 {% endif %}
                                 <figure class="image benchmark-image">
-                                    <img src="data:image/png;base64,{{ img }}" alt="{{ stat_type }} ..." width="500">
+                                    <img src="data:image/png;base64,{{ img }}" alt="{{ stat_type }} ..." width="400">
                                     <figcaption>
                                         <p></p>
                                     </figcaption>

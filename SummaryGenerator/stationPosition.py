@@ -42,7 +42,7 @@ def downloadFile(file_name):
 
 
 def file2DF(file_name):
-    dataframe_colnames = ['date', 'X', 'dX', 'Y', 'dY', 'Z', 'dZ', 'U', 'dU', 'E', 'dE', 'N', 'dN', 'station', 'vgosDB']
+    dataframe_colnames = ['date', 'X', 'dX', 'Y', 'dY', 'Z', 'dZ', 'U', 'dU', 'E', 'dE', 'N', 'dN']#, 'station', 'vgosDB']
     df = pandas.read_csv(file_name, names=dataframe_colnames, header=0, skiprows=2, delimiter='\s+')
 
     return df
@@ -58,17 +58,17 @@ def plotPos(df, startdate, stopdate, lim, pos_string):
     print(f"Min Date: {df['date'].min()}, Max Date: {df['date'].max()}")
 
     # Attempt to determine session type from vgosDB string
-    r1r4_mask = np.where(date_mask & (df['vgosDB'].str.contains('-r.')))[0]
-    vgos_mask = np.where(date_mask & (df['vgosDB'].str.contains('-v.')))[0]
+    #r1r4_mask = np.where(date_mask & (df['vgosDB'].str.contains('-r.')))[0]
+    #vgos_mask = np.where(date_mask & (df['vgosDB'].str.contains('-v.')))[0]
     everything_mask = np.where(date_mask)[0]
 
     # Plot the different sessions with unique colours
-    ax.scatter(df['date'][everything_mask], df[pos_string][everything_mask], s=20, color='r')
-    ax.errorbar(df['date'][everything_mask], df[pos_string][everything_mask], yerr=df['d' + pos_string][everything_mask], fmt='none',color='r')
-    ax.scatter(df['date'][r1r4_mask], df[pos_string][r1r4_mask], s=20, color='k')
-    ax.errorbar(df['date'][r1r4_mask], df[pos_string][r1r4_mask], yerr=df['d' + pos_string][r1r4_mask], fmt="none", color='k')
-    ax.scatter(df['date'][vgos_mask], df[pos_string][vgos_mask], s=20, color='b')
-    ax.errorbar(df['date'][vgos_mask], df[pos_string][vgos_mask], yerr=df['d' + pos_string][vgos_mask], fmt="none", color='b')
+    ax.scatter(df['date'][everything_mask], df[pos_string][everything_mask], s=20, color='k')
+    ax.errorbar(df['date'][everything_mask], df[pos_string][everything_mask], yerr=df['d' + pos_string][everything_mask], fmt='none',color='k')
+    #ax.scatter(df['date'][r1r4_mask], df[pos_string][r1r4_mask], s=20, color='k')
+    #ax.errorbar(df['date'][r1r4_mask], df[pos_string][r1r4_mask], yerr=df['d' + pos_string][r1r4_mask], fmt="none", color='k')
+    #ax.scatter(df['date'][vgos_mask], df[pos_string][vgos_mask], s=20, color='b')
+    #ax.errorbar(df['date'][vgos_mask], df[pos_string][vgos_mask], yerr=df['d' + pos_string][vgos_mask], fmt="none", color='b')
 
     # Set y-limits
     median_val = np.nanmedian(df.where(df['date'] > startdate)[pos_string])
@@ -77,7 +77,7 @@ def plotPos(df, startdate, stopdate, lim, pos_string):
     # Add labels and legend
     ax.set_xlabel('Date (Years)')
     ax.set_ylabel(pos_string + ' Position (mm)')
-    ax.legend(['Other', 'R1/R4', 'VGOS'])
+#    ax.legend(['Other', 'R1/R4', 'VGOS'])
 
     return f, ax
 
@@ -110,7 +110,7 @@ def get_station_positions(STATION_NAME, start_date, stop_date):
     # these files all have the same number of characters buffered by underscores
     stat_name_buffered = STATION_NAME.ljust(8, '_')
     file_name = f"{stat_name_buffered}.txt"
-    # This is a bit of a cludge editing Earl's existing code, revist this + the download step in summaryGenerator
+    # This is a bit of a kludge editing Earl's existing code, revist this + the download step in summaryGenerator
     pos_df = file2DF(os.path.dirname( __file__ ) + '/../' + file_name)
     
     fig_dict = {}
