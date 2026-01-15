@@ -257,17 +257,18 @@ def performanceAnalysis(table_input):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
-    # Determine the median performance
-    perf_str = str(np.median(table['Performance']))
+    # Write out the median performance string
+    perf_str = str(round(np.median(table['Performance'])*100, 1)) + '%'
     print(perf_str)
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))
-    ax.scatter(time_data, table['Performance'], color='k', s=10, marker='s')
-    ax.fill_between(time_data, table['Performance'],color='steelblue', alpha = 0.5)
-    ax.hlines(np.median(table['Performance']), np.min(time_data), np.max(time_data), linestyle='dashed', color='steelblue')
+    ax.scatter(time_data, table['Performance']*100, color='k', s=10, marker='s')
+    ax.fill_between(time_data, table['Performance']*100, color='steelblue', alpha=0.5)
+    ax.hlines(np.median(table['Performance'])*100, np.min(time_data), np.max(time_data), linestyle='dashed', color='steelblue')
     ax.set_title('Performance (used/scheduled) vs. Time')
     ax.set_xlabel('Date')
-    ax.set_ylim([0, 1.0])
+    ax.set_ylabel('% of used obs. vs. scheduled obs.')
+    ax.set_ylim([0, 100.0])
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
@@ -358,17 +359,17 @@ def detectRate(table_input, band):
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
     # Determine the median detection rate
-    rate_str = str(np.median(table[col_name]))
+    rate_str = str(round(np.median(table[col_name])*100, 1)) + '%'
     print(band, rate_str)
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))
-    ax.scatter(time_data, table[col_name], color='k', s=5)
-    ax.fill_between(time_data, table[col_name], color='steelblue', alpha = 0.5)
-    ax.hlines(np.median(table[col_name]), np.min(time_data), np.max(time_data), linestyle='dashed', color='steelblue')
+    ax.scatter(time_data, table[col_name]*100, color='k', s=5)
+    ax.fill_between(time_data, table[col_name]*100, color='steelblue', alpha = 0.5)
+    ax.hlines(np.median(table[col_name])*100, np.min(time_data), np.max(time_data), linestyle='dashed', color='steelblue')
     ax.set_title('Session ' + band + '-band Detection ratio')
-    ax.set_ylabel('Fraction of usable obs. vs. correlated obs.')
+    ax.set_ylabel('% of usable obs. vs. correlated obs.')
     ax.set_xlabel('Date')
-    ax.set_ylim([0, 1.0])
+    ax.set_ylim([0, 100.0])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
     # Save figure
@@ -486,24 +487,26 @@ def plotAssignmentRate(ass_rate):
     # Setup the plots
     fig, ax = plt.subplots(figsize=(7, 4.5))
     # Plot assignment rate time series
-    ax.scatter(ass_rate_array[:,1], ass_rate_array[:,2], color='k', s=5)
-    ax.fill_between(ass_rate_array[:,1], ass_rate_array[:,2], color='steelblue', alpha = 0.5)
-    ax.hlines(median_ass_rate, np.min(ass_rate_array[:,1]), np.max(ass_rate_array[:,1]), linestyle='dashed', color='steelblue')
+    ax.scatter(ass_rate_array[:,1], ass_rate_array[:,2]*100, color='k', s=5)
+    ax.fill_between(ass_rate_array[:,1], ass_rate_array[:,2]*100, color='steelblue', alpha = 0.5)
+    ax.hlines(median_ass_rate*100, np.min(ass_rate_array[:,1]), np.max(ass_rate_array[:,1]), linestyle='dashed', color='steelblue')
     ax.set_title('Assignment rate')
-    ax.set_ylabel('Fraction of max observations')
+    ax.set_ylabel('% of max observations')
     ax.set_xlabel('Date')
-    ax.set_ylim([0, 1.0])
+    ax.set_ylim([0, 100.0])
     ax.set_xlim([np.min(ass_rate_array[:,1]), np.max(ass_rate_array[:,1])])
     ax.tick_params(axis='x', labelrotation=45)
 
     for i, txt in enumerate(ass_rate_array[:,0]):
-        ax.annotate(txt, (ass_rate_array[i,1], ass_rate_array[i,2]), rotation=90, fontsize=5, xytext=(0, -20), textcoords='offset points')
+        ax.annotate(txt, (ass_rate_array[i,1], ass_rate_array[i,2]*100), rotation=90, fontsize=5, xytext=(0, -20), textcoords='offset points')
 
     img_filename = "assignment_rate_timeseries.png"
     img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
-    
-    return str(round(median_ass_rate, 2)), img_b64
+
+    rate_str = str(round(median_ass_rate*100, 1)) + '%'
+
+    return rate_str, img_b64
 
 
 def grabStations(sqldb_name):
