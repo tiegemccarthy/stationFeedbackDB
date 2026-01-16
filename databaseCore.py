@@ -79,6 +79,7 @@ def main(master_schedule, db_name):
                 vgosDB = meta_data[4]
                 databaseReportDownloader.corrReportDL(exp, vgosDB)
                 station_data = parseFiles.main(exp)
+                print(station_data)
                 # add station data to SQL database
                 for i in range(0, len(station_data)):
                     station = station_data[i]
@@ -88,7 +89,7 @@ def main(master_schedule, db_name):
                     data = [station.exp_id, station.performance, station.perf_uvr, station.date, station.date_mjd, station.posx, station.posy, station.posz, 
                             station.posu, station.pose, station.posn, station.wrms_del, station.sess_fit, station.analyser, station.vgosdb, station.man_pcal,
                             station.dropped_chans, station.total_obs, station.detect_rate_x, station.detect_rate_s, station.note_bool, station.notes, station.vgos_bool]
-                    print(data)
+                    #print(data)
                     conn = mariadb.connect(user='auscope', passwd='password', db=str(db_name))
                     cursor = conn.cursor()
                     cursor.execute(sql_station, data)

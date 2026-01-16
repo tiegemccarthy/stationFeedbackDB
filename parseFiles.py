@@ -152,7 +152,6 @@ def extractRelevantSections(all_corr_sections, version):
     # number of sections and can cause the script to fail. This allows you to know exactly which section is which.
 
 def noteFinder(text_section, stations): 
-    print(text_section)
     note_bool = []
     note_string_list = []
     text_section = text_section.split("\n")
@@ -169,6 +168,7 @@ def noteFinder(text_section, stations):
         else:
             note_bool.append(False)
             note_string_list.append('')
+
     return note_bool, note_string_list
     # # searches first section of text for a problem, creates two lists one with a boolean value, the other with at least 1 line of 
     # the string where a problem is mentioned
@@ -184,6 +184,7 @@ def droppedChannels(text_section, stations):
             dropped_chans.append('')
         else:
             dropped_chans.append(','.join(dropped))
+
     return dropped_chans  
     # This function takes a block of text, and scrapes out whether any AuScope antennas have dropped channels
     # The input of this function is a text section from the correlator report (section[5])
@@ -195,6 +196,7 @@ def manualPcal(text_section, stations):
             manual_pcal.append(True)
         else:
             manual_pcal.append(False)
+
     return manual_pcal
     # this determines whether manual pcal happened for any of our telescopes.
     # The input of this function is a text section from the correlator report (section[6])
@@ -217,6 +219,7 @@ def antennaReference_CORR(text_section, version):
             elif '-' in line: # this is to handle some funky corr report styles.
                 ref = [line[3:5], line[1]]
                 antennas_corr_reference.append(ref)
+
     return antennas_corr_reference
     # This function takes the section[4] of the corr report and gives the 2 character
     # station code plus the single character corr code.
@@ -229,6 +232,7 @@ def antennaReference_SKD(text_section):
         entry = entry.split()
         ref = [entry[2], entry[14], entry[15]]
         antenna_reference.append(ref)
+
     return antenna_reference
     
 def basnumArray(snr_data, antennas_corr_reference, SEFD_tags):
@@ -241,6 +245,7 @@ def basnumArray(snr_data, antennas_corr_reference, SEFD_tags):
                 bl_pair.append(index[0])
         basnum.append(np.concatenate(bl_pair))
     basnum=np.stack(basnum, axis=0)
+
     return basnum
 
 def stationParse(stations_config=dirname + '/stations.config'):
@@ -253,6 +258,7 @@ def stationParse(stations_config=dirname + '/stations.config'):
     else:
         stationNames = stationTable['2char'][:]
         stationNamesLong = stationTable['full'][:]
+
     return stationNames, stationNamesLong
 
 def createStationQTables(section, corr_ref, band):
@@ -277,6 +283,7 @@ def createStationQTables(section, corr_ref, band):
             summed_qcode_table = vstack([summed_qcode_table, baseline_sum_qcode])
         except:
             summed_qcode_table = summed_qcode_table
+
     return summed_qcode_table
 
 def extractQcodeInfo(qcode_table):
@@ -294,6 +301,7 @@ def extractQcodeInfo(qcode_table):
         bad = bad + Aych
     except:
         pass
+
     return qcode_table['station'], good/(good+bad), good/total, good+bad
     # this function returns the ammont of useable scans as a fraction against all correlated scans with no-issues, and against all scheduled scans
     
@@ -304,6 +312,7 @@ def corrMeta(contents):
             start_time = datetime.strptime(start_time, '%Y-%j-%H%M').strftime('%Y-%m-%d %H:%M:%S')
         if 'VGOSDB' in line:
             vgosdb_tag = line.split()[1]
+            
     return Time(start_time), vgosdb_tag
 
 # Set up a class to contain the data values for each station
@@ -384,7 +393,7 @@ def main(exp_code):
         if len(relevant_section) < 4:
             print("Incompatible correlator report format.")
         # Determine what section contains what info - sometimes variable...
-        notes_section  = ' ' # Occasioanlly a corr report has no notes section, this could be cleaned up using a try later on, bit of a cludge
+        notes_section  = ' ' # Occasionally a corr report has no notes section, this could be cleaned up using a try later on, bit of a kludge
         for i in range(0, len(relevant_section)):
             if 'QCODES' in relevant_section[i].split()[0]:
                 qcode_section = relevant_section[i]
@@ -426,11 +435,9 @@ def main(exp_code):
                 q_code_data_S.append([round(good_vs_bad_S[stat_index],3), round(good_vs_total_S[stat_index],3), round(total_obs_S[stat_index],3)])
             except:
                 q_code_data_S.append([None, None, None])
-        print(notes_section)
         notes_bool, notes = noteFinder(notes_section, stationNames)
     else:
         print("No correlator report available.") 
-
     # Determine whether session is a VGOS/broadband session from skd file
     # For some reason R1 sessions are the only S/X session that have content in this section, will need to filter that
     vgos = False # Default assumption
