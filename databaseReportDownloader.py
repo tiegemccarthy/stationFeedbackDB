@@ -32,10 +32,10 @@ def checkExistingData(db_name, stations):
         cursor.execute(query)
         result_list = [item for sublist in cursor.fetchall() for item in sublist]
         existing_experiments.append(result_list)
-    
     existing_experiments = [item for sublist in existing_experiments for item in sublist]
     unique_existing_experiments = set(existing_experiments)
-    
+
+
     return unique_existing_experiments
 
 def validExpFinder(master_schedule, station_names):

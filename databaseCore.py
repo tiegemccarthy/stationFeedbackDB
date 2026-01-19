@@ -70,6 +70,7 @@ def main(master_schedule, db_name):
     valid_experiments = databaseReportDownloader.validExpFinder(os.path.join(dirname, master_schedule), stationNames)
     existing_experiments = databaseReportDownloader.checkExistingData(str(db_name), stationNamesLong)
     experiments_to_add = [x for x in valid_experiments if x.lower() not in existing_experiments]
+    print('Experiments to add to database: ' + str(experiments_to_add))
     for exp in experiments_to_add:
         exp = exp.lower()
         if os.path.isfile(dirname+'/analysis_reports/'+ exp +'_report.txt'):
@@ -79,10 +80,10 @@ def main(master_schedule, db_name):
                 vgosDB = meta_data[4]
                 databaseReportDownloader.corrReportDL(exp, vgosDB)
                 station_data = parseFiles.main(exp)
-                print(station_data)
                 # add station data to SQL database
                 for i in range(0, len(station_data)):
                     station = station_data[i]
+                    print('Adding data for station ' + station.name + ' for session ' + exp + ' to database...')
                     sql_station = """INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N, 
                         W_RMS_del, session_fit, Analyser, vgosDB_tag, Manual_Pcal, Dropped_Chans, Total_Obs, Detect_Rate_X, Detect_Rate_S, Note_Bool, Notes, VGOS_Bool) 
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""".format(station_data[i].name)
