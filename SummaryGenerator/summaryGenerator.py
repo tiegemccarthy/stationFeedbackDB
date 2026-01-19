@@ -136,8 +136,8 @@ class StationSummariser:
         #print(station_dict)
         #print(self.station)
         #print(station_name)
-        stat_name_buffered = self.station.ljust(8, '_')
-        file_name = f"{stat_name_buffered}.txt"
+        #stat_name_buffered = self.station.ljust(8, '_')
+        file_name = f"{self.station}.txt"
         downloadFile(file_name)
         try:
             

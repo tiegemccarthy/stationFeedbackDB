@@ -108,8 +108,8 @@ def get_station_positions(STATION_NAME, start_date, stop_date):
     y_lim = 100 # the y axis is the range (median +/- y_lim)
 
     # these files all have the same number of characters buffered by underscores
-    stat_name_buffered = STATION_NAME.ljust(8, '_')
-    file_name = f"{stat_name_buffered}.txt"
+    #stat_name_buffered = STATION_NAME.ljust(8, '_')
+    file_name = f"{STATION_NAME}.txt"
     # This is a bit of a kludge editing Earl's existing code, revist this + the download step in summaryGenerator
     pos_df = file2DF(os.path.dirname( __file__ ) + '/../' + file_name)
     
