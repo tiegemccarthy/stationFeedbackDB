@@ -28,5 +28,6 @@ Need to add some flexibility then probably split the reports side off into its o
 
 ## TODO
 - Update the report scripts to use the new VGOS boolean value in the database
+- Re-do the end of the file parsing script so that invalid analysis reports don't stop data from being added to the database.
 
 
