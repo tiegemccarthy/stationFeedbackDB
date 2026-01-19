@@ -6,8 +6,22 @@ import sys
 from astropy.io import ascii
 from SummaryGenerator import summaryGenerator
 import os
+import argparse
 
 dirname = os.path.dirname(__file__)
+
+def parseFunc():
+    parser = argparse.ArgumentParser(description="""This script generates performance reports for all stations (specified in stations-reports.config) over a given date range.
+                                        \n The default behaviour is to generate reports for the last 180 days if no date range is specified.""")
+    parser.add_argument("sql_db_name", 
+                        help="""The name of the SQL database you would like to use to generate the existing experiment list.""")
+    parser.add_argument("--start-date", type=str, default=None,
+                        help="""The start date for the report in YYYY:DOY format. Default is 180 days before today.""")
+    parser.add_argument("--end-date", type=str, default=None,
+                        help="""The end date for the report in YYYY:DOY format. Default is today.""")
+    args = parser.parse_args()
+
+    return args
 
 def stationParse(stations_config= dirname + '/stations-reports.config'):
     with open(stations_config) as file:
@@ -21,13 +35,17 @@ def stationParse(stations_config= dirname + '/stations-reports.config'):
         stationNamesLong = stationTable['full'][:]
     return stationNames, stationNamesLong
 
-def main(database_name):
+def main(database_name, start_date=None, end_date=None):
     if not os.path.exists(dirname + '/reports'):
         os.makedirs(dirname + '/reports') 
     # sort out date range...
     today_date = datetime.now()
-    end_date = Time(today_date).to_value('yday', subfmt='date') 
-    start_date = (Time(today_date) - timedelta(days=365)).to_value('yday', subfmt='date') 
+    if start_date is None or end_date is None:
+        end_date = Time(today_date).to_value('yday', subfmt='date') 
+        start_date = (Time(today_date) - timedelta(days=180)).to_value('yday', subfmt='date') 
+    else:
+        start_date = Time(start_date, format='yday')
+        end_date = Time(end_date, format='yday')
     print(start_date)
     # generate report
     stationNames, stationNamesLong = stationParse()
@@ -44,4 +62,5 @@ def main(database_name):
             print(f"Unable to generate VGOS performance report for {str(station)}.\nException: {e}\nCheck whether sufficient data is available.")
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    args = parseFunc()
+    main(args.sql_db_name, args.start_date, args.end_date)
