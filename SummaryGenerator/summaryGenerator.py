@@ -115,27 +115,14 @@ class StationSummariser:
         ##################
         
         # handle the fractional time format expected of this:
-
         start_fractional = datetime_to_fractional_year(self.start_time)
         stop_fractional = datetime_to_fractional_year(self.stop_time)
-        print("DEBUG")
-        print(f"{self.start_time} as fraction is {start_fractional}")
-        print(f"{self.stop_time} as fraction is {stop_fractional}")
-
-        # we have been using the codename but this function requires the full name so 
-        # create a dictionary associating the station code names with the full names
-        # this dict will be useful in other parts of the code
-        # and ought to be created at a higher level
 
         conf_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'stations-reports.config'))
         station_dict_temp = dict(zip(*stationParse(conf_file)))
         station_dict_reverse = dict(zip(station_dict_temp.values(), station_dict_temp.keys()))
         station_name_2char = station_dict_reverse.get(self.station)
         
-        #print('DEBUG')
-        #print(station_dict)
-        #print(self.station)
-        #print(station_name)
         #stat_name_buffered = self.station.ljust(8, '_')
         file_name = f"{self.station}.txt"
         downloadFile(file_name)
@@ -147,6 +134,7 @@ class StationSummariser:
             print(f"Error creating the station position plots. Bad values, bad. More info: {ve}")
         except Exception as e:
             print(f"Error creating station position plots. Are you sure the API endpoint is correct? More info: {e}")
+        
         # station schedules
         ###################
 
@@ -209,8 +197,6 @@ def parseFunc():
                         help="""Change SQL search string clause from 'LIKE' to 'NOT LIKE.'""")
     # if reverse_search = 0 then  VGOS only
     # else if reverse_search =1 then LEGACY (R....)
-    # Isn't this backwards given that the sql_search = v%
-    #
     args = parser.parse_args()
     return args
 
@@ -247,7 +233,7 @@ def wRmsAnalysis(table_input):
 
     return wrms_med_str, img_b64
 
-#
+
 def performanceAnalysis(table_input):
     table = table_input.copy()
     # filter sessions with 0% data
@@ -279,7 +265,7 @@ def performanceAnalysis(table_input):
 
     return perf_str, img_b64
 
-#
+
 def posAnalysis(table_input, coord):
     # Currently this function is not used in the report generation
     table = table_input.copy()
@@ -510,6 +496,7 @@ def plotAssignmentRate(ass_rate):
 
 
 def grabStations(sqldb_name):
+
     conn = mariadb.connect(user='auscope', passwd='password')
     cursor = conn.cursor()
     query1 = "USE " + sqldb_name +";"
@@ -724,10 +711,8 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
         table = Table(rows=result, names=col_names)
     except Exception as e:
         raise Exception("Error creating Table (astropy).\n{e}") from e
-        # i think this fails for the Ht VGOS case...
 
     # once we have this we can produce the report elements that sumarise this...
-
     if config.ctrl.debug:
         print("result:")
         pprint(result)
@@ -751,14 +736,6 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
 
 
 if __name__ == '__main__':
-
-    # original:
-
     # deploy, will be called by updateReports
     args = parseFunc()
     main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
-
-    """
-    # test
-    main(config.args.station, config.db.name, config.args.start, config.args.stop, config.args.output, config.args.search, config.args.reverse_search)
-    """
