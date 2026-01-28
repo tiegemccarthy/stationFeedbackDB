@@ -24,13 +24,6 @@ from SummaryGenerator.stationPosition import get_station_positions, downloadFile
 from SummaryGenerator.scheduleStatistics import get_glovdh_piecharts, get_glovdh_barchart
 from SummaryGenerator.utilities import datetime_to_fractional_year, save_plt, stationParse
 
-########
-# TODO #
-########
-#
-# clean up the file structure...
-#
-
 @dataclass
 class StationSummariser:
     station: str
@@ -41,10 +34,10 @@ class StationSummariser:
     database: str
     total_sessions: int = 0
     total_observations: int = 0
-    wrms_analysis: str = ""             # this should be value not string
-    performance_analysis: str = ""      # this should be value not string
-    detectX_str: str = ""               # this should be value not string
-    detectS_str: str = ""               # this should be value not string
+    wrms_analysis: str = ""             
+    performance_analysis: str = ""      
+    detectX_str: str = ""               
+    detectS_str: str = ""               
     ass_rate_str: str = ""
     wrms_img: str = ""
     perf_img: str = ""
@@ -66,7 +59,7 @@ class StationSummariser:
         print(f"stop: {self.stop_time}")
 
         table = self.table
-        print(table)             # fix me later
+        print(table)         
 
         self.total_sessions = len(table['ExpID'])
         self.total_observations = int(np.nansum(table['Total_Obs'].astype(float)))
@@ -76,9 +69,8 @@ class StationSummariser:
 
         # detections
         ############
-
         self.detectX_str, self.detect_images['X'] = detectRate(table, 'X')
-        # here, like above, also, strings should be templated...
+
         try:
             self.detectS_str, self.detect_images['S'] = detectRate(table, 'S')
         except Exception:
@@ -203,6 +195,7 @@ def parseFunc():
 
 def wRmsAnalysis(table_input):
     table = table_input.copy()
+    
     # filter dummy data
     bad_data = []
     for i in range(0, len(table['W_RMS_del'])):
@@ -210,9 +203,11 @@ def wRmsAnalysis(table_input):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
+    
     # Determine the median W.RMS delay
     wrms_med_str = str(np.median(table['W_RMS_del']))
     print(wrms_med_str)
+    
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(time_data, table['W_RMS_del'], color='steelblue', s=20)
@@ -226,6 +221,7 @@ def wRmsAnalysis(table_input):
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
+    
     ### save figure
     img_filename = "wRMS.png"
     img_b64 = save_plt(plt, img_filename)
@@ -236,6 +232,7 @@ def wRmsAnalysis(table_input):
 
 def performanceAnalysis(table_input):
     table = table_input.copy()
+    
     # filter sessions with 0% data
     bad_data = []
     for i in range(0, len(table['Performance'])):
@@ -243,9 +240,11 @@ def performanceAnalysis(table_input):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
+    
     # Write out the median performance string
     perf_str = str(round(np.median(table['Performance'])*100, 1)) + '%'
     print(perf_str)
+
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(time_data, table['Performance']*100, color='k', s=10, marker='s')
@@ -258,6 +257,7 @@ def performanceAnalysis(table_input):
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
+    
     ### save figure
     img_filename = "performance.png"
     img_b64 = save_plt(plt, img_filename)
@@ -281,6 +281,7 @@ def posAnalysis(table_input, coord):
         col_name = 'Pos_N'
     elif coord == 'U':
         col_name = 'Pos_U'
+    
     # filter sessions with 0% data
     bad_data = []
     for i in range(0, len(table[col_name])):
@@ -292,7 +293,6 @@ def posAnalysis(table_input, coord):
     ax = fig.add_subplot(111)
     lim_offset = np.median(table[col_name])
     ax.scatter(time_data, table[col_name], color='k', s=20)
-    #ax.plot(mjd_x, wrms_runavg, color='r')
     ax.set_title(coord + '_pos vs. Time')
     ax.set_xlabel('Date')
     ax.set_ylabel(coord + ' (mm)')
@@ -301,7 +301,7 @@ def posAnalysis(table_input, coord):
     ax.set_aspect(0.1)
     ax.grid(axis='y', alpha=0.3, linestyle='--', zorder=0)
     ax.tick_params(axis='x', labelrotation=45)
-    # these ticks should probably be 45 degrees
+    
     ### save
     img_filename = f"{coord}_pos.png"
     img_b64 = save_plt(plt, img_filename)
@@ -311,7 +311,9 @@ def posAnalysis(table_input, coord):
 
 def usedVsRecoveredAnalysis(table_input):
     # Currently this function is not used in the report generation
+    
     table = table_input.copy()
+    
     # filter sessions with 0% data
     bad_data = []
     for i in range(0, len(table['Performance_UsedVsRecov'])):
@@ -319,6 +321,7 @@ def usedVsRecoveredAnalysis(table_input):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
+    
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(time_data, table['v'], color='k', s=5)
@@ -337,6 +340,7 @@ def detectRate(table_input, band):
         col_name = 'Detect_Rate_X'
     elif band == 'S':
         col_name = 'Detect_Rate_S'
+    
     # filter sessions with 0% data
     bad_data = []
     for i in range(0, len(table[col_name])):
@@ -344,9 +348,11 @@ def detectRate(table_input, band):
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table['Date'], dtype=Time)
+    
     # Determine the median detection rate
     rate_str = str(round(np.median(table[col_name])*100, 1)) + '%'
     print(band, rate_str)
+    
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.scatter(time_data, table[col_name]*100, color='k', s=5)
@@ -358,6 +364,7 @@ def detectRate(table_input, band):
     ax.set_ylim([0, 100.0])
     ax.set_xlim([np.min(time_data), np.max(time_data)])
     ax.tick_params(axis='x', labelrotation=45)
+    
     # Save figure
     img_filename = f"{band}_detect_rate.png"
     img_b64 = save_plt(plt, img_filename)
@@ -428,11 +435,9 @@ def extractStationData(station_code, database_name, mjd_start, mjd_stop, search=
     cursor = conn.cursor()
     # Change to the correct database
     query = "USE " + database_name +";"
-    #print(query)
     cursor.execute(query)
     # Extract the data from the database
     query = "SELECT ExpID, Date, Date_MJD, Performance, Performance_UsedVsRecov, session_fit, W_RMS_del, Detect_Rate_X, Detect_Rate_S, Total_Obs, Notes, Pos_X, Pos_Y, Pos_Z, Pos_E, Pos_N, Pos_U FROM " + station_code+ " WHERE ExpID " + like + " \"" + search + "\" AND Date_MJD > " + str(mjd_start) + " AND Date_MJD < " + str(mjd_stop) + " ORDER BY DATE ASC;"
-    #print(query)
     cursor.execute(query)
     result = cursor.fetchall()
     col_names = ["ExpID", "Date", "Date_MJD", "Performance", "Performance_UsedVsRecov", "session_fit", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs", "Notes", "Pos_X", "Pos_Y", "Pos_Z", "Pos_E", "Pos_N", "Pos_U"]
@@ -448,6 +453,7 @@ def determineAssignmentRate(table_list, stat_tab_list, target_stat):
     except IndexError:
         print("Station code not found in the data.")
         return None
+    
     # Calculate assignment rate for each experiment for a given station
     assignment_rate_list = []
     for exp in table_list[station_index]['ExpID']:
@@ -470,8 +476,10 @@ def plotAssignmentRate(ass_rate):
     # Convert to numpy array for easier plotting
     ass_rate_array = np.array(ass_rate)
     median_ass_rate = np.median(ass_rate_array[:,2])
+   
     # Setup the plots
     fig, ax = plt.subplots(figsize=(7, 4.5))
+    
     # Plot assignment rate time series
     ax.scatter(ass_rate_array[:,1], ass_rate_array[:,2]*100, color='k', s=5)
     ax.fill_between(ass_rate_array[:,1], ass_rate_array[:,2]*100, color='steelblue', alpha = 0.5)
@@ -685,10 +693,8 @@ def plotBenchWRMS(data, specific_station):
 
 
 def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
-
     print("##########################################")
     print(f"Generating Summary for Station {stat_code}.")
-
 
     start_time = Time(start, format='yday', out_subfmt='date')
     stop_time = Time(stop, format='yday', out_subfmt='date')
