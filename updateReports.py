@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# Default behaviour is to generate reports for all stations in the stations-reports.config file
+# over the last 180 days, unless a date range is specified.
+
 from astropy.time import Time
 from datetime import datetime, timedelta
 import sys
