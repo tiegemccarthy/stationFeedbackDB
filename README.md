@@ -24,7 +24,7 @@ Example crontab:
 
 ### databaseCore.py
 
-Create or fill the database (hardcoded parameters) with entries processed from the analysis reports, .
+Create or fill the database (hardcoded parameters) with entries processed from the analysis reports, correlation reports and sked files.
 
 ### updateReports.py
 
@@ -35,6 +35,5 @@ Need to add some flexibility then probably split the reports side off into its o
 - Update the report scripts to use the new VGOS boolean value in the database
 - Re-do the end of the file parsing script so that invalid analysis reports don't stop data from being added to the database.
 - Extract number of scheduled and number of successful scans for each station for use in assignment rate
-- Perhaps add in default behaviour that the database attempts to add sessions from the past 2 years, this can be overidden to update for older sessions? 
-
-
+- Perhaps add in default behaviour that the database attempts to add sessions from the past 2 years, this can be overidden to update for older sessions?
+- Remove hardcoded SQL credentials
