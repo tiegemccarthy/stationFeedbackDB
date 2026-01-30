@@ -452,9 +452,11 @@ def main(exp_code):
                 break
 
     # Create a data object for each station with the relevant data values - append present stations to list of objects
+    # Define some invalid data flags
+    invalid_data_flags = (None, 'NULL', '-999')
     station_objects = []
     for i in range(0,len(stationNames)):
-        if performance[i] != None:
+        if performance[i] not in invalid_data_flags or position[i][0] not in invalid_data_flags or delays[i] not in invalid_data_flags :
             station = stationData(stationNamesLong[i], exp_code)
             station.date = meta[2]
             station.date_mjd = meta[3]
@@ -462,27 +464,24 @@ def main(exp_code):
             station.analyser = meta[1]
             station.performance = performance[i]
             station.perf_uvr = performanceUsedVsRecovered[i]
-            if position[i][0] != None:
-                station.posx = position[i][0]
-                station.posy = position[i][1]
-                station.posz = position[i][2]
-                station.posu = position[i][3]
-                station.pose = position[i][4]
-                station.posn = position[i][5]
-            if delays[i] != None:
-                station.wrms_del = delays[i]
-                station.sess_fit = session_fit
-            if start_date != None:
-                station.man_pcal = manual_pcal[i]
-                station.dropped_chans = dropped_channels[i]
-                station.total_obs = q_code_data_X[i][2]
-                station.detect_rate_x = q_code_data_X[i][0]
-                station.detect_rate_s = q_code_data_S[i][0]
-                station.note_bool = notes_bool[i]
-                station.notes = notes[i]
-                station.vgos_bool = vgos
+            station.posx = position[i][0]
+            station.posy = position[i][1]
+            station.posz = position[i][2]
+            station.posu = position[i][3]
+            station.pose = position[i][4]
+            station.posn = position[i][5]
+            station.wrms_del = delays[i]
+            station.sess_fit = session_fit
+            station.man_pcal = manual_pcal[i]
+            station.dropped_chans = dropped_channels[i]
+            station.total_obs = q_code_data_X[i][2]
+            station.detect_rate_x = q_code_data_X[i][0]
+            station.detect_rate_s = q_code_data_S[i][0]
+            station.note_bool = notes_bool[i]
+            station.notes = notes[i]
+            station.vgos_bool = vgos
             station_objects.append(station)
-    
+
     return station_objects
 
 if __name__ == '__main__':
