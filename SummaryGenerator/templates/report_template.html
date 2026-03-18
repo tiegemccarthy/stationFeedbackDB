@@ -12,7 +12,11 @@
     <div class="report">
         <header>
             <div class="heading">
-                <h1>{{ station }} Summary Report</h1>
+                {% if vgos %}
+                    <h1>{{ station }} Summary Report - VGOS 24 hour</h1>
+                {% else %}
+                    <h1>{{ station }} Summary Report - S/X 24 hour</h1>
+                {% endif %}
                 <!--<h4><samp>{{ start_time }}</samp> -> <samp>{{ stop_time }}</samp></h4>-->
                 <p>Report generated: <samp>{{ report_ts }}</samp></p>
             </div>
@@ -23,7 +27,7 @@
                 <div class="intro">
                     <p>
                         Thank you for your valuable contribution to the IVS! This is an automatically generated report for <strong>{{ station }}</strong>, based on data extracted from analysis and correlator reports from 24 hour IVS VLBI sessions between <strong>{{ start_time }}</strong> 
-                        and <strong>{{ stop_time }}</strong>.
+                        and <strong>{{ stop_time }}</strong>. Analysis and correltor reports for all sessions are publicly available on the IVS combination centre website at <a href="https://ivscc.gsfc.nasa.gov/sessions/">https://ivscc.gsfc.nasa.gov/sessions/</a>.
                     </p>
                     <p>
                         Please note that only processed (correlated and analysed) sessions are included in the values and figures presented in this report.
@@ -38,23 +42,23 @@
                 {% if wrms_analysis or performance_analysis %}
                     <div class="analysis">
                         {% if wrms_analysis %}
-                            <h3><u>WRMS Analysis</u></h3>
+                            <h3><u>WRMS Analysis<sup>1</sup></u></h3>
                             <p>This is a measure of the station's contribution to the weighted RMS of the delay measurement.</p>
                             <p><strong>Median station W.RMS over period: {{ wrms_analysis }} ps</strong></p>
                         {% endif %}
                     </div>
                     <div class="analysis">
                         {% if performance_analysis %}
-                            <h3><u>Performance Analysis</u></h3>
+                            <h3><u>Performance Analysis<sup>2</sup></u></h3>
                             <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.
-                                Heavily affected by other station outages or maintenance and not necessarily indicative of issues at this station.
+                                
                             </p>
                             <p><strong>Median station 'Performance' (used/scheduled) over period: {{ performance_analysis }}</strong></p>
                         {% endif %}
                     </div>
                     <div class="analysis">
                         {% if ass_rate_str %}
-                            <h3><u>Assignment Rate</u></h3>
+                            <h3><u>Assignment Rate<sup>3</sup></u></h3>
                             <p>Assignment Rate is the fraction of observations this station was involved in compared to the station with the most observations.
                             </p>
                             <p><strong>Median station assignment rate over period: {{ ass_rate_str }}</strong></p>
@@ -63,15 +67,16 @@
                 {% endif %}
                 {% if detectX_img or detectS_str %}
                     <div class="detection-rates">
-                        <h3><u>Detection Rates</u></h3>
+                        <h3><u>Detection Rates<sup>4</sup></u></h3>
                         <p>Detection rates are measured as the ratio between number of successful detections (with quality code > 6) versus the number of correlated observations.
-                            Impacted by performance of baseline partner stations.
                         </p>
-                        {% if detectX_str %}
+                        {% if detectX_str and vgos %}
+                            <h4>Combined Band:</h4>
+                            <p><strong>Median detection rate: {{ detectX_str }}</strong></p>
+                        {% endif %}
+                        {% if detectS_str and not vgos %}                            
                             <h4>X Band:</h4>
                             <p><strong>Median X-band detection rate: {{ detectX_str }}</strong></p>
-                        {% endif %}
-                        {% if detectS_str%}
                             <h4>S Band:</h4>
                             <p><strong>Median S-band detection rate: {{ detectS_str }}</strong></p>
                         {% endif %}
@@ -112,9 +117,9 @@
                 {% if benchmark_images %}
                 <div class="page-break"></div>
                     <div class="benchmark-images section">
-                        <h2>Benchmarking barcharts</h2>
+                        <h2>Benchmarking barcharts - <strong>{{ start_time }}</strong> to <strong>{{ stop_time }}</strong></h2>
                         <p>
-                            The 10 stations with highest totals in database are plotted, if this station is not in the top 10 it will be added to the right hand side of the figure.
+                            The 10 stations with highest totals in the database are plotted, if this station is not in the top 10 it will be added to the right hand side of the figure.
                             Please note, only 24 hour sessions are included and our database may not necessarily be complete for all stations.
                         </p>
                         {% for param, img in benchmark_images.items %}
@@ -179,7 +184,10 @@
                 <div class="issues">
                     <h2>Reported Issues</h2>
                     <div class="problems-list">
-                        <p> The following are extracted from correlation reports using keywords and are not necessarily a comprehensive list.</p>
+                        <p> 
+                            The following comments are extracted form the correlation reports, capturing station issues. 
+                            Please note that the script searches for keywords only and may not capture all noted issues.
+                        </p>
                         <ul>
                             {% for problem in problems %}
                                 <li>{{ problem|linebreaksbr|safe }}</li>
@@ -193,6 +201,9 @@
                 <div class="table-section">
                     <h2>Tabulated Data</h2>
                     <div class="table-container">
+                        <p>
+                            The following table displays the underlying data that was used to generate this report.
+                        </p>
                         {{ table_data|safe }}
                     </div>
                     <div class="about">
@@ -209,10 +220,22 @@
             <div class="page-break"></div>
             <div class="about">
                 <h3>About</h3>
-                <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please comment or alert the creators of any apparent issues at the following address <a href="mailto:email@example.com">email</a>.</p>
+                <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please alert the creators of any apparent issues at the following address <a href="mailto:tiegem@utas.edu.au">tiegem@utas.edu.au</a>.</p>
                 <p>Station position figures are based on analysis output from the Paris Observatory Geodetic VLBI Center. The schedule breakdown section presents data taken from the API developed and offered by ETH Zurich. </p>
                 <p>This report was developed by the AuScope VLBI project, which is managed by the University of Tasmania, contracted through Geoscience Australia.</p>
                 <p>More information on this project as well as the source code may be found at the following <a href="https://github.com/tiegemccarthy/stationFeedbackDB">link</a>.</p>
+                <p><sup>1</sup> This value represents the statiions contribution to the final session fit, it is extracted directly from the IVS analysis reports.</p>
+                <p>
+                    <sup>2</sup> The performance values represent the fraction of observations used in analysis compared to scheduled. 
+                    These values are extracted directly from the IVS analysis reports.
+                    Performance values are heavily affected by other station outages, and are not necessarily indicative of issues at the station.
+                </p>
+                <p><sup>3</sup> Assignment rate is calculated by dividing the number of observations assigned to a station by the maximum observations assigned to any station in that session. 
+                    The total observations for each station per session are extracted from the correlation reports.
+                    Please note that assignment rates will be much higher for stations in denser parts of the network.
+                </p>
+                <p><sup>4</sup> Detection rates are calculated by dividing the number of observations with Q codes 6 or above by the total number of observations.
+                This value is meant to give an indication of the sensitivity of baselines this station participates in.</p>
             </div>
         </div>
     </main>
