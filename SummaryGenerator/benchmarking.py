@@ -43,7 +43,7 @@ def plotAssignmentRate(ass_rate):
     ax.scatter(ass_rate_array[:,1], ass_rate_array[:,2]*100, color='k', s=5)
     ax.fill_between(ass_rate_array[:,1], ass_rate_array[:,2]*100, color='steelblue', alpha = 0.5)
     ax.hlines(median_ass_rate*100, np.min(ass_rate_array[:,1]), np.max(ass_rate_array[:,1]), linestyle='dashed', color='steelblue')
-    ax.set_title('Assignment rate')
+    #ax.set_title('Assignment rate')
     ax.set_ylabel('% of max observations')
     ax.set_xlabel('Date')
     ax.set_ylim([0, 100.0])

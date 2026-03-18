@@ -64,7 +64,7 @@ header p {
 
 /*** headings ***/
 
-h1, h2, h3 {
+h1, h2, h3, h4 {
     color: #0e3124;
     text-align: left;
 }
@@ -80,6 +80,19 @@ h3 {
     font-size: 16px;
     font-weight: bold;
     margin-top: 30px;
+}
+
+h4 {
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+h5 {
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 15px;
+    text-align: center
 }
 
 /* h3::after {
@@ -169,8 +182,8 @@ tr, td, th {
 
 .summary, .figures, .more-info {
     margin: 5px;
-    margin-bottom: 30px;
-    padding: 20px;
+    margin-bottom: -30px;
+    padding: 5px;
 }
 
 .intro, .analysis, .detection-rates {
@@ -205,9 +218,9 @@ figcaption {
 
 .image img {
     width: 100%;
-    height: 300px;
+    height: 280px;
     object-fit: contain;
-    border-radius: 5px;
+    border-radius: 0px;
     page-break-inside: avoid;
     margin-bottom: 0px;
 }

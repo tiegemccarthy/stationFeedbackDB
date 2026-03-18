@@ -42,14 +42,14 @@
                 {% if wrms_analysis or performance_analysis %}
                     <div class="analysis">
                         {% if wrms_analysis %}
-                            <h3><u>WRMS Analysis<sup>1</sup></u></h3>
+                            <h3><u>W.RMS Analysis</u><sup>1</sup></h3>
                             <p>This is a measure of the station's contribution to the weighted RMS of the delay measurement.</p>
                             <p><strong>Median station W.RMS over period: {{ wrms_analysis }} ps</strong></p>
                         {% endif %}
                     </div>
                     <div class="analysis">
                         {% if performance_analysis %}
-                            <h3><u>Performance Analysis<sup>2</sup></u></h3>
+                            <h3><u>Performance Analysis</u><sup>2</sup></h3>
                             <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.
                                 
                             </p>
@@ -58,7 +58,7 @@
                     </div>
                     <div class="analysis">
                         {% if ass_rate_str %}
-                            <h3><u>Assignment Rate<sup>3</sup></u></h3>
+                            <h3><u>Assignment Rate</u><sup>3</sup></h3>
                             <p>Assignment Rate is the fraction of observations this station was involved in compared to the station with the most observations.
                             </p>
                             <p><strong>Median station assignment rate over period: {{ ass_rate_str }}</strong></p>
@@ -67,7 +67,7 @@
                 {% endif %}
                 {% if detectX_img or detectS_str %}
                     <div class="detection-rates">
-                        <h3><u>Detection Rates<sup>4</sup></u></h3>
+                        <h3><u>Detection Rates</u><sup>4</sup></h3>
                         <p>Detection rates are measured as the ratio between number of successful detections (with quality code > 6) versus the number of correlated observations.
                         </p>
                         {% if detectX_str and vgos %}
@@ -85,26 +85,31 @@
             </div>
             <div class="page-break"></div>
             <div class="figures section">
-                <h2>Figures</h2>
+                <!-- <h2>Figures</h2> -->
                 {% if wrms_img %}
+                    <h5> W.RMS Figure<sup>1</sup> </h5>
                     <figure class="image">
                         <img src="data:image/png;base64,{{ wrms_img }}" alt="Wrms Image" width="300">
                     </figure>
                 {% endif %}
                 {% if perf_img %}
+                    <h5> Performance Figure<sup>2</sup> </h5>
                     <figure class="image">
                         <img src="data:image/png;base64,{{ perf_img }}" alt="Performance Image" width="300">
                     </figure>
                 {% endif %}
                 {% if ass_rate_img %}
+                    <h5> Assignment Rate Figure<sup>3</sup> </h5>
                     <figure class="image">
                         <img src="data:image/png;base64,{{ ass_rate_img }}" alt="Assignment Rate Image" width="300">
                     </figure>
                 {% endif %}
-                <div class="page-break"></div>
-                {% if detect_images %}
-                    <div class="detection-images section">
-                        <h2>Detections</h2>
+            <div class="page-break"></div>
+            {% if detect_images %}
+                <div class="detection-images section">
+                <h2>Detection Rates</h2>
+                    {% if vgos %}
+                        <h5>Combined band</h5>
                         {% for band, img in detect_images.items %}
                             {% if img %}
                                 <figure class="image">
@@ -112,7 +117,18 @@
                                 </figure>
                             {% endif %}
                         {% endfor %}
-                    </div>
+                    {% else %}
+
+                        {% for band, img in detect_images.items %}
+                            {% if img %}
+                                <h5>{{ band }}-band</h5>
+                                <figure class="image">
+                                    <img src="data:image/png;base64,{{ img }}" alt="{{ band }} Band Detections" width="300">
+                                </figure>
+                            {% endif %}
+                        {% endfor %}   
+                    {% endif %}                      
+                </div>
                 {% endif %}
                 {% if benchmark_images %}
                 <div class="page-break"></div>
@@ -219,7 +235,7 @@
             {% endif %}
             <div class="page-break"></div>
             <div class="about">
-                <h3>About</h3>
+                <h2>About</h2>
                 <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please alert the creators of any apparent issues at the following address <a href="mailto:tiegem@utas.edu.au">tiegem@utas.edu.au</a>.</p>
                 <p>Station position figures are based on analysis output from the Paris Observatory Geodetic VLBI Center. The schedule breakdown section presents data taken from the API developed and offered by ETH Zurich. </p>
                 <p>This report was developed by the AuScope VLBI project, which is managed by the University of Tasmania, contracted through Geoscience Australia.</p>
