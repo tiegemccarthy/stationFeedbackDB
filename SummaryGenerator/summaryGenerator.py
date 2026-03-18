@@ -119,10 +119,9 @@ class StationSummariser:
         station_name_2char = station_dict_reverse.get(self.station)
         
         #stat_name_buffered = self.station.ljust(8, '_')
-        file_name = f"{self.station}.txt"
-        downloadFile(file_name)
         try:
-            
+            file_name = f"{self.station}.txt"
+            downloadFile(file_name)           
             pos_fig_dict = get_station_positions(self.station, start_fractional, stop_fractional)
             self.pos_images = {coord: save_plt(fig) for coord, fig in pos_fig_dict.items()}
         except ValueError as ve:
@@ -155,9 +154,12 @@ class StationSummariser:
         print(f"PROBLEMS:\n{self.problems}")
 
         # now onto the table
-        columns_to_remove = ['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Performance_UsedVsRecov']
+        columns_to_remove = ['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Pos_E', 'Pos_N', 'Pos_U', 'session_fit', 'Performance_UsedVsRecov']
+ 
+        self.table.rename_columns(('ExpID', 'W_RMS_del', 'Detect_Rate_X', 'Detect_Rate_S', 'Total_Obs'), ('Session Code', 'WRMS (ps)', 'Detect Rate - X', 'Detect Rate - S', 'Total Obs.'))
         self.table = self.table.to_pandas()
         table = self.table.drop(columns=columns_to_remove)
+
         self.table_data = table.to_html(classes='table table-bordered table-striped', index=False)
 
 
