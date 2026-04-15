@@ -21,6 +21,9 @@ Example crontab:
 0 7 * * 1 ~/software/stationFeedbackDB/databaseCore.py master2025.txt auscopeDB
 0 9 * * 1 ~/software/stationFeedbackDB/updateReports.py auscopeDB
 ```
+### Configuration
+
+It's in the name, but to be clear: `station-reports.config` lists stations for which reports are generated, `stations.config` lists stations included in the database and analysis.
 
 ### databaseCore.py
 
