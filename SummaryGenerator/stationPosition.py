@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 
-import wget
-import pandas
+import argparse
+import os
+import sys
+import warnings
+
+# from pickletools import string1
+# from typing import Any, Dict
+# import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
-import os
-import argparse
-import matplotlib.dates as mdates
+import pandas
+import wget
 
-import warnings
+from logger_config import logger
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -33,20 +37,23 @@ def parseFunc():
     return args
 
 
-def downloadFile(file_name):
+def downloadFile(file_name: str):
     # currently this always removes the old file and redownloads, probably add some logic in here to check when the file was downloaded.
     if os.path.exists(file_name):
         os.remove(file_name)
 
     try:
-        wget.download(f"https://ivsopar.obspm.fr/stations/series/{file_name}")
+        wget.download(
+            f"https://ivsopar.obspm.fr/stations/series/{file_name}",
+            out="../stat_pos_data",
+        )
     except Exception as e:
-        print(f"wget exception:\n{e}")
+        logger.error(f"wget exception:\n{e}")
 
         # careful here!
 
 
-def file2DF(file_name):
+def file2DF(file_name: str) -> pandas.DataFrame:
     dataframe_colnames = [
         "date",
         "X",
@@ -69,14 +76,17 @@ def file2DF(file_name):
     return df
 
 
-def plotPos(df, startdate, stopdate, lim, pos_string):
+### FIXME
+# pos_string isn't included in the calls in main
+# so it needs a defaul value.
+def plotPos(df: pandas.DataFrame, startdate, stopdate, lim, pos_string):
 
     f, ax = plt.subplots(figsize=(12, 4))
 
     # Time frame filter
     date_mask = (df["date"] > startdate) & (df["date"] < stopdate)
 
-    print(f"Min Date: {df['date'].min()}, Max Date: {df['date'].max()}")
+    logger.info(f"Min Date: {df['date'].min()}, Max Date: {df['date'].max()}")
 
     # Attempt to determine session type from vgosDB string
     # r1r4_mask = np.where(date_mask & (df['vgosDB'].str.contains('-r.')))[0]
@@ -101,7 +111,7 @@ def plotPos(df, startdate, stopdate, lim, pos_string):
 
     # Set y-limits
     median_val = np.nanmedian(df.where(df["date"] > startdate)[pos_string])
-    ax.set_ylim([median_val - lim, median_val + lim])
+    ax.set_ylim(median_val - lim, median_val + lim)
 
     # Add labels and legend
     ax.set_xlabel("Date (Years)")
@@ -111,22 +121,10 @@ def plotPos(df, startdate, stopdate, lim, pos_string):
     return f, ax
 
 
-def main(STATION_NAME, start_date):
-    start_date = float(start_date)
-    coords = ["X", "Y", "Z", "U", "E", "N"]
-    downloadFile(STATION_NAME)
-    pos_df = file2DF(STATION_NAME)
-
-    fX, axX = plotPos(pos_df, start_date, 500, "X")
-    fY, axY = plotPos(pos_df, start_date, 500, "Y")
-    fZ, axZ = plotPos(pos_df, start_date, 500, "Z")
-    plt.show()
-
-
 def get_station_positions(STATION_NAME, start_date, stop_date):
 
     # debug
-    print(f"get_station_position, args: {STATION_NAME}, {start_date}")
+    logger.debug(f"get_station_position, args: {STATION_NAME}, {start_date}")
 
     start_date = float(start_date)
     stop_date = float(stop_date)
@@ -140,7 +138,7 @@ def get_station_positions(STATION_NAME, start_date, stop_date):
     # stat_name_buffered = STATION_NAME.ljust(8, '_')
     file_name = f"{STATION_NAME}.txt"
     # This is a bit of a kludge editing Earl's existing code, revist this + the download step in summaryGenerator
-    pos_df = file2DF(os.path.dirname(__file__) + "/../" + file_name)
+    pos_df = file2DF(os.path.dirname(__file__) + "/../stat_pos_data/" + file_name)
 
     fig_dict = {}
     for coord in coords:
@@ -148,6 +146,18 @@ def get_station_positions(STATION_NAME, start_date, stop_date):
         fig_dict[coord] = fig
 
     return fig_dict
+
+
+def main(STATION_NAME, start_date):
+    start_date = float(start_date)
+    coords = ["X", "Y", "Z", "U", "E", "N"]
+    downloadFile(STATION_NAME)
+    pos_df = file2DF(STATION_NAME)
+
+    fX, axX = plotPos(pos_df, start_date, 500, "X")
+    fY, axY = plotPos(pos_df, start_date, 500, "Y")
+    fZ, axZ = plotPos(pos_df, start_date, 500, "Z")
+    plt.show()
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ import tarfile
 import argparse
 from astropy.io import ascii
 
+from logger_config import *
+
 dirname = os.path.dirname(__file__)
 
 def parseFunc():
@@ -76,7 +78,7 @@ def corrReportDL(exp_id,vgos_tag):
     exp_id = str(exp_id)
     vgos_exists = []
     if os.path.isfile(dirname+"/corr_files/"+ exp_id + '.corr'):
-        print("Corr report already exists for experiment " + exp_id + ", skipping re-download.")
+        logger.info("Corr report already exists for experiment " + exp_id + ", skipping re-download.")
         return
     else:
         ftps = FTP_TLS(host = 'gdc.cddis.eosdis.nasa.gov')
@@ -107,10 +109,10 @@ def corrReportDL(exp_id,vgos_tag):
                             tar.close()
                             break
                 os.remove(dirname + '/' + tag + ".tgz")
-                print("Corr report download complete for experiment " + exp_id + ".")
+                logger.info("Corr report download complete for experiment " + exp_id + ".")
                 return 
         except Exception:
-            print("Corr report not available for experiment " + exp_id + ".")
+            logger.warning("Corr report not available for experiment " + exp_id + ".")
             return
 
 def stationParse(stations_config=dirname + '/stations.config'):
@@ -150,11 +152,11 @@ def main(master_schedule, db_name):
         experiments_to_download = [x for x in valid_experiment if x not in existing_experiments]
     for exp in experiments_to_download:
         if os.path.isfile(dirname+'/analysis_reports/'+exp.lower()+'_report.txt'):
-            print("Analysis report already exists for " + exp.lower() + ", skipping file downloads.")
+            logger.info("Analysis report already exists for " + exp.lower() + ", skipping file downloads.")
             continue
         else:
             exp = exp.lower()
-            print('Beginning file downloads for experiment ' + exp + ".")
+            logger.info('Beginning file downloads for experiment ' + exp + ".")
             ftps = FTP_TLS(host = 'gdc.cddis.eosdis.nasa.gov')
             ftps.login(user='anonymous', passwd='')
             ftps.prot_p()
@@ -169,7 +171,7 @@ def main(master_schedule, db_name):
                     ftps.retrbinary('RETR /pub/vlbi/ivsdata/aux/'+str(year)+ '/' + exp + '/' + exp + ".skd", lf3.write)
                     lf3.close()
             except Exception: 
-                print('No SKED file found for ' + exp)
+                logger.warning('No SKED file found for ' + exp)
             
             # Spelling options need to be here because analysis report names are unfortunately not standardised - sometimes they are even different within the same experiment (e.g. 'ivs' and 'IVS')
             # Now time to download analysis report
@@ -184,7 +186,7 @@ def main(master_schedule, db_name):
                         lf1 = open(local_filename_report, "wb")
                         ftps.retrbinary('RETR /pub/vlbi/ivsdata/aux/' +str(year)+ '/' + exp + '/' + filename_report[len(filename_report)-1].split()[8], lf1.write)
                         lf1.close()
-                        print('Analysis report downloaded for experiment ' + exp + ".")
+                        logger.info('Analysis report downloaded for experiment ' + exp + ".")
                         break
                 except Exception:
                     pass
@@ -199,7 +201,7 @@ def main(master_schedule, db_name):
                         lf2 = open(local_filename_spool, "wb")
                         ftps.retrbinary('RETR /pub/vlbi/ivsdata/aux/' +str(year)+ '/' + exp + '/' + filename_spool[len(filename_report)-1].split()[8], lf2.write)
                         lf2.close()
-                        print('Spoolfile downloaded for experiment ' + exp + ".")
+                        logger.info('Spoolfile downloaded for experiment ' + exp + ".")
                         break
                 except Exception:
                     pass

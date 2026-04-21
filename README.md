@@ -5,7 +5,7 @@ Pull this repo into a directory, and then manually run databaseCore.py to setup 
 
 Current pre-requisites:
 1. MariaDB setup with user 'auscope' (easily changed)
-2. Python3 with mysqlclient, numpy, astropy and ftplib packages
+2. Python3 with mysqlclient, numpy, astropy and ftplib packages, among others, see the `requirements.txt` file.
 
 Please note that these scripts have been written to comply with the current master schedule (Master file format version 2.0), analysis report (version ?) and correlator report versions (CORRELATOR_REPORT_FORMAT 3).
 
@@ -20,6 +20,7 @@ Example crontab:
 0 5 * * 1 ~/software/stationFeedbackDB/databaseCore.py master2024.txt auscopeDB
 0 7 * * 1 ~/software/stationFeedbackDB/databaseCore.py master2025.txt auscopeDB
 0 9 * * 1 ~/software/stationFeedbackDB/updateReports.py auscopeDB
+0 10 * * 1 ~/software/stationFeedbackDB/sendReports.py
 ```
 ### Configuration
 
@@ -39,4 +40,4 @@ Need to add some flexibility then probably split the reports side off into its o
 - Re-do the end of the file parsing script so that invalid analysis reports don't stop data from being added to the database.
 - Extract number of scheduled and number of successful scans for each station for use in assignment rate
 - Perhaps add in default behaviour that the database attempts to add sessions from the past 2 years, this can be overidden to update for older sessions?
-- Remove hardcoded SQL credentials
+- Remove hardcoded SQL credentials.

@@ -22,8 +22,12 @@ Pipfile
 **.csv
 #
 ESL-NOTES.md
+**.bak
+**server-config.yaml
+**config.yaml
 # analysis data
 **analysis_reports
 **corr_files
 **skd_files
+**stat_pos_data
 **master*.txt

@@ -8,6 +8,8 @@ from datetime import datetime
 import os
 from astropy.io import ascii
 import re
+import yaml                     # pyyaml
+
 
 ################
 # time formats #
@@ -66,6 +68,32 @@ def load_png(img_filename):
 
 
 def stationParse(
+    stations_config=os.path.dirname(__file__) + "/stations-reports.yaml",
+):
+    """
+    Reads in configuration file for which stations to produce reports,
+    and returns lists of codes (short, two character station names)
+    and the longer station name codes.
+
+    Updated to take a .yaml file.
+    """
+
+    with open(stations_config) as file:
+        stations = yaml.safe_load(file)['stations']
+
+    # initialise what we return
+    stationNames = []
+    stationNamesLong = []
+
+    # pull from the config
+    for code, info in stations.items():
+        stationNames.append(code)
+        stationNamesLong.append(info["name"])
+
+    return stationNames, stationNamesLong
+
+"""
+def stationParse_v1_config(
     stations_config=os.path.dirname(__file__) + "/stations-reports.config",
 ):
     with open(stations_config) as file:
@@ -80,7 +108,7 @@ def stationParse(
         stationNames = stationTable["2char"][:]
         stationNamesLong = stationTable["full"][:]
     return stationNames, stationNamesLong
-
+"""
 
 def problemExtract(table_input):
     """

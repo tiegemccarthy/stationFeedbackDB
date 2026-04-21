@@ -1,12 +1,15 @@
 import asyncio
 import os
-import base64
-from pyppeteer import launch
-import django
-from django.template import Template, Context
-from django.conf import settings
-from datetime import datetime
 from dataclasses import asdict
+from datetime import datetime
+
+import django
+from django.conf import settings
+from django.template import Context, Template
+
+# import base64
+from pyppeteer import launch
+
 from SummaryGenerator.utilities import load_png
 
 # control
@@ -55,7 +58,7 @@ def create_report(summary, output_path):
             )
             await browser.close()
         except Exception as e:
-            raise Exception(f"Couldnn't generate the report") from e
+            raise Exception("Could not generate the report.") from e
 
     #########################
     # Preliminaries:

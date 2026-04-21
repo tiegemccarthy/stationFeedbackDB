@@ -1,11 +1,13 @@
 # Functions related to generating various plots in the station report
 
-from astropy.table import vstack, Table, Column
-from astropy.time import Time
-import numpy as np
 import matplotlib.pyplot as plt
-from pprint import pprint
+import numpy as np
+from astropy.table import Column
 
+# from astropy.table import Table, vstack
+from astropy.time import Time
+
+# from pprint import pprint
 from SummaryGenerator.utilities import save_plt
 
 
@@ -55,7 +57,7 @@ def wRmsAnalysis(table_input):
     ax.set_ylabel("W.RMS (ps)")
     # ax.set_title('Station W.RMS vs. Time')
     ax.grid(axis="y", alpha=0.3, linestyle="--", zorder=0)
-    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.set_xlim(np.min(time_data), np.max(time_data))
     ax.tick_params(axis="x", labelrotation=45)
 
     ### save figure
@@ -95,9 +97,9 @@ def performanceAnalysis(table_input):
     # ax.set_title('Performance (used/scheduled) vs. Time')
     ax.set_xlabel("Date")
     ax.set_ylabel("% of used obs. vs. scheduled obs.")
-    ax.set_ylim([0, 100.0])
+    ax.set_ylim(0, 100.0)
     ax.grid(axis="y", alpha=0.3, linestyle="--", zorder=0)
-    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.set_xlim(np.min(time_data), np.max(time_data))
     ax.tick_params(axis="x", labelrotation=45)
 
     ### save figure
@@ -109,8 +111,16 @@ def performanceAnalysis(table_input):
 
 
 def posAnalysis(table_input, coord):
-    # Currently this function is not used in the report generation
+    """
+    Currently this function is not used in the report generation
+    Is this still true?
+    """
+
     table = table_input.copy()
+
+    # set default col_name, in case of rubbish coord input
+    col_name = "X"
+
     if coord == "X":
         col_name = "Pos_X"
     elif coord == "Y":
@@ -138,8 +148,8 @@ def posAnalysis(table_input, coord):
     ax.set_title(coord + "_pos vs. Time")
     ax.set_xlabel("Date")
     ax.set_ylabel(coord + " (mm)")
-    ax.set_ylim([lim_offset - 250, lim_offset + 250])
-    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.set_ylim(lim_offset - 250, lim_offset + 250)
+    ax.set_xlim(np.min(time_data), np.max(time_data))
     ax.set_aspect(0.1)
     ax.grid(axis="y", alpha=0.3, linestyle="--", zorder=0)
     ax.tick_params(axis="x", labelrotation=45)
@@ -162,7 +172,7 @@ def usedVsRecoveredAnalysis(table_input):
     for i in range(0, len(table["Performance_UsedVsRecov"])):
         if (
             table["Performance_UsedVsRecov"][i] == 0
-            or table["Performance_UsedVsRecov"][i] == None
+            or table["Performance_UsedVsRecov"][i] is None
         ):
             bad_data.append(i)
     table.remove_rows(bad_data)
@@ -174,14 +184,17 @@ def usedVsRecoveredAnalysis(table_input):
     ax.fill_between(time_data, table["Performance_UsedVsRecov"], alpha=0.5)
     ax.set_title("Fractional Used/Recovered Observations vs. Time")
     ax.set_xlabel("MJD (days)")
-    ax.set_ylim([0, 1.0])
-    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.set_ylim(0, 1.0)
+    ax.set_xlim(np.min(time_data), np.max(time_data))
     ax.tick_params(axis="x", labelrotation=45)
 
 
 def detectRate(table_input, band):
     # determine which band we are looking at
     table = table_input.copy()
+    # default col_name in case of rubbish band input:
+    col_name = "X"
+
     if band == "X":
         col_name = "Detect_Rate_X"
     elif band == "S":
@@ -190,7 +203,7 @@ def detectRate(table_input, band):
     # filter sessions with 0% data
     bad_data = []
     for i in range(0, len(table[col_name])):
-        if table[col_name][i] == 0 or table[col_name][i] == None:
+        if table[col_name][i] == 0 or table[col_name][i] is None:
             bad_data.append(i)
     table.remove_rows(bad_data)
     time_data = Column(table["Date"], dtype=Time)
@@ -213,8 +226,8 @@ def detectRate(table_input, band):
     # ax.set_title('Session ' + band + '-band Detection ratio')
     ax.set_ylabel("% of usable obs. vs. correlated obs.")
     ax.set_xlabel("Date")
-    ax.set_ylim([0, 100.0])
-    ax.set_xlim([np.min(time_data), np.max(time_data)])
+    ax.set_ylim(0, 100.0)
+    ax.set_xlim(np.min(time_data), np.max(time_data))
     ax.tick_params(axis="x", labelrotation=45)
 
     # Save figure

@@ -2,7 +2,7 @@
 #
 # List of stations one wants to generate the reports for.
 #
-# Two-letter code specifying entries and long-names as "name" is required. 
+# Two-letter code specifying entries and long-names as "name" is required.
 # Emails is optional (but required for report send-offs, obviously) and
 # uses a standard yaml list to specify multiple emails, second entry onwards are CC'ed.
 #
@@ -11,22 +11,30 @@
 stations:
   Hb:
     name: HOBART12
-    emails: 
+    emails:
       - sullivan.lester@utas.edu.au
+      - tiegem@utas.edu.au
   Yg:
     name: YARRA12M
-    emails: 
+    emails:
       - sullivan.lester@utas.edu.au
+      - tiegem@utas.edu.au
   Ke:
     name: KATH12M
-    emails: 
+    emails:
       - sullivan.lester@utas.edu.au
+      - tiegem@utas.edu.au
   Ht:
     name: HART15M
   Nn:
     name: NYALE13N
+    emails:
+      - sullivan.lester@utas.edu.au
   Ns:
     name: NYALE13S
+    emails:
+      - sullivan.lester@utas.edu.au
+      - tiegem@utas.edu.au
   Yj:
     name: RAEGYEB
   Sa:

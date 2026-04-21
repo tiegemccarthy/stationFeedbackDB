@@ -1,7 +1,7 @@
 # Functions related to generating the 'benchmarking' figures included in the station report
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from SummaryGenerator.utilities import save_plt
 
@@ -62,8 +62,8 @@ def plotAssignmentRate(ass_rate):
     # ax.set_title('Assignment rate')
     ax.set_ylabel("% of max observations")
     ax.set_xlabel("Date")
-    ax.set_ylim([0, 100.0])
-    ax.set_xlim([np.min(ass_rate_array[:, 1]), np.max(ass_rate_array[:, 1])])
+    ax.set_ylim(0, 100.0)
+    ax.set_xlim(np.min(ass_rate_array[:, 1]), np.max(ass_rate_array[:, 1]))
     ax.tick_params(axis="x", labelrotation=45)
 
     for i, txt in enumerate(ass_rate_array[:, 0]):
@@ -93,7 +93,7 @@ def sumTotalObsALL(table_list, stat_tab_list):
     for i in range(0, len(temp_table_list)):
         bad_data = []
         for j in range(0, len(temp_table_list[i][col_name])):
-            if temp_table_list[i][col_name][j] == None:
+            if temp_table_list[i][col_name][j] is None:
                 bad_data.append(j)
 
         temp_table_list[i].remove_rows(bad_data)
@@ -121,7 +121,7 @@ def medWRMSdelALL(table_list, stat_tab_list):
         for j in range(0, len(temp_table_list[i][col_name])):
             if (
                 temp_table_list[i][col_name][j] == -999
-                or temp_table_list[i][col_name][j] == None
+                or temp_table_list[i][col_name][j] is None
             ):
                 bad_data.append(j)
 
@@ -153,7 +153,7 @@ def numSessionsALL(table_list, stat_tab_list):
         for j in range(0, len(temp_table_list[i][col_name])):
             if (
                 temp_table_list[i][col_name][j] == 0
-                or temp_table_list[i][col_name][j] == None
+                or temp_table_list[i][col_name][j] is None
             ):
                 bad_data.append(j)
 
@@ -172,21 +172,28 @@ def numSessionsALL(table_list, stat_tab_list):
     return data_list
 
 
+"""
+The three functions to follow need to have an optional anonymisation flag,
+which removes the x-axis labels.
+"""
+
+
 def plotBenchObs(data, specific_station):
 
     specific_stat_index = np.where(data[:, 0] == specific_station)[0]
 
     fig, ax = plt.subplots(figsize=(7, 4.5))
 
-    bars = ax.bar(
-        data[0:10, 0], data[0:10, 1], color="steelblue", alpha=0.8
-    )  # Plot the 10 best performing stations
-    bar_specific = ax.bar(
+    # Plot the 10 best performing stations
+    ax.bar(data[0:10, 0], data[0:10, 1], color="steelblue", alpha=0.8)
+
+    # Plot the 'target' station
+    ax.bar(
         data[specific_stat_index, 0],
         data[specific_stat_index, 1],
         color="firebrick",
         alpha=0.8,
-    )  # Plot the 'target' station
+    )
 
     # Sort out labelling
     if specific_stat_index > 9:

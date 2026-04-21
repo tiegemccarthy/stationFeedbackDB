@@ -4,11 +4,11 @@ mariadb.connect(host='56d09x2.phys.utas.edu.au', user='auscope', passwd='passwor
 """
 
 import json
-from pprint import pprint
+
+# from pprint import pprint
 
 
 class Config:
-
     class Args:
         """
         for main runner

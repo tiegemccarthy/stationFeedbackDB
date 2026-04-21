@@ -1,47 +1,47 @@
 #!/usr/bin/env python
 
-import MySQLdb as mariadb
-from astropy.table import vstack, Table, Column
-from astropy.time import Time
-from astropy.io import ascii
-import numpy as np
-import matplotlib.pyplot as plt
 import argparse
-from reportlab.pdfgen.canvas import Canvas
+import os
+import re
+import textwrap
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pprint import pprint
-import re
-import os
 
-from adjustText import adjust_text
-import textwrap
+import matplotlib.pyplot as plt
+import MySQLdb as mariadb
+import numpy as np
 import pandas as pd
-from dataclasses import dataclass, field
+from adjustText import adjust_text
+from astropy.io import ascii
+from astropy.table import Column, Table, vstack
+from astropy.time import Time
+from reportlab.pdfgen.canvas import Canvas
 
-from SummaryGenerator.program_parameters import *
+from SummaryGenerator.analysis_plots import *
+from SummaryGenerator.benchmarking import *
 from SummaryGenerator.createReport import *
+from SummaryGenerator.database_tools import (
+    extractStationData,
+    grabAllStationData,
+    grabStations,
+)
+from SummaryGenerator.program_parameters import *
+from SummaryGenerator.scheduleStatistics import (
+    get_glovdh_barchart,
+    get_glovdh_piecharts,
+)
 from SummaryGenerator.stationPosition import (
-    get_station_positions,
     downloadFile,
     file2DF,
-)
-from SummaryGenerator.scheduleStatistics import (
-    get_glovdh_piecharts,
-    get_glovdh_barchart,
+    get_station_positions,
 )
 from SummaryGenerator.utilities import (
     datetime_to_fractional_year,
+    problemExtract,
     save_plt,
     stationParse,
-    problemExtract,
 )
-from SummaryGenerator.database_tools import (
-    grabAllStationData,
-    grabStations,
-    extractStationData,
-)
-from SummaryGenerator.analysis_plots import *
-from SummaryGenerator.benchmarking import *
 
 
 @dataclass
@@ -140,7 +140,7 @@ class StationSummariser:
         stop_fractional = datetime_to_fractional_year(self.stop_time)
 
         conf_file = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "stations-reports.config")
+            os.path.join(os.path.dirname(__file__), "..", "stations-reports.yaml")
         )
         station_dict_temp = dict(zip(*stationParse(conf_file)))
         station_dict_reverse = dict(
@@ -149,6 +149,9 @@ class StationSummariser:
         station_name_2char = station_dict_reverse.get(self.station)
 
         # stat_name_buffered = self.station.ljust(8, '_')
+
+        ### FIXME
+        # the downloaded .txt files should be stored in a dedicated directory.
         try:
             file_name = f"{self.station}.txt"
             downloadFile(file_name)

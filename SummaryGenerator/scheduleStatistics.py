@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+import argparse
+import os
+import time
+from datetime import datetime
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 #
@@ -9,19 +15,12 @@ import numpy as np
 # but also
 # https://scc.ms.unimelb.edu.au/resources/data-visualisation-and-exploration/no_pie-charts
 #
-
 # TODO
 #   - remove intensives
 #   - filter by VGOS
-
 import pandas as pd
-import matplotlib.pyplot as plt
-import argparse
-import requests
-from datetime import datetime
 import pytz
-import os
-import time
+import requests
 
 ################################
 
@@ -37,9 +36,11 @@ def parse_func():
     :return: the arguments, as given or defaults, if not.
     """
 
-    parser = argparse.ArgumentParser(description="""
+    parser = argparse.ArgumentParser(
+        description="""
     Simple script to test the eth zurich glovd api for vlbi sessions.
-    """)
+    """
+    )
     parser.add_argument(
         "station", help="""station code eg Nn""", nargs="?", default="Nn"
     )
@@ -180,8 +181,8 @@ def plot_sessions(args, data):
         session_counts,
         session_counts.index,
         f"Session Distribution for {args.station} "
-        f'({datetime.strptime(args.start_time, "%Y:%j").strftime("%j.%Y")}'
-        f' to {datetime.strptime(args.stop_time, "%Y:%j").strftime("%j.%Y")})',
+        f"({datetime.strptime(args.start_time, '%Y:%j').strftime('%j.%Y')}"
+        f" to {datetime.strptime(args.stop_time, '%Y:%j').strftime('%j.%Y')})",
         f"{args.station.lower()}_session_piechart.png",
     )
 
@@ -211,15 +212,14 @@ def plot_scans_and_observations(args, station_data, stats_data):
     df_filtered = df[(df["time_start"] >= start) & (df["time_start"] <= stop)]
 
     for x in ["scans", "observations"]:
-
         program_counts = df_filtered.groupby("program")[x].sum()
 
         plot_pie_chart(
             program_counts,
             program_counts.index,
             f"{x.capitalize()} Distribution for {args.station} "
-            f'({datetime.strptime(args.start_time, "%Y:%j").strftime("%j.%Y")}'
-            f' to {datetime.strptime(args.stop_time, "%Y:%j").strftime("%j.%Y")})',
+            f"({datetime.strptime(args.start_time, '%Y:%j').strftime('%j.%Y')}"
+            f" to {datetime.strptime(args.stop_time, '%Y:%j').strftime('%j.%Y')})",
             f"{args.station.lower()}_yearly_{x}.png",
         )
 
@@ -242,7 +242,6 @@ def process_n_plot(station, start_time, stop_time, stat_type, is_vgos):
     )
 
     if stat_type in ["scans", "observations"]:
-
         stats_data = get_station_statistics(station)
         stats_df = pd.DataFrame(stats_data["rows"], columns=stats_data["columns"])
         df = pd.merge(stats_df, df, on="session_id")
@@ -250,34 +249,29 @@ def process_n_plot(station, start_time, stop_time, stat_type, is_vgos):
     df["time_start"] = pd.to_datetime(df["time_start"]).dt.tz_localize(None)
     df_filtered = df[(df["time_start"] >= start) & (df["time_start"] <= stop)]
 
-    # this removes everything:
-    # df_filtered = filter_by_session_type(df_filtered, is_vgos)
-
     # sessions
 
     if stat_type == "sessions":
-
         session_counts = df_filtered.groupby("program")["session_id"].count()
 
         return plot_pie_chart(
             session_counts,
             session_counts.index,
             f"Session Distribution for {station} "
-            f'({start.strftime("%j.%Y")}'
-            f' to {stop.strftime("%j.%Y")})',
+            f"({start.strftime('%j.%Y')}"
+            f" to {stop.strftime('%j.%Y')})",
             f"{station.lower()}_session_piechart.png",
         )
 
     elif stat_type in ["scans", "observations"]:
-
         program_counts = df_filtered.groupby("program")[stat_type].sum()
 
         return plot_pie_chart(
             program_counts,
             program_counts.index,
             f"{stat_type.capitalize()} Distribution for {station} "
-            f'({start.strftime("%j.%Y")}'
-            f' to {stop.strftime("%j.%Y")})',
+            f"({start.strftime('%j.%Y')}"
+            f" to {stop.strftime('%j.%Y')})",
             f"{station.lower()}_yearly_{stat_type}.png",
         )
 
@@ -340,6 +334,7 @@ def filter_by_session_type(df, is_vgos):
     return df
 
 
+# use types here to help pyright sort out what's going on.
 def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
 
     BASEURL = "https://glovdh.ethz.ch/api/v1/"
@@ -378,7 +373,6 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
         stat_sessions = []
 
         for station in stations:
-
             resp = requests.get(f"{BASEURL}station/{station}")
             resp.raise_for_status()
             data = resp.json()
@@ -426,8 +420,6 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
 
     # print(f"Top 30 stations by number of sessions:\n{top_stations}")
 
-    #####
-
     if station not in stat_sessions_df["station"].values:
         print(f"Warning: {station} not found in station data.")
         return None
@@ -471,12 +463,10 @@ def plot_bar_char(df, station, start, stop, title):
         color="red",
     )
 
-    ###
-
     ax.set_xlabel("Station", fontsize=14, fontweight="bold")
 
     ax.set_ylabel(
-        f'Sessions between {start.strftime("%Y.%j")} and {stop.strftime("%Y.%j")}',
+        f"Sessions between {start.strftime('%Y.%j')} and {stop.strftime('%Y.%j')}",
         fontsize=14,
         fontweight="bold",
     )
@@ -493,9 +483,6 @@ def plot_bar_char(df, station, start, stop, title):
     fig.tight_layout()
 
     return fig
-
-
-################################
 
 
 def main(args):
@@ -516,6 +503,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-
     arguments = parse_func()
     main(arguments)
