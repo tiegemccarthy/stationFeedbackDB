@@ -13,12 +13,13 @@ We follow the design of old Perl scripts that use the postoffice.utas.edu.au SMT
 
 ### TODO
 # - check reports exist
-# - how to know what report type is to be sent...
+# - how to know what report type is to be sent... or just send all that are available.
 
 """
 
 import os
-import re
+
+# import re
 import smtplib
 import ssl
 import sys
@@ -127,26 +128,13 @@ def send_email(
             smtp.login(tls_user, tls_passwd)
             smtp.send_message(msg)
     except Exception as e:
+        logger.error(f"Fatal exception: {e}")
         sys.exit(f"Error sending email: {e}")
 
-
-"""
-    ##########
-    # report #
-    ##########
-
-    YELLOW = "\033[33m"
-    RESET = "\033[0m"
-
-    print(
-        f"successfully sent email:\n"
-        f"from {YELLOW}{send_from}{RESET} to "
-        f"{YELLOW}{send_to}{RESET}"
-    )
+    logger.info(f"successfully sent email:\nfrom {send_from} to {send_to}")
 
     if cc_list:
-        print(f"carbon-copying {YELLOW}{', '.join(cc_list)}{RESET}")
-"""
+        logger.info(f"carbon-copying {', '.join(cc_list)}")
 
 
 def main():
@@ -169,11 +157,7 @@ def main():
             name = info["name"]
             # email text body:
             body = f"""
-            To whom it may concern,
-
             Please find attached the station reports for {name}.
-
-            Warm regards,
             """
             # attach reports:
             attachments = [

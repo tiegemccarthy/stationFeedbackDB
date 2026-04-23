@@ -13,17 +13,14 @@ stations:
     name: HOBART12
     emails:
       - sullivan.lester@utas.edu.au
-      - tiegem@utas.edu.au
   Yg:
     name: YARRA12M
     emails:
       - sullivan.lester@utas.edu.au
-      - tiegem@utas.edu.au
   Ke:
     name: KATH12M
     emails:
       - sullivan.lester@utas.edu.au
-      - tiegem@utas.edu.au
   Ht:
     name: HART15M
   Nn:
@@ -34,7 +31,6 @@ stations:
     name: NYALE13S
     emails:
       - sullivan.lester@utas.edu.au
-      - tiegem@utas.edu.au
   Yj:
     name: RAEGYEB
   Sa:

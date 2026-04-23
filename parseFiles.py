@@ -9,7 +9,9 @@ from datetime import datetime
 
 import numpy as np
 from astropy.io import ascii
-from astropy.table import Table, vstack
+from astropy.table import vstack
+
+# from astropy.table import Table
 from astropy.time import Time
 
 if not sys.warnoptions:
@@ -108,6 +110,7 @@ def metaData(text_section, exp_code):
 
 
 def sessionFit(text_section):
+    session_fit = ""
     for line in text_section.split("\n"):
         if "Session fit:" in line:
             session_fit = line.split()[2]
@@ -154,21 +157,6 @@ def delayRMS(
             station_delays[i] = "-999"
     # print(station_delays)
     return station_delays
-
-
-def stationParse(stations_config=dirname + "/stations.config"):
-    with open(stations_config) as file:
-        station_contents = file.read()
-    stationTable = ascii.read(station_contents, data_start=0, names=["2char", "full"])
-    if (
-        len(stationTable) == 1
-    ):  # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
-        stationNames = [stationTable[0][0]]
-        stationNamesLong = [stationTable[0][1]]
-    else:
-        stationNames = stationTable["2char"][:]
-        stationNamesLong = stationTable["full"][:]
-    return stationNames, stationNamesLong
 
 
 def extractRelevantSections(all_corr_sections, version):
@@ -303,6 +291,27 @@ def stationParse(stations_config=dirname + "/stations.config"):
         stationNamesLong = stationTable["full"][:]
 
     return stationNames, stationNamesLong
+
+
+"""
+# we had two definitions of this.
+### TODO
+# diff the two to know which is the one to keep...
+
+def stationParse(stations_config=dirname + "/stations.config"):
+    with open(stations_config) as file:
+        station_contents = file.read()
+    stationTable = ascii.read(station_contents, data_start=0, names=["2char", "full"])
+    if (
+        len(stationTable) == 1
+    ):  # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
+        stationNames = [stationTable[0][0]]
+        stationNamesLong = [stationTable[0][1]]
+    else:
+        stationNames = stationTable["2char"][:]
+        stationNamesLong = stationTable["full"][:]
+    return stationNames, stationNamesLong
+"""
 
 
 def createStationQTables(section, corr_ref, band):

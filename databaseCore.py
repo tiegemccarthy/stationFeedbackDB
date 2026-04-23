@@ -164,9 +164,11 @@ def main(master_schedule, db_name):
                     cursor.execute(sql_station, data)
                     conn.commit()
                     conn.close()
-            except:
+            except Exception as e:
                 logger.error(
-                    "Error processing analysis report for session " + exp + "..."
+                    "Error processing analysis report for session "
+                    + exp
+                    + f". Exception occurred: {e}"
                 )
                 pass
 

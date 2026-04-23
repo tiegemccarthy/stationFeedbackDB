@@ -22,6 +22,7 @@ Pipfile
 **.csv
 #
 ESL-NOTES.md
+test-run.sh
 **.bak
 **server-config.yaml
 **config.yaml
