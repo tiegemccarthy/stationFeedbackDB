@@ -149,12 +149,13 @@ def plotBenchObs(data, specific_station):
     bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1], color='firebrick', alpha=0.8) # Plot the 'target' station
 
     # Sort out labelling
-    if specific_stat_index > 9:
-        labels = np.append(data[0:10,0], data[specific_stat_index,0])
-        ax.set_xticklabels(labels, rotation='vertical')  
-    else:
-        ax.set_xticklabels(data[0:10,0], rotation='vertical')
-    ax.tick_params(axis='x', labelrotation=45)
+    #if specific_stat_index > 9:
+    #    labels = np.append(data[0:10,0], data[specific_stat_index,0])
+    #    ax.set_xticklabels(labels, rotation='vertical')  
+    #else:
+    #    ax.set_xticklabels(data[0:10,0], rotation='vertical')
+    #ax.tick_params(axis='x', labelrotation=45)
+    ax.tick_params(axis='x', labelbottom=False)
 
     plt.xlabel('Stations')
     plt.title('Total observations')
@@ -174,12 +175,15 @@ def plotBenchSess(data, specific_station):
     bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1].astype(float), color='firebrick', alpha=0.8) # Plot the 'target' station
 
     # Sort out labelling
-    if specific_stat_index > 9:
-        labels = np.append(data[0:10,0], data[specific_stat_index,0])
-        ax.set_xticklabels(labels, rotation='vertical')  
-    else:
-        ax.set_xticklabels(data[0:10,0], rotation='vertical')
-    ax.tick_params(axis='x', labelrotation=45)
+    #if specific_stat_index > 9:
+    #    labels = np.append(data[0:10,0], data[specific_stat_index,0])
+    #else:
+    #    labels = data[0:10,0]
+   # 
+   # anonymised_labels = [label if label == specific_station else "" for label in labels]
+   # ax.set_xticklabels(anonymised_labels, rotation='vertical')
+   # ax.tick_params(axis='x', labelrotation=45)
+    ax.tick_params(axis='x', labelbottom=False)
 
     # Top of bar labels
     ax.bar_label(bars, label_type='edge')
@@ -203,12 +207,13 @@ def plotBenchWRMS(data, specific_station):
     bar_specific =  ax.bar(data[specific_stat_index,0], data[specific_stat_index,1], color='firebrick', alpha=0.8) # Plot the 'target' station
 
     # Sort out labelling
-    if specific_stat_index > 9:
-        labels = np.append(data[0:10,0], data[specific_stat_index,0])
-        ax.set_xticklabels(labels, rotation='vertical')
-    else:
-        ax.set_xticklabels(data[0:10,0], rotation='vertical')
-    ax.tick_params(axis='x', labelrotation=45)
+    #if specific_stat_index > 9:
+    #    labels = np.append(data[0:10,0], data[specific_stat_index,0])
+    #    ax.set_xticklabels(labels, rotation='vertical')
+    #else:
+    #    ax.set_xticklabels(data[0:10,0], rotation='vertical')
+    #ax.tick_params(axis='x', labelrotation=45)
+    ax.tick_params(axis='x', labelbottom=False)
 
     # Top of bar labels
     ax.bar_label(bars, label_type='edge')

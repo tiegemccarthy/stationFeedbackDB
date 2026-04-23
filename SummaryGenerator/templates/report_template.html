@@ -135,7 +135,7 @@
                     <div class="benchmark-images section">
                         <h2>Benchmarking barcharts - <strong>{{ start_time }}</strong> to <strong>{{ stop_time }}</strong></h2>
                         <p>
-                            The 10 stations with highest totals in the database are plotted, if this station is not in the top 10 it will be added to the right hand side of the figure.
+                            The 10 stations with highest totals for each parameter in the database are plotted, if this station (red bar) is not in the top 10 it will be added to the right hand side of the figure.
                             Please note, only 24 hour sessions are included and our database may not necessarily be complete for all stations.
                         </p>
                         {% for param, img in benchmark_images.items %}
