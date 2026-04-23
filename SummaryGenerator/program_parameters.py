@@ -5,6 +5,8 @@ mariadb.connect(host='56d09x2.phys.utas.edu.au', user='auscope', passwd='passwor
 
 import json
 
+from logger_config import logger
+
 # from pprint import pprint
 
 
@@ -60,5 +62,5 @@ class Config:
 # create an instance
 config = Config()
 
-print("Default config:")
-print(json.dumps(config.__dict__, default=lambda o: o.__dict__, indent=4))
+logger.info("Default config:")
+logger.info(json.dumps(config.__dict__, default=lambda o: o.__dict__, indent=4))

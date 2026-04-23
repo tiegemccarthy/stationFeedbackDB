@@ -7,6 +7,8 @@ from astropy.table import Column
 # from astropy.table import Table, vstack
 from astropy.time import Time
 
+from logger_config import logger
+
 # from pprint import pprint
 from SummaryGenerator.utilities import save_plt
 
@@ -81,7 +83,7 @@ def performanceAnalysis(table_input):
 
     # Write out the median performance string
     perf_str = str(round(np.median(table["Performance"]) * 100, 1)) + "%"
-    print(perf_str)
+    logger.info(f"Performance = {perf_str}")
 
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))

@@ -18,6 +18,10 @@ from astropy.table import Column, Table, vstack
 from astropy.time import Time
 from reportlab.pdfgen.canvas import Canvas
 
+from logger_config import logger
+
+### TODO
+# do not use * imports...
 from SummaryGenerator.analysis_plots import *
 from SummaryGenerator.benchmarking import *
 from SummaryGenerator.createReport import *
@@ -75,11 +79,11 @@ class StationSummariser:
         self.start_time = self.start_time.iso
         self.stop_time = self.stop_time.iso
 
-        print(f"start: {self.start_time}")
-        print(f"stop: {self.stop_time}")
+        logger.info(f"start: {self.start_time}")
+        logger.info(f"stop: {self.stop_time}")
 
         table = self.table
-        print(table)
+        logger.info(f"table:\n{table}")
 
         self.total_sessions = len(table["ExpID"])
         self.total_observations = int(np.nansum(table["Total_Obs"].astype(float)))
@@ -106,7 +110,7 @@ class StationSummariser:
             search = "v%"
             reverse_search = 1
 
-        print(self.start_time)
+        logger.info(f"Start time = {self.start_time}")
 
         stat_list = grabStations(self.database)
         stat_tab_list, table_list = grabAllStationData(
@@ -162,11 +166,11 @@ class StationSummariser:
                 coord: save_plt(fig) for coord, fig in pos_fig_dict.items()
             }
         except ValueError as ve:
-            print(
+            logger.warning(
                 f"Error creating the station position plots. Bad values, bad. More info: {ve}"
             )
         except Exception as e:
-            print(
+            logger.warning(
                 f"Error creating station position plots. Are you sure the API endpoint is correct? More info: {e}"
             )
 
@@ -192,7 +196,7 @@ class StationSummariser:
 
         # the list of issues from the correlation reports
         self.problems = problemExtract(table)
-        print(f"PROBLEMS:\n{self.problems}")
+        logger.info(f"PROBLEMS:\n{self.problems}")
 
         # now onto the table
         columns_to_remove = [
@@ -271,8 +275,8 @@ def parseFunc():
 
 
 def main(stat_code, db_name, start, stop, output_name, search="%", reverse_search=0):
-    print("##########################################")
-    print(f"Generating Summary for Station {stat_code}.")
+
+    logger.info(f"Generating Summary for Station {stat_code}.")
 
     start_time = Time(start, format="yday", out_subfmt="date")
     stop_time = Time(stop, format="yday", out_subfmt="date")
@@ -284,9 +288,8 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     elif search == "v%" and reverse_search == 1:
         vgos = False
 
-    print(f"Report range: {start_time} -> {stop_time}.")
-    print(f"Report type: {'VGOS' if vgos else 'Legacy'}.")
-    print("##########################################")
+    logger.info(f"Report range: {start_time} -> {stop_time}.")
+    logger.info(f"Report type: {'VGOS' if vgos else 'Legacy'}.")
 
     # create the info table which will be used to generate the rest of it...
     result, col_names = extractStationData(
@@ -296,7 +299,7 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     try:
         table = Table(rows=result, names=col_names)
     except Exception as e:
-        raise Exception("Error creating Table (astropy).\n{e}") from e
+        raise Exception(f"Error creating Table (astropy).\n{e}") from e
 
     # once we have this we can produce the report elements that sumarise this...
     if config.ctrl.debug:
@@ -305,8 +308,8 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
         print("col_names:")
         pprint(col_names)
 
-    print(f"Number of columns in result: {len(result[0])}")
-    print(f"Number of column names: {len(col_names)}")
+    logger.info(f"Number of columns in result: {len(result[0])}")
+    logger.info(f"Number of column names: {len(col_names)}")
 
     if len(result[0]) != len(col_names):
         raise ValueError("Mismatched names to data columns.")

@@ -10,6 +10,7 @@ from django.template import Context, Template
 # import base64
 from pyppeteer import launch
 
+from logger_config import logger
 from SummaryGenerator.utilities import load_png
 
 # control
@@ -102,7 +103,7 @@ def create_report(summary, output_path):
         with open(html_output_path, "w", encoding="utf-8") as html_file:
             html_file.write(html_content)
 
-        print(f"HTML preview generated: {html_output_path}")
+        logger.info(f"HTML preview generated: {html_output_path}")
 
     # Define the output path for the PDF
     # output_path = os.path.join(reports_dir, filename)
@@ -110,4 +111,4 @@ def create_report(summary, output_path):
     # Generate the PDF
     asyncio.run(generate_pdf(html_content, output_path))
 
-    print(f"PDF generated and saved to {output_path}")
+    logger.info(f"PDF generated and saved to {output_path}")

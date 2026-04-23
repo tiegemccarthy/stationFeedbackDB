@@ -22,6 +22,8 @@ import pandas as pd
 import pytz
 import requests
 
+from logger_config import logger
+
 ################################
 
 
@@ -229,7 +231,7 @@ def plot_scans_and_observations(args, station_data, stats_data):
 
 def process_n_plot(station, start_time, stop_time, stat_type, is_vgos):
 
-    print(
+    logger.info(
         f"In process_and_plot w/ args = {station}, {start_time}, {stop_time}, {stat_type}"
     )
 
@@ -298,7 +300,7 @@ def get_glovdh_piecharts(station, start, stop, is_vgos):
         fig = process_n_plot(station, start, stop, stat_type, is_vgos)
         fig_dict[stat_type] = fig
 
-    print(f"glovdh fig dict: {fig_dict}")
+    logger.info(f"glovdh fig dict: {fig_dict}")
     return fig_dict
 
 
@@ -351,7 +353,7 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
     start = datetime.strptime(time_start, "%Y-%m-%d").replace(tzinfo=pytz.UTC)
     stop = datetime.strptime(time_stop, "%Y-%m-%d").replace(tzinfo=pytz.UTC)
 
-    print(f"Time range: start = {start}, stop = {stop}, formatted.")
+    logger.info(f"Time range: start = {start}, stop = {stop}, formatted.")
 
     ###
 
@@ -360,10 +362,10 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
         and (time.time() - os.path.getmtime(CACHE_FILE))
         < cache_age_threshold * 24 * 60 * 60
     ):
-        print("Loading cached data...")
+        logger.info("Loading cached data...")
         stat_sessions_df = pd.read_csv(CACHE_FILE)
     else:
-        print("Cache is missing or outdated. Downloading...")
+        logger.info("Cache is missing or outdated. Downloading...")
 
         try:
             stations = getAllStations(BASEURL)
@@ -395,23 +397,23 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
             in_time_df = df[(df["time_start"] >= start) & (df["time_start"] <= stop)]
             total_sessions = in_time_df.shape[0]
 
-            print(
+            logger.info(
                 f"Total number of sessions scheduled for {station} = {total_sessions}."
             )
 
             if total_sessions > 0:
                 stat_sessions.append([station, total_sessions])
 
-        print(f"Stations and sessions (if non zero) = {stat_sessions}")
+        logger.info(f"Stations and sessions (if non zero) = {stat_sessions}")
 
         stat_sessions_df = pd.DataFrame(
             stat_sessions, columns=["station", "total_sessions"]
         )
         stat_sessions_df.to_csv(CACHE_FILE, index=False)
-        print(f"Data cached to {CACHE_FILE}")
+        logger.info(f"Data cached to {CACHE_FILE}")
 
     average_sessions = np.mean(stat_sessions_df["total_sessions"])
-    print(f"Average number of sessions: {average_sessions:.2f}")
+    logger.info(f"Average number of sessions: {average_sessions:.2f}")
 
     top_station_num = 30
     top_stations = stat_sessions_df.sort_values(
@@ -421,10 +423,12 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
     # print(f"Top 30 stations by number of sessions:\n{top_stations}")
 
     if station not in stat_sessions_df["station"].values:
-        print(f"Warning: {station} not found in station data.")
+        logger.warning(f"Warning: {station} not found in station data.")
         return None
     elif station not in top_stations["station"].values:
-        print(f"Warning: {station} not found in top {top_station_num} stations.")
+        logger.warning(
+            f"Warning: {station} not found in top {top_station_num} stations."
+        )
         return None
     else:
         sorted_df = top_stations.sort_values(by="total_sessions", ascending=False)
