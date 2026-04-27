@@ -37,15 +37,20 @@ def parseFunc():
     return args
 
 
-def downloadFile(file_name: str):
+def downloadFile(file_name: str, data_dir: str):
+
     # currently this always removes the old file and redownloads, probably add some logic in here to check when the file was downloaded.
     if os.path.exists(file_name):
         os.remove(file_name)
 
+    # must create the data directory before wgetting into it
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
     try:
         wget.download(
             f"https://ivsopar.obspm.fr/stations/series/{file_name}",
-            out="../stat_pos_data",
+            out=data_dir,
         )
     except Exception as e:
         logger.error(f"wget exception:\n{e}")
@@ -53,7 +58,11 @@ def downloadFile(file_name: str):
         # careful here!
 
 
-def file2DF(file_name: str) -> pandas.DataFrame:
+def file2DF(file_name: str, data_dir: str) -> pandas.DataFrame:
+
+    file = os.path.join(data_dir, file_name)
+    logger.debug(f"FILEPATH = {file} !!!!")
+
     dataframe_colnames = [
         "date",
         "X",
@@ -70,7 +79,7 @@ def file2DF(file_name: str) -> pandas.DataFrame:
         "dN",
     ]  # , 'station', 'vgosDB']
     df = pandas.read_csv(
-        file_name, names=dataframe_colnames, header=0, skiprows=2, delimiter="\s+"
+        file, names=dataframe_colnames, header=0, skiprows=2, delimiter="\s+"
     )
 
     return df
@@ -121,7 +130,7 @@ def plotPos(df: pandas.DataFrame, startdate, stopdate, lim, pos_string):
     return f, ax
 
 
-def get_station_positions(STATION_NAME, start_date, stop_date):
+def get_station_positions(STATION_NAME: str, data_dir: str, start_date, stop_date):
 
     # debug
     logger.debug(f"get_station_position, args: {STATION_NAME}, {start_date}")
@@ -138,7 +147,7 @@ def get_station_positions(STATION_NAME, start_date, stop_date):
     # stat_name_buffered = STATION_NAME.ljust(8, '_')
     file_name = f"{STATION_NAME}.txt"
     # This is a bit of a kludge editing Earl's existing code, revist this + the download step in summaryGenerator
-    pos_df = file2DF(os.path.dirname(__file__) + "/../stat_pos_data/" + file_name)
+    pos_df = file2DF(file_name, data_dir)
 
     fig_dict = {}
     for coord in coords:
@@ -151,8 +160,12 @@ def get_station_positions(STATION_NAME, start_date, stop_date):
 def main(STATION_NAME, start_date):
     start_date = float(start_date)
     coords = ["X", "Y", "Z", "U", "E", "N"]
-    downloadFile(STATION_NAME)
-    pos_df = file2DF(STATION_NAME)
+
+    # use os.path for this...
+    data_dir = f"{dirname}/../station_position_data"
+
+    downloadFile(STATION_NAME, data_dir)
+    pos_df = file2DF(STATION_NAME, data_dir)
 
     fX, axX = plotPos(pos_df, start_date, 500, "X")
     fY, axY = plotPos(pos_df, start_date, 500, "Y")

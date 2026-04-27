@@ -156,11 +156,14 @@ class StationSummariser:
 
         ### FIXME
         # the downloaded .txt files should be stored in a dedicated directory.
+        # in fixing the above, created a new issue:
+        # shouldn't have hardcoded paths, in multiple spots.
         try:
             file_name = f"{self.station}.txt"
-            downloadFile(file_name)
+            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"
+            downloadFile(file_name, data_dir)
             pos_fig_dict = get_station_positions(
-                self.station, start_fractional, stop_fractional
+                self.station, data_dir, start_fractional, stop_fractional
             )
             self.pos_images = {
                 coord: save_plt(fig) for coord, fig in pos_fig_dict.items()
