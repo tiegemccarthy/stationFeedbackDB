@@ -75,7 +75,7 @@ def corrReportDL(exp_id,vgos_tag):
     tag = str(vgos_tag.rstrip())
     exp_id = str(exp_id)
     vgos_exists = []
-    if os.path.isfile(dirname+"/corr_files/"+ exp_id + '.corr'):
+    if (os.path.isfile(dirname+"/corr_files/"+ exp_id + '.corr') and os.path.isfile(dirname+"/vgosDB/" + tag + ".tgz")):
         print("Corr report already exists for experiment " + exp_id + ", skipping re-download.")
         return
     else:
@@ -85,12 +85,12 @@ def corrReportDL(exp_id,vgos_tag):
         try:
             ftps.retrlines("LIST /pub/vlbi/ivsdata/vgosdb/" + year + "/" + tag + ".tgz", vgos_exists.append)
             if len(vgos_exists) > 0:
-                local_filename = os.path.join(dirname, tag + ".tgz")
+                local_filename = os.path.join(dirname + '/vgosDB/', tag + ".tgz")
                 ftps.sendcmd('TYPE I')
                 lf = open(local_filename, "wb")
                 ftps.retrbinary("RETR /pub/vlbi/ivsdata/vgosdb/" + year + "/" + tag + ".tgz", lf.write)
                 lf.close()
-                tar = tarfile.open(dirname + '/' + tag + ".tgz")
+                tar = tarfile.open(dirname + '/vgosDB/' + tag + ".tgz")
                 if tag +'/History/'+ tag + '_V000_kMk4.hist' in tar.getnames():
                     member = tar.getmember(tag +'/History/'+ tag + '_V000_kMk4.hist')
                     member.name = dirname + '/corr_files/' + exp_id + '.corr'
@@ -106,7 +106,6 @@ def corrReportDL(exp_id,vgos_tag):
                             tar.extract(member)
                             tar.close()
                             break
-                os.remove(dirname + '/' + tag + ".tgz")
                 print("Corr report download complete for experiment " + exp_id + ".")
                 return 
         except Exception:

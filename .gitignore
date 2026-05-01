@@ -14,6 +14,8 @@
 **.txt
 **.test
 **.ipynb
+**.tgz
+**vgosDB/
 # the pipenv config
 Pipfile
 # the glovdh api cache
