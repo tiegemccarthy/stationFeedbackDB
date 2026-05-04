@@ -1,31 +1,52 @@
 #!/usr/bin/env python
 
-import MySQLdb as mariadb
-from astropy.table import vstack, Table, Column
-from astropy.time import Time
-from astropy.io import ascii
-import numpy as np
-import matplotlib.pyplot as plt
 import argparse
-from reportlab.pdfgen.canvas import Canvas
+import os
+import re
+import textwrap
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pprint import pprint
-import re
-import os
 
-from adjustText import adjust_text
-import textwrap
+import matplotlib.pyplot as plt
+import MySQLdb as mariadb
+import numpy as np
 import pandas as pd
-from dataclasses import dataclass, field
+from adjustText import adjust_text
+from astropy.io import ascii
+from astropy.table import Column, Table, vstack
+from astropy.time import Time
+from reportlab.pdfgen.canvas import Canvas
 
-from SummaryGenerator.program_parameters import *
-from SummaryGenerator.createReport import *
-from SummaryGenerator.stationPosition import get_station_positions, downloadFile, file2DF
-from SummaryGenerator.scheduleStatistics import get_glovdh_piecharts, get_glovdh_barchart
-from SummaryGenerator.utilities import datetime_to_fractional_year, save_plt, stationParse, problemExtract
-from SummaryGenerator.database_tools import grabAllStationData, grabStations, extractStationData
+from logger_config import logger
+
+### TODO
+# do not use * imports...
 from SummaryGenerator.analysis_plots import *
 from SummaryGenerator.benchmarking import *
+from SummaryGenerator.createReport import *
+from SummaryGenerator.database_tools import (
+    extractStationData,
+    grabAllStationData,
+    grabStations,
+)
+from SummaryGenerator.program_parameters import *
+from SummaryGenerator.scheduleStatistics import (
+    get_glovdh_barchart,
+    get_glovdh_piecharts,
+)
+from SummaryGenerator.stationPosition import (
+    downloadFile,
+    file2DF,
+    get_station_positions,
+)
+from SummaryGenerator.utilities import (
+    datetime_to_fractional_year,
+    problemExtract,
+    save_plt,
+    stationParse,
+)
+
 
 @dataclass
 class StationSummariser:
@@ -37,10 +58,10 @@ class StationSummariser:
     database: str
     total_sessions: int = 0
     total_observations: int = 0
-    wrms_analysis: str = ""             
-    performance_analysis: str = ""      
-    detectX_str: str = ""               
-    detectS_str: str = ""               
+    wrms_analysis: str = ""
+    performance_analysis: str = ""
+    detectX_str: str = ""
+    detectS_str: str = ""
     ass_rate_str: str = ""
     wrms_img: str = ""
     perf_img: str = ""
@@ -58,84 +79,111 @@ class StationSummariser:
         self.start_time = self.start_time.iso
         self.stop_time = self.stop_time.iso
 
-        print(f"start: {self.start_time}")
-        print(f"stop: {self.stop_time}")
+        logger.info(f"start: {self.start_time}")
+        logger.info(f"stop: {self.stop_time}")
 
         table = self.table
-        print(table)         
+        logger.info(f"table:\n{table}")
 
-        self.total_sessions = len(table['ExpID'])
-        self.total_observations = int(np.nansum(table['Total_Obs'].astype(float)))
+        self.total_sessions = len(table["ExpID"])
+        self.total_observations = int(np.nansum(table["Total_Obs"].astype(float)))
 
         self.wrms_analysis, self.wrms_img = wRmsAnalysis(table)
         self.performance_analysis, self.perf_img = performanceAnalysis(table)
 
         # detections
         ############
-        self.detectX_str, self.detect_images['X'] = detectRate(table, 'X')
+        self.detectX_str, self.detect_images["X"] = detectRate(table, "X")
 
         try:
-            self.detectS_str, self.detect_images['S'] = detectRate(table, 'S')
+            self.detectS_str, self.detect_images["S"] = detectRate(table, "S")
         except Exception:
             self.detectS_str = "No S-band data present..."
-            self.detect_images['S'] = ""
+            self.detect_images["S"] = ""
 
         # Benchmarking figures
         ######################
         if self.vgos == True:
-            search = 'v%'
+            search = "v%"
             reverse_search = 0
         elif self.vgos == False:
-            search = 'v%'
-            reverse_search = 1   
+            search = "v%"
+            reverse_search = 1
 
-        print(self.start_time) 
+        logger.info(f"Start time = {self.start_time}")
 
         stat_list = grabStations(self.database)
-        stat_tab_list, table_list = grabAllStationData(stat_list, self.database, self.start_time, self.stop_time, search, reverse_search)
+        stat_tab_list, table_list = grabAllStationData(
+            stat_list,
+            self.database,
+            self.start_time,
+            self.stop_time,
+            search,
+            reverse_search,
+        )
 
         bench_obs_list = sumTotalObsALL(table_list, stat_tab_list)
         bench_numsess_list = numSessionsALL(table_list, stat_tab_list)
         bench_wrms_list = medWRMSdelALL(table_list, stat_tab_list)
 
-        self.benchmark_images['numobs'] = plotBenchObs(bench_obs_list, self.station)
-        self.benchmark_images['numsess'] = plotBenchSess(bench_numsess_list, self.station)
-        self.benchmark_images['medwrms'] = plotBenchWRMS(bench_wrms_list, self.station)
+        self.benchmark_images["numobs"] = plotBenchObs(bench_obs_list, self.station)
+        self.benchmark_images["numsess"] = plotBenchSess(
+            bench_numsess_list, self.station
+        )
+        self.benchmark_images["medwrms"] = plotBenchWRMS(bench_wrms_list, self.station)
 
         # assignment rate plot
         ass_rate_list = determineAssignmentRate(table_list, stat_tab_list, self.station)
-        self.ass_rate_str, self.ass_rate_img = plotAssignmentRate(ass_rate_list)     
+        self.ass_rate_str, self.ass_rate_img = plotAssignmentRate(ass_rate_list)
 
         # station position
         ##################
-        
+
         # handle the fractional time format expected of this:
         start_fractional = datetime_to_fractional_year(self.start_time)
         stop_fractional = datetime_to_fractional_year(self.stop_time)
 
-        conf_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'stations-reports.config'))
+        conf_file = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "stations-reports.yaml")
+        )
         station_dict_temp = dict(zip(*stationParse(conf_file)))
-        station_dict_reverse = dict(zip(station_dict_temp.values(), station_dict_temp.keys()))
+        station_dict_reverse = dict(
+            zip(station_dict_temp.values(), station_dict_temp.keys())
+        )
         station_name_2char = station_dict_reverse.get(self.station)
-        
-        #stat_name_buffered = self.station.ljust(8, '_')
+
+        # stat_name_buffered = self.station.ljust(8, '_')
+
+        ### FIXME
+        # the downloaded .txt files should be stored in a dedicated directory.
+        # in fixing the above, created a new issue:
+        # shouldn't have hardcoded paths, in multiple spots.
         try:
             file_name = f"{self.station}.txt"
-            downloadFile(file_name)           
-            pos_fig_dict = get_station_positions(self.station, start_fractional, stop_fractional)
-            self.pos_images = {coord: save_plt(fig) for coord, fig in pos_fig_dict.items()}
+            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"
+            downloadFile(file_name, data_dir)
+            pos_fig_dict = get_station_positions(
+                self.station, data_dir, start_fractional, stop_fractional
+            )
+            self.pos_images = {
+                coord: save_plt(fig) for coord, fig in pos_fig_dict.items()
+            }
         except ValueError as ve:
-            print(f"Error creating the station position plots. Bad values, bad. More info: {ve}")
+            logger.warning(
+                f"Error creating the station position plots. Bad values, bad. More info: {ve}"
+            )
         except Exception as e:
-            print(f"Error creating station position plots. Are you sure the API endpoint is correct? More info: {e}")
-        
+            logger.warning(
+                f"Error creating station position plots. Are you sure the API endpoint is correct? More info: {e}"
+            )
+
         # station schedules
         ###################
 
         # try:
         #     glovdh_dict =  get_glovdh_piecharts(station_name_2char, self.start_time,
         #                                 self.stop_time, self.vgos)
-        #     self.glovdh_images = {stat_type: save_plt(fig) 
+        #     self.glovdh_images = {stat_type: save_plt(fig)
         #             for stat_type, fig in glovdh_dict.items()}
         # except Exception as e:
         #     print(f"Problem creating the piecharts:\n{e}")
@@ -151,19 +199,42 @@ class StationSummariser:
 
         # the list of issues from the correlation reports
         self.problems = problemExtract(table)
-        print(f"PROBLEMS:\n{self.problems}")
+        logger.info(f"PROBLEMS:\n{self.problems}")
 
         # now onto the table
-        columns_to_remove = ['Notes', 'Date_MJD', 'Pos_X', 'Pos_Y', 'Pos_Z', 'Pos_E', 'Pos_N', 'Pos_U', 'session_fit', 'Performance_UsedVsRecov']
- 
-        self.table.rename_columns(('ExpID', 'W_RMS_del', 'Detect_Rate_X', 'Detect_Rate_S', 'Total_Obs'), ('Session Code', 'WRMS (ps)', 'Detect Rate - X', 'Detect Rate - S', 'Total Obs.'))
+        columns_to_remove = [
+            "Notes",
+            "Date_MJD",
+            "Pos_X",
+            "Pos_Y",
+            "Pos_Z",
+            "Pos_E",
+            "Pos_N",
+            "Pos_U",
+            "session_fit",
+            "Performance_UsedVsRecov",
+        ]
+
+        self.table.rename_columns(
+            ("ExpID", "W_RMS_del", "Detect_Rate_X", "Detect_Rate_S", "Total_Obs"),
+            (
+                "Session Code",
+                "WRMS (ps)",
+                "Detect Rate - X",
+                "Detect Rate - S",
+                "Total Obs.",
+            ),
+        )
         self.table = self.table.to_pandas()
         table = self.table.drop(columns=columns_to_remove)
 
-        self.table_data = table.to_html(classes='table table-bordered table-striped', index=False)
+        self.table_data = table.to_html(
+            classes="table table-bordered table-striped", index=False
+        )
 
 
 ###############
+
 
 def parseFunc():
     """
@@ -171,58 +242,67 @@ def parseFunc():
     :return:
     """
     # Argument parsing
-    parser = argparse.ArgumentParser(description="""Current draft script for a report/summary generator that interacts with the SQL database and
-                                        extracts data over a requested time range.""")
-    parser.add_argument('station',
-                        default='hb',
-                        help="""2 letter station code of the station you would like to extract data for.""")
-    parser.add_argument('sql_db_name', 
-                        default='auscopeDB',
-                        help="""The name of the SQL database you would like to use.""")
-    parser.add_argument('date_start', 
-                        help="""Start date (in MJD) of the time period.""")
-    parser.add_argument('date_stop', 
-                        help="""The end date (in MJD) of the time period.""")
-    parser.add_argument('output_name',
-                        default='report.pdf',
-                        help="""File name for output PDF.""")
-    parser.add_argument('sql_search',
-                        default='%',
-                        help="""SQL search string.""")
-    parser.add_argument('reverse_search',
-                        default=0,
-                        help="""Change SQL search string clause from 'LIKE' to 'NOT LIKE.'""")
+    parser = argparse.ArgumentParser(
+        description="""Current draft script for a report/summary generator that interacts with the SQL database and
+                                        extracts data over a requested time range."""
+    )
+    parser.add_argument(
+        "station",
+        default="hb",
+        help="""2 letter station code of the station you would like to extract data for.""",
+    )
+    parser.add_argument(
+        "sql_db_name",
+        default="auscopeDB",
+        help="""The name of the SQL database you would like to use.""",
+    )
+    parser.add_argument(
+        "date_start", help="""Start date (in MJD) of the time period."""
+    )
+    parser.add_argument(
+        "date_stop", help="""The end date (in MJD) of the time period."""
+    )
+    parser.add_argument(
+        "output_name", default="report.pdf", help="""File name for output PDF."""
+    )
+    parser.add_argument("sql_search", default="%", help="""SQL search string.""")
+    parser.add_argument(
+        "reverse_search",
+        default=0,
+        help="""Change SQL search string clause from 'LIKE' to 'NOT LIKE.'""",
+    )
     # if reverse_search = 0 then  VGOS only
     # else if reverse_search =1 then LEGACY (R....)
     args = parser.parse_args()
     return args
 
 
-def main(stat_code, db_name, start, stop, output_name, search='%', reverse_search=0):
-    print("##########################################")
-    print(f"Generating Summary for Station {stat_code}.")
+def main(stat_code, db_name, start, stop, output_name, search="%", reverse_search=0):
 
-    start_time = Time(start, format='yday', out_subfmt='date')
-    stop_time = Time(stop, format='yday', out_subfmt='date')
+    logger.info(f"Generating Summary for Station {stat_code}.")
+
+    start_time = Time(start, format="yday", out_subfmt="date")
+    stop_time = Time(stop, format="yday", out_subfmt="date")
 
     vgos = None
 
-    if search == 'v%' and reverse_search == 0:
+    if search == "v%" and reverse_search == 0:
         vgos = True
-    elif search == 'v%' and reverse_search == 1:
+    elif search == "v%" and reverse_search == 1:
         vgos = False
 
-    print(f"Report range: {start_time} -> {stop_time}.")
-    print(f"Report type: {'VGOS' if vgos else 'Legacy'}.")
-    print("##########################################")
+    logger.info(f"Report range: {start_time} -> {stop_time}.")
+    logger.info(f"Report type: {'VGOS' if vgos else 'Legacy'}.")
 
     # create the info table which will be used to generate the rest of it...
-    result, col_names = extractStationData(stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search)
+    result, col_names = extractStationData(
+        stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search
+    )
     # turn this into an astropy table datastructure
     try:
         table = Table(rows=result, names=col_names)
     except Exception as e:
-        raise Exception("Error creating Table (astropy).\n{e}") from e
+        raise Exception(f"Error creating Table (astropy).\n{e}") from e
 
     # once we have this we can produce the report elements that sumarise this...
     if config.ctrl.debug:
@@ -231,8 +311,8 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
         print("col_names:")
         pprint(col_names)
 
-    print(f"Number of columns in result: {len(result[0])}")
-    print(f"Number of column names: {len(col_names)}")
+    logger.info(f"Number of columns in result: {len(result[0])}")
+    logger.info(f"Number of column names: {len(col_names)}")
 
     if len(result[0]) != len(col_names):
         raise ValueError("Mismatched names to data columns.")
@@ -241,13 +321,21 @@ def main(stat_code, db_name, start, stop, output_name, search='%', reverse_searc
     stat_sum = StationSummariser(stat_code, vgos, start_time, stop_time, table, db_name)
 
     # create the PDF report
-    print('Generating PDF report...')
+    print("Generating PDF report...")
     create_report(stat_sum, output_name)
 
     return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # deploy, will be called by updateReports
     args = parseFunc()
-    main(args.station, args.sql_db_name, args.date_start, args.date_stop, args.output_name, args.sql_search, args.reverse_search)
+    main(
+        args.station,
+        args.sql_db_name,
+        args.date_start,
+        args.date_stop,
+        args.output_name,
+        args.sql_search,
+        args.reverse_search,
+    )
