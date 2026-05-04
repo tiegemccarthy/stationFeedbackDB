@@ -3,13 +3,14 @@
 #############
 
 import base64
-from io import BytesIO
-from datetime import datetime
 import os
-from astropy.io import ascii
-import re
-import yaml                     # pyyaml
 
+# from astropy.io import ascii
+import re
+from datetime import datetime
+from io import BytesIO
+
+import yaml  # pyyaml
 
 ################
 # time formats #
@@ -79,7 +80,7 @@ def stationParse(
     """
 
     with open(stations_config) as file:
-        stations = yaml.safe_load(file)['stations']
+        stations = yaml.safe_load(file)["stations"]
 
     # initialise what we return
     stationNames = []
@@ -92,23 +93,6 @@ def stationParse(
 
     return stationNames, stationNamesLong
 
-"""
-def stationParse_v1_config(
-    stations_config=os.path.dirname(__file__) + "/stations-reports.config",
-):
-    with open(stations_config) as file:
-        station_contents = file.read()
-    stationTable = ascii.read(station_contents, data_start=0, names=["2char", "full"])
-    if (
-        len(stationTable) == 1
-    ):  # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
-        stationNames = [stationTable[0][0]]
-        stationNamesLong = [stationTable[0][1]]
-    else:
-        stationNames = stationTable["2char"][:]
-        stationNamesLong = stationTable["full"][:]
-    return stationNames, stationNamesLong
-"""
 
 def problemExtract(table_input):
     """

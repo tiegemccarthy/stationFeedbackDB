@@ -31,5 +31,8 @@ test-run.sh
 **corr_files
 **skd_files
 **stat_pos_data
+**station_position_data
 **master*.txt
 **example-*
+**.bak
+

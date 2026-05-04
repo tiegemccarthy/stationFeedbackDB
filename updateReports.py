@@ -5,7 +5,8 @@
 
 import argparse
 import os
-import sys
+
+# import sys
 from datetime import datetime, timedelta
 
 from astropy.io import ascii
@@ -41,22 +42,6 @@ def parseFunc():
     args = parser.parse_args()
 
     return args
-
-
-# the below is duplicated code from utilities.py
-"""
-def stationParse(stations_config= dirname + '/stations-reports.config'):
-    with open(stations_config) as file:
-        station_contents = file.read()
-    stationTable = ascii.read(station_contents, data_start=0, names=['2char', 'full'])
-    if len(stationTable) == 1: # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
-        stationNames = [stationTable[0][0]]
-        stationNamesLong = [stationTable[0][1]]
-    else:
-        stationNames = stationTable['2char'][:]
-        stationNamesLong = stationTable['full'][:]
-    return stationNames, stationNamesLong
-"""
 
 
 def main(database_name, start_date=None, end_date=None):
