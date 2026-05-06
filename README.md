@@ -5,7 +5,7 @@ Pull this repo into a directory, and then manually run databaseCore.py to setup 
 
 Current pre-requisites:
 1. MariaDB setup with user 'auscope' (easily changed)
-2. Python3 with mysqlclient, numpy, astropy and ftplib packages
+2. Python3 with mysqlclient, numpy, astropy and ftplib packages, among others, see the `requirements.txt` file.
 
 Please note that these scripts have been written to comply with the current master schedule (Master file format version 2.0), analysis report (version ?) and correlator report versions (CORRELATOR_REPORT_FORMAT 3).
 
@@ -20,7 +20,11 @@ Example crontab:
 0 5 * * 1 ~/software/stationFeedbackDB/databaseCore.py master2024.txt auscopeDB
 0 7 * * 1 ~/software/stationFeedbackDB/databaseCore.py master2025.txt auscopeDB
 0 9 * * 1 ~/software/stationFeedbackDB/updateReports.py auscopeDB
+0 10 * * 1 ~/software/stationFeedbackDB/sendReports.py
 ```
+### Configuration
+
+It's in the name, but to be clear: `station-reports.config` lists stations for which reports are generated, `stations.config` lists stations included in the database and analysis.
 
 ### databaseCore.py
 
@@ -36,4 +40,27 @@ Need to add some flexibility then probably split the reports side off into its o
 - Re-do the end of the file parsing script so that invalid analysis reports don't stop data from being added to the database.
 - Extract number of scheduled and number of successful scans for each station for use in assignment rate
 - Perhaps add in default behaviour that the database attempts to add sessions from the past 2 years, this can be overidden to update for older sessions?
-- Remove hardcoded SQL credentials
+- Remove hardcoded SQL credentials.
+
+## NOTES
+
+### databaseCore.py
+
+The first entry point to the program may produce some errors. These are due to issues with the pulled data files and can be safely ignored.
+For example, here is some output from the log (of an early version):
+```
+2026.113.13:19:12-INFO: databaseReportDownloader.py-159: Beginning file downloads for experiment r41225.
+2026.113.13:19:32-INFO: databaseReportDownloader.py-189: Analysis report downloaded for experiment r41225.
+2026.113.13:19:40-INFO: databaseReportDownloader.py-204: Spoolfile downloaded for experiment r41225.
+2026.113.13:19:42-INFO: databaseCore.py-110: Experiments to add to database: ['rv169', 'r41189', 'rv170', 'rv171', 'rv172', 'r11208', 'vr2503', 'crf148', 'r41212', 'apsg57', 'r41225']
+2026.113.13:20:05-INFO: databaseReportDownloader.py-112: Corr report download complete for experiment rv169.
+No correlator report available.
+2026.113.13:20:05-ERROR: databaseCore.py-168: Error processing analysis report for session rv169...
+2026.113.13:20:17-INFO: databaseReportDownloader.py-112: Corr report download complete for experiment r41189.
+No correlator report available.
+2026.113.13:20:17-ERROR: databaseCore.py-168: Error processing analysis report for session r41189...
+2026.113.13:20:33-INFO: databaseReportDownloader.py-112: Corr report download complete for experiment rv170.
+2026.113.13:20:33-ERROR: databaseCore.py-168: Error processing analysis report for session rv170...
+```
+These types of errors are likely to occur and may be ignored.
+

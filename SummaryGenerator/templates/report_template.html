@@ -26,7 +26,7 @@
             <div class="summary">
                 <div class="intro">
                     <p>
-                        Thank you for your valuable contribution to the IVS! This is an automatically generated report for <strong>{{ station }}</strong>, based on data extracted from analysis and correlator reports from 24 hour IVS VLBI sessions between <strong>{{ start_time }}</strong> 
+                        Thank you for your valuable contribution to the IVS! This is an automatically generated report for <strong>{{ station }}</strong>, based on data extracted from analysis and correlator reports from 24 hour IVS VLBI sessions between <strong>{{ start_time }}</strong>
                         and <strong>{{ stop_time }}</strong>. Analysis and correltor reports for all sessions are publicly available on the IVS combination centre website at <a href="https://ivscc.gsfc.nasa.gov/sessions/">https://ivscc.gsfc.nasa.gov/sessions/</a>.
                     </p>
                     <p>
@@ -51,7 +51,7 @@
                         {% if performance_analysis %}
                             <h3><u>Performance Analysis</u><sup>2</sup></h3>
                             <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.
-                                
+
                             </p>
                             <p><strong>Median station 'Performance' (used/scheduled) over period: {{ performance_analysis }}</strong></p>
                         {% endif %}
@@ -74,7 +74,7 @@
                             <h4>Combined Band:</h4>
                             <p><strong>Median detection rate: {{ detectX_str }}</strong></p>
                         {% endif %}
-                        {% if detectS_str and not vgos %}                            
+                        {% if detectS_str and not vgos %}
                             <h4>X Band:</h4>
                             <p><strong>Median X-band detection rate: {{ detectX_str }}</strong></p>
                             <h4>S Band:</h4>
@@ -126,8 +126,8 @@
                                     <img src="data:image/png;base64,{{ img }}" alt="{{ band }} Band Detections" width="300">
                                 </figure>
                             {% endif %}
-                        {% endfor %}   
-                    {% endif %}                      
+                        {% endfor %}
+                    {% endif %}
                 </div>
                 {% endif %}
                 {% if benchmark_images %}
@@ -172,7 +172,7 @@
                             {% endif %}
                         {% endfor %}
                     </div>
-                {% endif %}                
+                {% endif %}
                 {% if glovdh_images %}
                 <div class="page-break"></div>
                     <div class="glovdh-images section">
@@ -200,8 +200,8 @@
                 <div class="issues">
                     <h2>Reported Issues</h2>
                     <div class="problems-list">
-                        <p> 
-                            The following comments are extracted form the correlation reports, capturing station issues. 
+                        <p>
+                            The following comments are extracted form the correlation reports, capturing station issues.
                             Please note that the script searches for keywords only and may not capture all noted issues.
                         </p>
                         <ul>
@@ -237,16 +237,17 @@
             <div class="about">
                 <h2>About</h2>
                 <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please alert the creators of any apparent issues at the following address <a href="mailto:tiegem@utas.edu.au">tiegem@utas.edu.au</a>.</p>
-                <p>Station position figures are based on analysis output from the Paris Observatory Geodetic VLBI Center. The schedule breakdown section presents data taken from the API developed and offered by ETH Zurich. </p>
+                <p>Station position figures are based on analysis output from the Paris Observatory Geodetic VLBI Center.</p>
+                <!-- <p>The schedule breakdown section presents data taken from the API developed and offered by ETH Zurich. </p>  -->
                 <p>This report was developed by the AuScope VLBI project, which is managed by the University of Tasmania, contracted through Geoscience Australia.</p>
                 <p>More information on this project as well as the source code may be found at the following <a href="https://github.com/tiegemccarthy/stationFeedbackDB">link</a>.</p>
                 <p><sup>1</sup> This value represents the statiions contribution to the final session fit, it is extracted directly from the IVS analysis reports.</p>
                 <p>
-                    <sup>2</sup> The performance values represent the fraction of observations used in analysis compared to scheduled. 
+                    <sup>2</sup> The performance values represent the fraction of observations used in analysis compared to scheduled.
                     These values are extracted directly from the IVS analysis reports.
                     Performance values are heavily affected by other station outages, and are not necessarily indicative of issues at the station.
                 </p>
-                <p><sup>3</sup> Assignment rate is calculated by dividing the number of observations assigned to a station by the maximum observations assigned to any station in that session. 
+                <p><sup>3</sup> Assignment rate is calculated by dividing the number of observations assigned to a station by the maximum observations assigned to any station in that session.
                     The total observations for each station per session are extracted from the correlation reports.
                     Please note that assignment rates will be much higher for stations in denser parts of the network.
                 </p>

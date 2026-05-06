@@ -1,0 +1,21 @@
+# server-config.yaml
+#
+# Miscellaneous configuration for the server, such as
+# SMTP server settings, including account details for TLS, and
+# default credentials for the SQL database.
+#
+# NOTE:
+# secrets are generally set in the ENV, perhaps we should consider this.
+
+database:
+  user: auscope
+  pw:
+
+mail:
+  from: noreply.vlbi@utas.edu.au
+  smtp:
+    host:
+    port:
+  tls:
+    user:
+    pw:

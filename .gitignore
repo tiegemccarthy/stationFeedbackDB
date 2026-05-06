@@ -2,6 +2,8 @@
 **._*
 # pycharm config stuff
 **__pycache__**
+**.idea**
+**.venv**
 # the actual final reports
 **reports/
 **.pdf
@@ -18,3 +20,19 @@
 Pipfile
 # the glovdh api cache
 **.csv
+#
+ESL-NOTES.md
+test-run.sh
+**.bak
+**server-config.yaml
+**config.yaml
+# analysis data
+**analysis_reports
+**corr_files
+**skd_files
+**stat_pos_data
+**station_position_data
+**master*.txt
+**example-*
+**.bak
+
