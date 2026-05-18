@@ -9,7 +9,7 @@ from ftplib import FTP_TLS
 import MySQLdb as mariadb
 from astropy.io import ascii
 
-from config import logger
+from config import db_conf, logger
 
 dirname = os.path.dirname(__file__)
 
@@ -34,7 +34,7 @@ def parseFunc():
 def checkExistingData(db_name, stations):
     # db_name should be the name of the auscope database (as a string) we want to query for
     #  unique existing experiment IDs
-    conn = mariadb.connect(user="auscope", passwd="password", db=db_name)
+    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["passwd"], db=db_name)
     cursor = conn.cursor()
     # station_key = ['Ke', 'Yg', 'Hb', 'Ho']
     existing_experiments = []

@@ -10,7 +10,7 @@ from astropy.io import ascii
 # Source other modules
 import databaseReportDownloader
 import parseFiles
-from config import logger
+from config import db_conf, logger
 
 dirname = os.path.dirname(__file__)
 
@@ -158,7 +158,7 @@ def main(master_schedule, db_name):
                         station.vgos_bool,
                     ]
                     conn = mariadb.connect(
-                        user="auscope", passwd="password", db=str(db_name)
+                        user=db_conf["user"], passwd=db_conf["passwd"], db=str(db_name)
                     )
                     cursor = conn.cursor()
                     cursor.execute(sql_station, data)

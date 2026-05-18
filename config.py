@@ -18,7 +18,8 @@ from os import getenv
 
 from dotenv import load_dotenv
 
-### load the environment
+### load the environment ###
+
 load_dotenv()  # this finds and loads `.env` files automatically.
 
 """
@@ -39,7 +40,7 @@ tls_conf = {"user": getenv("SFB_TLS_USER"), "passwd": getenv("SFB_TLS_PASSWD")}
 db_conf = {"user": getenv("SFB_DB_USER"), "passwd": getenv("SFB_DB_PASSWD")}
 email_conf = {"email": getenv("SFB_EMAIL"), "smtp": smtp_conf, "tls": tls_conf}
 
-### configure the logger
+### configure the logger ###
 
 logger = logging.getLogger(__name__)
 

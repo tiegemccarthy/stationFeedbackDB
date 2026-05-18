@@ -1,13 +1,16 @@
 """
+
+Hmmmm.
+
+If this is what I think it is, it should be merged into the more general configuration file.
+
 main(station, database, "2025:001:00:00:00", "2025:071:00:00:00", "report.pdf", "%", "0")
 mariadb.connect(host='56d09x2.phys.utas.edu.au', user='auscope', passwd='password')
 """
 
 import json
 
-from config import logger
-
-# from pprint import pprint
+from config import db_conf, logger
 
 
 class Config:
@@ -32,8 +35,8 @@ class Config:
         def __init__(self):
             self.host = "56d09x2.phys.utas.edu.au"
             self.name = "auscopeDB"
-            self.user = "auscope"
-            self.pw = "password"
+            self.user = db_conf["user"]
+            self.pw = db_conf["passwd"]
 
     class Defaults:
         """
