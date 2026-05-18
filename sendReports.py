@@ -28,7 +28,7 @@ from pathlib import Path
 
 import yaml
 
-from logger_config import logger
+from config import logger
 
 
 def load_server_config(config_file="server-config.yaml"):

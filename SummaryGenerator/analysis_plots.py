@@ -7,7 +7,7 @@ from astropy.table import Column
 # from astropy.table import Table, vstack
 from astropy.time import Time
 
-from logger_config import logger
+from config import logger
 
 # from pprint import pprint
 from SummaryGenerator.utilities import save_plt

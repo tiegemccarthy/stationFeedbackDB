@@ -9,7 +9,7 @@ from ftplib import FTP_TLS
 import MySQLdb as mariadb
 from astropy.io import ascii
 
-from logger_config import logger
+from config import logger
 
 dirname = os.path.dirname(__file__)
 

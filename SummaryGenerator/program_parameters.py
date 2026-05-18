@@ -5,7 +5,7 @@ mariadb.connect(host='56d09x2.phys.utas.edu.au', user='auscope', passwd='passwor
 
 import json
 
-from logger_config import logger
+from config import logger
 
 # from pprint import pprint
 

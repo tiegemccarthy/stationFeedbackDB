@@ -10,7 +10,7 @@ from astropy.io import ascii
 # Source other modules
 import databaseReportDownloader
 import parseFiles
-from logger_config import logger
+from config import logger
 
 dirname = os.path.dirname(__file__)
 

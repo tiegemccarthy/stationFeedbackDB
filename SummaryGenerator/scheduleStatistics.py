@@ -22,7 +22,7 @@ import pandas as pd
 import pytz
 import requests
 
-from logger_config import logger
+from config import logger
 
 ################################
 

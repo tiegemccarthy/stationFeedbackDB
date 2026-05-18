@@ -13,7 +13,7 @@ import numpy as np
 import pandas
 import wget
 
-from logger_config import logger
+from config import logger
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")

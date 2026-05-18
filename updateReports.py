@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from astropy.io import ascii
 from astropy.time import Time
 
-from logger_config import logger
+from config import logger
 from SummaryGenerator import summaryGenerator, utilities
 
 dirname = os.path.dirname(__file__)
