@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 
 ### TODO
-# merging config.py and server-config.yaml
-# with secrets stored in the environment (c.f. the .env.example file)
+# understand the program_parameters.py file and merge into this file as appropriate.
+
 
 """
 config.py
