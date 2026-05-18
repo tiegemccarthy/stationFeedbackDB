@@ -3,8 +3,8 @@
 """
 Given the succesful production of station reports (as .pdf files)
 this scipt sends those reports to the email address(es) associated with that station.
-To do so, it uses an SMTP server & email account defined in a configuration .yaml file,
-and a list of recipents associated with stations (and hence reports) stored in another .yaml file.
+To do so, it uses an SMTP server & email account,
+and a list of recipents associated with stations (and hence reports) stored in .yaml file.
 
 This script is desgined to be run as cron.
 It assumes, for now, that the reports have been successfully produced.
@@ -28,50 +28,21 @@ from pathlib import Path
 
 import yaml
 
-from config import logger
+from config import email_conf, logger
 
 
-def load_server_config(config_file="server-config.yaml"):
+def load_server_config():
     """
-    load the file containing server configuration
-    such as RDBMS details and smtp and tls information.
-    the relevant sections for us look like:
-        ```
-        mail:
-        from: email address
-        smtp:
-            host: smtp server
-            port: 587
-        tls:
-            user: account
-            passwd: password
-        ```
-    the configuration information for the other side (_e.g._ send what and to who)
-    is found in the `stations-reports.yaml` and is loaded next.
+    Get the the smtp + tls configuration details we need.
     """
 
-    ### TODO
-    # a generic email body should be generated (customised for the receiver) and included.
-
-    try:
-        with open(config_file, "r") as f:
-            config = yaml.safe_load(f)
-    except Exception as e:
-        sys.exit(f"Failed to load config.yaml: {e}")
-
-    # select the relevant section from the server configuration yaml
-    conf = config["mail"]
-    smtp_conf = conf["smtp"]
-    tls_conf = conf["tls"]
-
-    # the smtp + tls configuration details we need:
-    send_from = conf["from"]
-    server = smtp_conf["host"]
-    port = smtp_conf["port"]
-    user = tls_conf["user"]
-    pw = tls_conf["passwd"]
-
-    return [send_from, server, port, user, pw]
+    return [
+        email_conf["email"],
+        email_conf["smtp"]["host"],
+        email_conf["smtp"]["port"],
+        email_conf["tls"]["user"],
+        email_conf["tls"]["passwd"],
+    ]
 
 
 def send_email(
