@@ -18,7 +18,7 @@ from astropy.table import Column, Table, vstack
 from astropy.time import Time
 from reportlab.pdfgen.canvas import Canvas
 
-from logger_config import logger
+from config import logger
 
 ### TODO
 # do not use * imports...

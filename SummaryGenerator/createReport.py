@@ -10,7 +10,7 @@ from django.template import Context, Template
 # import base64
 from pyppeteer import launch
 
-from logger_config import logger
+from config import logger
 from SummaryGenerator.utilities import load_png
 
 # control

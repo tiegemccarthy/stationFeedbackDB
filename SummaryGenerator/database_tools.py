@@ -1,13 +1,15 @@
 # Functions that interact with the SQL database to extract station data
 
-from astropy.time import Time
-from astropy.table import Table
 import MySQLdb as mariadb
+from astropy.table import Table
+from astropy.time import Time
+
+from config import db_conf
 
 
 def grabStations(sqldb_name):
 
-    conn = mariadb.connect(user="auscope", passwd="password")
+    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["user"])
     cursor = conn.cursor()
     query1 = "USE " + sqldb_name + ";"
     cursor.execute(query1)
@@ -46,7 +48,7 @@ def extractStationData(
     else:
         like = "LIKE"
 
-    conn = mariadb.connect(user="auscope", passwd="password")
+    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["passwd"])
     cursor = conn.cursor()
     # Change to the correct database
     query = "USE " + database_name + ";"
