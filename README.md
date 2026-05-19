@@ -1,23 +1,23 @@
 # README
 
-The stationFeedbackDB project attempts to address a core lacuane within the current operations of the International VLBI Service.
-Experiments are scheduled, performed, correlated and assessed without the results of this assessment being quickly and succiently provided back to the stations that performed the observations.
+The stationFeedbackDB project attempts to address a core lacunae within the current operations of the International VLBI Service.
+Experiments are scheduled, performed, correlated and assessed without the results of this assessment being quickly and succinctly provided back to the stations that performed the observations.
 Without this information, there is no opportunity for the continual improvement of station's performance.
 
-The stationFeedbackDB project automates the analysis and assessment of station performance as dervied from publically available datasets (such as correlation reports), and packages this information in the form of short reports replete with graphical figures.
+The stationFeedbackDB project automates the analysis and assessment of station performance as derived from publicly available datasets (such as correlation reports), and packages this information in the form of short reports replete with graphical figures.
 
 
 ## Implementation
 
-In order to use the project, all that should be required is a mariaDB installation and python3.
-We recommend using a python3 virtual enviornment to hold the required packages, predominately these are: numpy, astropy, MySQLDB, scipy and ftplib. Please see the file `requirements.txt` for a full list, including the package versions used.
+In order to use the project, all that should be required is a MariaDB installation and python3.
+We recommend using a python3 virtual environment to hold the required packages, predominately these are: numpy, astropy, MySQLDB, scipy and ftplib. Please see the file `requirements.txt` for a full list, including the package versions used.
 
 This project has been designed with use of the current standard formats for the relevant input files, _i.e._ the master schedule assumes Master file format version 2.0, the correlator report versions are assumed to be CORRELATOR_REPORT_FORMAT 3, and the analysis reports are taken to follow the version XXX. (FIXME what version)
 
 
-### Prerequisties
+### Prerequisites
 
-Prior to running the project code, manually or as a cronjob, the following prerequistes must be met:
+Prior to running the project code, manually or as a cronjob, the following prerequisites must be met:
 
 - MariaDB (or MySQL) set up with a user corresponding to the field defined in the `.env` file (see below). We use `auscope` in our implementation.
 
@@ -96,5 +96,5 @@ No correlator report available.
 - Update the report scripts to use the new VGOS boolean value in the database
 - Re-do the end of the file parsing script so that invalid analysis reports don't stop data from being added to the database.
 - Extract number of scheduled and number of successful scans for each station for use in assignment rate
-- Perhaps add in default behaviour that the database attempts to add sessions from the past 2 years, this can be overidden to update for older sessions?
+- Perhaps add in default behaviour that the database attempts to add sessions from the past 2 years, this can be overridden to update for older sessions?
 - Consider including contributors and license to the README?
