@@ -37,8 +37,19 @@ smtp_conf = {"host": getenv("SFB_SMTP_HOST"), "port": getenv("SFB_SMTP_PORT")}
 tls_conf = {"user": getenv("SFB_TLS_USER"), "passwd": getenv("SFB_TLS_PASSWD")}
 
 # and these are what we 'export':
-db_conf = {"user": getenv("SFB_DB_USER"), "passwd": getenv("SFB_DB_PASSWD")}
+db_conf = {
+    "user": getenv("SFB_DB_USER"),
+    "passwd": getenv("SFB_DB_PASSWD"),
+    "host": getenv("SFB_DB_HOST"),
+    "name": getenv("SFB_DB_NAME"),
+}
 email_conf = {"email": getenv("SFB_EMAIL"), "smtp": smtp_conf, "tls": tls_conf}
+
+#### DEBUG
+print("DEUBG-- DB user:", db_conf["user"])
+print("DEUBG-- DB passwd:", db_conf["passwd"])
+print("DEBUG ENV PASS:", repr(getenv("SFB_DB_PASSWD")))
+
 
 ### configure the logger ###
 

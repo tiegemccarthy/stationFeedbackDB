@@ -9,7 +9,7 @@ from config import db_conf
 
 def grabStations(sqldb_name):
 
-    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["user"])
+    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["passwd"])
     cursor = conn.cursor()
     query1 = "USE " + sqldb_name + ";"
     cursor.execute(query1)

@@ -31,10 +31,13 @@ from SummaryGenerator.database_tools import (
     grabStations,
 )
 from SummaryGenerator.program_parameters import *
+
+"""
 from SummaryGenerator.scheduleStatistics import (
     get_glovdh_barchart,
     get_glovdh_piecharts,
 )
+"""
 from SummaryGenerator.stationPosition import (
     downloadFile,
     file2DF,
@@ -303,13 +306,6 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
         table = Table(rows=result, names=col_names)
     except Exception as e:
         raise Exception(f"Error creating Table (astropy).\n{e}") from e
-
-    # once we have this we can produce the report elements that sumarise this...
-    if config.ctrl.debug:
-        print("result:")
-        pprint(result)
-        print("col_names:")
-        pprint(col_names)
 
     logger.info(f"Number of columns in result: {len(result[0])}")
     logger.info(f"Number of column names: {len(col_names)}")

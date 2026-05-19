@@ -35,8 +35,8 @@ class Config:
         """
 
         def __init__(self):
-            self.host = "56d09x2.phys.utas.edu.au"
-            self.name = "auscopeDB"
+            self.host = db_conf["host"]  # 56d09x2.phys.utas.edu.au
+            self.name = db_conf["name"]
             self.user = db_conf["user"]
             self.pw = db_conf["passwd"]
 

@@ -9,7 +9,7 @@ import os
 # import sys
 from datetime import datetime, timedelta
 
-from astropy.io import ascii
+# from astropy.io import ascii
 from astropy.time import Time
 
 from config import logger

@@ -74,10 +74,10 @@ def main(master_schedule, db_name):
     db_name = str(db_name)
 
     # Load dummy/default user details from configuration file
-    with open(dirname + "/server-config.yaml") as file:
-        db_info = yaml.safe_load(file)["database"]
+    # with open(dirname + "/server-config.yaml") as file:
+    #    db_info = yaml.safe_load(file)["database"]
 
-    conn = mariadb.connect(user=db_info["user"], passwd=db_info["passwd"])
+    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["passwd"])
     cursor = conn.cursor()
     query = "CREATE DATABASE IF NOT EXISTS " + db_name + ";"
     cursor.execute(query)

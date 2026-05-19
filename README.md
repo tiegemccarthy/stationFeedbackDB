@@ -55,9 +55,13 @@ Finally, the final component of this project reads a list of stations send the r
 ### Configuration
 
 There are 4 locations for possible changes to configuration of the project, these are:
+
 - `.env`: contains secret configuration details not to be made public.
+
 - `stations-reports.yaml`: lists stations for which reports are generated and the corresponding contact emails for those stations
+
 - `stations.config`: list stations included in the databases and analysis.
+
 - `config.py`: internal configuration file for the python project. In this file such things as the location of the logging output may be set.
 
 (FIXME merge the station configurations files)
@@ -69,6 +73,10 @@ This is a work in progress. See the `TODO` section below.
 
 
 ### Common Errors
+
+Because this project relies on publically-accesible external datasources, we cannot gurantee the validity of this data. The scripts attempt to validate all data before inclusion in the database, but some cases may still occur. This may cause errors in the scripts, primarily scripts associated with the `databaseCore.py`.
+
+#### Delete me down the line:
 
 There are some errors which presently may be ignored.
 For example, due to issues with the pulled data files some errors are produced by `databaseCore.py` and can be safely ignored.
@@ -97,4 +105,11 @@ No correlator report available.
 - Re-do the end of the file parsing script so that invalid analysis reports don't stop data from being added to the database.
 - Extract number of scheduled and number of successful scans for each station for use in assignment rate
 - Perhaps add in default behaviour that the database attempts to add sessions from the past 2 years, this can be overridden to update for older sessions?
-- Consider including contributors and license to the README?
+- Consider including contributors and license to the README.
+- Do we use shortname?
+- How much of the spool files do we use?
+- Condense reports: more figures per page.
+- More informative log outputs on errors
+- Investigate RVXXX session file formatting.
+- Secondary analysis reports if first is bad (IVS is the offical analysis center's reports)
+- Add info about disk space (approximately 10GB per year for VGOS DBs) requirements etc for the project.

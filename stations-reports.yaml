@@ -11,29 +11,38 @@
 stations:
   Hb:
     name: HOBART12
+    report: true
     emails:
       - sullivan.lester@utas.edu.au
   Yg:
     name: YARRA12M
+    report: true
     emails:
       - sullivan.lester@utas.edu.au
   Ke:
     name: KATH12M
+    report: true
     emails:
       - sullivan.lester@utas.edu.au
   Ht:
     name: HART15M
+    report: true
   Nn:
     name: NYALE13N
+    report: true
     emails:
       - sullivan.lester@utas.edu.au
   Ns:
     name: NYALE13S
+    report: true
     emails:
       - sullivan.lester@utas.edu.au
   Yj:
     name: RAEGYEB
+    report: true
   Sa:
     name: RAEGSMAR
+    report: true
   Is:
     name: ISHIOKA
+    report: true
