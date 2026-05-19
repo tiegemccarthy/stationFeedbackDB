@@ -1,13 +1,11 @@
 # README
 
 The stationFeedbackDB project attempts to address a core lacuane within the current operations of the International VLBI Service.
-
 Experiments are scheduled, performed, correlated and assessed without the results of this assessment being quickly and succiently provided back to the stations that performed the observations.
 Without this information, there is no opportunity for the continual improvement of station's performance.
 
-The following project automates the analysis and assessment of station performance, and packages this information in the form of short reports replete with graphical figures.
+The stationFeedbackDB project automates the analysis and assessment of station performance as dervied from publically available datasets (such as correlation reports), and packages this information in the form of short reports replete with graphical figures.
 
-(FIXME more here)
 
 ## Implementation
 
