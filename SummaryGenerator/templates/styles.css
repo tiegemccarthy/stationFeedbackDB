@@ -1,14 +1,14 @@
 :root {
-    /* Primary Blues */
+    /* blues */
     --color-primary: #53778f;
     --color-strong: #00589f;
     --color-accent-blue: #5cb1fa;
     --color-light-blue: #e4f2ff;
 
-    /* Accent */
+    /* yellow */
     --color-accent: #ffd500;
 
-    /* Neutrals */
+    /* neutrals */
     --color-text: #181818;
     --color-bg: #ffffff;
     --color-light-grey: #efefef;
@@ -78,11 +78,25 @@ header h1 {
 header p {
     margin: 0;
     padding: 0.05rem;
+    color: var(--color-text);
+}
+
+header samp {
+    margin: 0;
+    padding: 0.05rem;
+    font-weight: 500;
     color: var(--color-accent-blue);
 }
 
-.logo img {
-    height: 5rem;
+.logo {
+    height: 6rem;
+}
+
+img {
+    width: auto;
+    height: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
 }
 
 /*** headings ***/
@@ -118,8 +132,9 @@ h5 {
     font-size: 12px;
     font-weight: bold;
     margin-top: 15px;
-    text-align: center;
-    color: var(--color-strong);
+    text-align: center !important;
+    /* color: var(--color-strong); */
+    color: var(--color-text);
 }
 
 /*** tables ***/
@@ -159,12 +174,10 @@ th {
     page-break-inside: avoid;
 }
 
-/**** problems list (neutral + branded, no red) ****/
-
 .problems-list {
     background-color: var(--color-light-blue);
     padding: 15px;
-    border-left: 5px solid var(--color-accent); /* yellow accent */
+    /* border-left: 5px solid var(--color-accent); */
     border-radius: 5px;
     margin-top: 20px;
 }
@@ -205,11 +218,22 @@ th {
     margin-bottom: -20px;
 }
 
-.about {
-    text-align: center;
+.container {
+    background-color: var(--color-light-grey);
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.about,
+.notes {
     font-size: 0.8rem;
     padding: 10px;
     color: var(--color-primary);
+}
+
+.about,
+.notes {
+    text-align: left;
 }
 
 /*** images ***/
@@ -221,7 +245,7 @@ th {
 
 figcaption {
     font-style: italic;
-    color: var(--color-accent-blue);
+    color: var(--color-text);
     font-size: 0.8rem;
     text-align: center;
 }
@@ -236,11 +260,13 @@ figcaption {
     height: 200px;
 }
 
+/*
 .glovdh-image {
     margin-right: 8rem;
     margin-top: 2rem;
     padding: 2rem 4rem 2rem 2rem;
 }
+*/
 
 /*** layout helpers ***/
 
@@ -252,4 +278,8 @@ figcaption {
 
 .figure-grid .image {
     flex: 0 1 calc(50% - 20px);
+}
+
+figure {
+    break-inside: avoid;
 }
