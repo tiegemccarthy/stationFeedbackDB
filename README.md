@@ -113,3 +113,4 @@ No correlator report available.
 - Investigate RVXXX session file formatting.
 - Secondary analysis reports if first is bad (IVS is the offical analysis center's reports)
 - Add info about disk space (approximately 10GB per year for VGOS DBs) requirements etc for the project.
+- Module-arise more, _i.e._ the database generation could use a module similiar to how updateReports use the SummaryGenerator module.

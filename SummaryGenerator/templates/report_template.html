@@ -1,244 +1,384 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ filename }}</title>
-    <style>
-        {{ css|safe }}
-    </style>
-</head>
-<body>
-    <div class="report">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{ filename }}</title>
+        <style>
+            {{ css|safe }}
+        </style>
+    </head>
+    <body class="report">
+
         <header>
             <div class="heading">
                 {% if vgos %}
-                    <h1>{{ station }} Summary Report - VGOS 24 hour</h1>
+                <h1>{{ station }} Summary Report - VGOS 24 hour</h1>
                 {% else %}
-                    <h1>{{ station }} Summary Report - S/X 24 hour</h1>
+                <h1>{{ station }} Summary Report - S/X 24 hour</h1>
                 {% endif %}
-                <!--<h4><samp>{{ start_time }}</samp> -> <samp>{{ stop_time }}</samp></h4>-->
                 <p>Report generated: <samp>{{ report_ts }}</samp></p>
             </div>
-            <div class="logo"> <img src="data:image/png;base64,{{ ivs_logo }}" alt="IVS logo" width="140"></div>
+            <div class="logo">
+                <img src="data:image/png;base64,{{ ivs_logo }}" alt="IVS logo" width="140"/>
+            </div>
         </header>
+
         <main>
-            <div class="summary">
-                <div class="intro">
-                    <p>
-                        Thank you for your valuable contribution to the IVS! This is an automatically generated report for <strong>{{ station }}</strong>, based on data extracted from analysis and correlator reports from 24 hour IVS VLBI sessions between <strong>{{ start_time }}</strong>
-                        and <strong>{{ stop_time }}</strong>. Analysis and correlator reports for all sessions are publicly available on the IVS combination centre website at <a href="https://ivscc.gsfc.nasa.gov/sessions/">https://ivscc.gsfc.nasa.gov/sessions/</a>.
-                    </p>
-                    <p>
-                        Please note that only processed (correlated and analysed) sessions are included in the values and figures presented in this report.
-                    </p>
-                    {% if total_sessions %}
-                        <p>Total number of <strong>{{ station }}</strong> sessions found in database for this time range: <strong>{{ total_sessions }}</strong></p>
-                    {% endif %}
-                    {% if total_observations %}
-                        <p>Total number of <strong>{{ station }}</strong> observations across all sessions in this time range: <strong>{{ total_observations }}</strong></p>
+            <section class="intro">
+                <p>
+                    Thank you for your valuable contribution to the IVS!
+                </p>
+                <p>
+                    This is an automatically generated report for
+                    <strong>{{ station }}</strong>, based on data
+                    extracted from analysis and correlator reports from
+                    24 hour IVS VLBI sessions between
+                    <strong>{{ start_time }}</strong> and
+                    <strong>{{ stop_time }}</strong>. Analysis and
+                    correlator reports for all sessions are publicly
+                    available on the IVS combination centre website at
+                    <a href="https://ivscc.gsfc.nasa.gov/sessions/">https://ivscc.gsfc.nasa.gov/sessions/</a>.
+                </p>
+                <p>
+                    Please note that only processed (correlated and
+                    analysed) sessions are included in the values and
+                    figures presented in this report.
+                </p>
+                <p>
+                    Additional information on the processing pipeline
+                    and production of these reports is available in the final two sections, under About and
+                    Notes.
+                </p>
+                {% if total_sessions %}
+                <p>
+                    Total number of
+                    <strong>{{ station }}</strong> sessions found in
+                    database for this time range:
+                    <samp>{{ total_sessions }}</samp>
+                </p>
+                {% endif %}
+                {% if total_observations %}
+                <p>
+                    Total number of
+                    <strong>{{ station }}</strong> observations across
+                    all sessions in this time range:
+                    <samp>{{ total_observations }}</samp>
+                </p>
+                {% endif %}
+            </section>
+            {% if wrms_analysis %}
+            <section class="analysis">
+                <h2>W.RMS Analysis<sup>1</sup></h2>
+                <div class="analysis-content">
+                    <div class="text-block">
+                        <p>
+                            This is a measure of the station's
+                            contribution to the weighted RMS of the
+                            delay measurement.
+                        </p>
+                        <p>
+                            <strong
+                                >Median station W.RMS over period:
+                                <samp>{{ wrms_analysis }} ps</samp>
+                            </strong>
+                        </p>
+                    </div>
+                    {% if wrms_img %}
+                    <figure class="image">
+                        <img
+                            src="data:image/png;base64,{{ wrms_img }}"
+                            alt="Wrms Image"
+                            width="300"
+                        />
+                    </figure>
                     {% endif %}
                 </div>
-                {% if wrms_analysis or performance_analysis %}
-                    <div class="analysis">
-                        {% if wrms_analysis %}
-                            <h3><u>W.RMS Analysis</u><sup>1</sup></h3>
-                            <p>This is a measure of the station's contribution to the weighted RMS of the delay measurement.</p>
-                            <p><strong>Median station W.RMS over period: {{ wrms_analysis }} ps</strong></p>
-                        {% endif %}
-                    </div>
-                    <div class="analysis">
-                        {% if performance_analysis %}
-                            <h3><u>Performance Analysis</u><sup>2</sup></h3>
-                            <p>Performance is measured as the ratio between the number of observations used in analysis versus the number of scheduled observations for the station.
-
-                            </p>
-                            <p><strong>Median station 'Performance' (used/scheduled) over period: {{ performance_analysis }}</strong></p>
-                        {% endif %}
-                    </div>
-                    <div class="analysis">
-                        {% if ass_rate_str %}
-                            <h3><u>Assignment Rate</u><sup>3</sup></h3>
-                            <p>Assignment Rate is the fraction of observations this station was involved in compared to the station with the most observations.
-                            </p>
-                            <p><strong>Median station assignment rate over period: {{ ass_rate_str }}</strong></p>
-                        {% endif %}
-                    </div>
-                {% endif %}
-                {% if detectX_img or detectS_str %}
-                    <div class="detection-rates">
-                        <h3><u>Detection Rates</u><sup>4</sup></h3>
-                        <p>Detection rates are measured as the ratio between number of successful detections (with quality code > 6) versus the number of correlated observations.
+            </section>
+            {% endif %}
+            {% if performance_analysis %}
+            <section class="analysis">
+                <h2>Performance Analysis<sup>2</sup></h2>
+                <div class="analysis-content">
+                    <div class="text-block">
+                        <p>
+                            Performance is measured as the ratio between
+                            the number of observations used in analysis
+                            versus the number of scheduled observations
+                            for the station.
                         </p>
-                        {% if detectX_str and vgos %}
-                            <h4>Combined Band:</h4>
-                            <p><strong>Median detection rate: {{ detectX_str }}</strong></p>
-                        {% endif %}
-                        {% if detectS_str and not vgos %}
-                            <h4>X Band:</h4>
-                            <p><strong>Median X-band detection rate: {{ detectX_str }}</strong></p>
-                            <h4>S Band:</h4>
-                            <p><strong>Median S-band detection rate: {{ detectS_str }}</strong></p>
-                        {% endif %}
+                        <p>
+                            <strong
+                                >Median station 'Performance'
+                                (used/scheduled) over period:
+                                <samp>{{ performance_analysis }}</samp>
+                            </strong>
+                        </p>
                     </div>
-                {% endif %}
-            </div>
-            <div class="page-break"></div>
-            <div class="figures section">
-                <!-- <h2>Figures</h2> -->
-                {% if wrms_img %}
-                    <h5> W.RMS Figure<sup>1</sup> </h5>
+                    {% if perf_img %}
                     <figure class="image">
-                        <img src="data:image/png;base64,{{ wrms_img }}" alt="Wrms Image" width="300">
+                        <img
+                            src="data:image/png;base64,{{ perf_img }}"
+                            alt="Performance Image"
+                            width="300"
+                        />
                     </figure>
-                {% endif %}
-                {% if perf_img %}
-                    <h5> Performance Figure<sup>2</sup> </h5>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+            {% if ass_rate_str %}
+            <section class="analysis">
+                <h2>Assignment Rate<sup>3</sup></h2>
+                <div class="analysis-content">
+                    <div class="text-block">
+                        <p>
+                            Assignment Rate is the fraction of
+                            observations this station was involved in
+                            compared to the station with the most
+                            observations.
+                        </p>
+                        <p>
+                            <strong
+                                >Median station assignment rate over
+                                period:
+                                <samp>{{ ass_rate_str }}</samp>
+                            </strong>
+                        </p>
+                    </div>
+                    {% if ass_rate_img %}
                     <figure class="image">
-                        <img src="data:image/png;base64,{{ perf_img }}" alt="Performance Image" width="300">
+                        <img
+                            src="data:image/png;base64,{{ ass_rate_img }}"
+                            alt="Assignment Rate Image"
+                            width="300"
+                        />
                     </figure>
-                {% endif %}
-                {% if ass_rate_img %}
-                    <h5> Assignment Rate Figure<sup>3</sup> </h5>
-                    <figure class="image">
-                        <img src="data:image/png;base64,{{ ass_rate_img }}" alt="Assignment Rate Image" width="300">
-                    </figure>
-                {% endif %}
-            <div class="page-break"></div>
-            {% if detect_images %}
-                <div class="detection-images section">
-                <h2>Detection Rates</h2>
-                    {% if vgos %}
-                        <h5>Combined band</h5>
-                        {% for band, img in detect_images.items %}
-                            {% if img %}
-                                <figure class="image">
-                                    <img src="data:image/png;base64,{{ img }}" alt="{{ band }} Band Detections" width="300">
-                                </figure>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+            {% if detectX_img or detectS_str or detect_images %}
+            <section class="analysis">
+                <h2>Detection Rates</u><sup>4</sup></h2>
 
+                <p>
+                    Detection rates are measured as the ratio between
+                    number of successful detections (with quality code >
+                    6) versus the number of correlated observations.
+                </p>
+                {% if detectX_str and vgos %}
+                <h4>Combined Band:</h4>
+                <p>
+                    <strong
+                        >Median detection rate:
+                        <samp>{{ detectX_str }}</samp>
+                    </strong>
+                </p>
+                {% endif %}
+                {% if detectS_str and not vgos %}
+                <h4>X Band:</h4>
+                <p>
+                    <strong
+                        >Median X-band detection rate:
+                        <samp>{{ detectX_str }}</samp>
+                    </strong>
+                </p>
+                <h4>S Band:</h4>
+                <p>
+                    <strong
+                        >Median S-band detection rate:
+                        <samp>{{ detectS_str }}</samp>
+                    </strong>
+                </p>
+                {% endif %}
+
+                {% if detect_images %}
+                <div class="detection-images section">
+
+                    <div class="image-row">
                         {% for band, img in detect_images.items %}
                             {% if img %}
+                            <div class="image-block">
                                 <h5>{{ band }}-band</h5>
                                 <figure class="image">
-                                    <img src="data:image/png;base64,{{ img }}" alt="{{ band }} Band Detections" width="300">
+                                    <img src="data:image/png;base64,{{ img }}" alt="{{ band }}">
                                 </figure>
-                            {% endif %}
-                        {% endfor %}
-                    {% endif %}
-                </div>
-                {% endif %}
-                {% if benchmark_images %}
-                <div class="page-break"></div>
-                    <div class="benchmark-images section">
-                        <h2>Benchmarking barcharts - <strong>{{ start_time }}</strong> to <strong>{{ stop_time }}</strong></h2>
-                        <p>
-                            The 10 stations with highest totals for each parameter in the database are plotted, if this station (red bar) is not in the top 10 it will be added to the right hand side of the figure.
-                            Please note, only 24 hour sessions are included and our database may not necessarily be complete for all stations.
-                        </p>
-                        {% for param, img in benchmark_images.items %}
-                            {% if img %}
-                                {% if forloop.counter0|divisibleby:3 and not forloop.first %}
-                                    <div class="page-break"></div>
-                                {% endif %}
-                                <figure class="image benchmark-image">
-                                    <img src="data:image/png;base64,{{ img }}" alt="{{ stat_type }} ..." width="400">
-                                    <figcaption>
-                                        <p></p>
-                                    </figcaption>
-                                </figure>
+                            </div>
                             {% endif %}
                         {% endfor %}
                     </div>
+                </div>
                 {% endif %}
-                <div class="page-break"></div>
-                {% if pos_images %}
-                    <div class="position-images section">
-                        <h2>Station Position</h2>
-                        <p>Station position (East, North and Up) time series extracted from <a href="https://ivsopar.obspm.fr/stations/series/">https://ivsopar.obspm.fr/</a></p>
-                        {% for coord, img in pos_images.items %}
-                            {% if img %}
-                                {% if forloop.counter0|divisibleby:3 and not forloop.first %}
-                                    <div class="page-break"></div>
-                                {% endif %}
-                                <figure class="image">
-                                    <img src="data:image/png;base64,{{ img }}" alt="{{ coord }} Position" width="300">
-                                    <figcaption>
-                                        <p>{{ coord }} Position</p>
-                                    </figcaption>
-                                </figure>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            <div class="page-break"></div>
-            {% if problems %}
-                <div class="issues">
-                    <h2>Reported Issues</h2>
-                    <div class="problems-list">
-                        <p>
-                            The following comments are extracted form the correlation reports, capturing station issues.
-                            Please note that the script searches for keywords only and may not capture all noted issues.
-                        </p>
-                        <ul>
-                            {% for problem in problems %}
-                                <li>{{ problem|linebreaksbr|safe }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
+            </section>
             {% endif %}
-            <div class="page-break"></div>
-            {% if table_data %}
-                <div class="table-section">
-                    <h2>Tabulated Data</h2>
-                    <div class="container">
-                        <p>
-                            The following table displays the underlying data that was used to generate this report.
-                        </p>
-                        {{ table_data|safe }}
-                    </div>
-                </div>
-            {% endif %}
-            {% if more_info %}
-                <div class="more-info">
-                    <h2>Additional Information</h2>
-                    <p>{{ more_info }}</p>
-                </div>
-            {% endif %}
+
             <div class="page-break"></div>
 
-                <div class="about">
-                    <h2>About</h2>
-                    <div class="container">
-                    <p>This document is automatically generated from the station correlation reports via a series of python scripts. As such, please alert the creators of any apparent issues at the following address <a href="mailto:tiegem@utas.edu.au">tiegem@utas.edu.au</a>.</p>
-                    <p>Station position figures are based on analysis output from the Paris Observatory Geodetic VLBI Center.</p>
-                    <!-- <p>The schedule breakdown section presents data taken from the API developed and offered by ETH Zurich. </p>  -->
-                    <p>This report was developed by the AuScope VLBI project, which is managed by the University of Tasmania, contracted through Geoscience Australia.</p>
-                    <p>More information on this project as well as the source code may be found at the following <a href="https://github.com/tiegemccarthy/stationFeedbackDB">link</a>.</p>
+            <div class="figures">
+                {% if benchmark_images %}
+                <section class="benchmarks">
+                    <h2>
+                        Benchmarking barcharts -
+                        <strong>{{ start_time }}</strong> to <strong>{{ stop_time }}</strong>
+                    </h2>
+
+                    <p>
+                        The 10 stations with highest totals for each
+                        parameter in the database are plotted, if this
+                        station (red bar) is not in the top 10 it will be
+                        added to the right hand side of the figure. Please
+                        note, only 24 hour sessions are included and our
+                        database may not necessarily be complete for all
+                        stations.
+                    </p>
+
+                    <div class="benchmark-images">
+                    {% for param, img in benchmark_images.items %}
+                        {% if img %}
+                        <figure class="image">
+                            <img src="data:image/png;base64,{{ img }}" alt="{{ param }}">
+                        </figure>
+                        {% endif %}
+                    {% endfor %}
                     </div>
-                </div>
-                <div class="notes">
-                    <h2>Notes</h2>
-                    <div class="container">
-                        <p><sup>1</sup> This value represents the stations contribution to the final session fit, it is extracted directly from the IVS analysis reports.</p>
-                        <p>
-                            <sup>2</sup> The performance values represent the fraction of observations used in analysis compared to scheduled.
-                            These values are extracted directly from the IVS analysis reports.
-                            Performance values are heavily affected by other station outages, and are not necessarily indicative of issues at the station.
-                        </p>
-                        <p><sup>3</sup> Assignment rate is calculated by dividing the number of observations assigned to a station by the maximum observations assigned to any station in that session.
-                            The total observations for each station per session are extracted from the correlation reports.
-                            Please note that assignment rates will be much higher for stations in denser parts of the network.
-                        </p>
-                        <p><sup>4</sup> Detection rates are calculated by dividing the number of observations with Q codes 6 or above by the total number of observations.
-                        This value is meant to give an indication of the sensitivity of baselines this station participates in.</p>
+                </section>
+                {% endif %}
+
+                <div class="page-break"></div>
+
+                {% if pos_images %}
+                <section class="position-images">
+                    <h2>Station Position</h2>
+                    <p>
+                        Station position (East, North and Up) time series
+                        extracted from
+                        <a href="https://ivsopar.obspm.fr/stations/series/">https://ivsopar.obspm.fr/</a>
+                    </p>
+                    <div class="position-grid">
+                        {% for coord, img in pos_images.items %}
+                            {% if img %}
+                            <figure class="image">
+                                <img src="data:image/png;base64,{{ img }}" alt="{{ coord }}">
+                                <figcaption>{{ coord }} Position</figcaption>
+                            </figure>
+                            {% endif %}
+                        {% endfor %}
                     </div>
-                </div>
+                </section>
+                {% endif %}
             </div>
-    </main>
-</body>
+
+            <div class="page-break"></div>
+            {% if problems %}
+            <section class="issues">
+                <h2>Reported Issues</h2>
+                <div class="problems-list">
+                    <p>
+                        The following comments are extracted form the
+                        correlation reports, capturing station issues.
+                        Please note that the script searches for keywords
+                        only and may not capture all noted issues.
+                    </p>
+                    <ul>
+                        {% for problem in problems %}
+                        <li>{{ problem|linebreaksbr|safe }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- <div class="page-break"></div> -->
+            {% if table_data %}
+            <section class="table-section">
+                <h2>Tabulated Data</h2>
+                <div class="container">
+                    <p>
+                        The following table displays the underlying data
+                        that was used to generate this report.
+                    </p>
+                    {{ table_data|safe }}
+                </div>
+            </section>
+            {% endif %}
+
+            <!--
+            {% if more_info %}
+            <div class="more-info">
+                <h2>Additional Information</h2>
+                <p>{{ more_info }}</p>
+            </div>
+            {% endif %}
+            -->
+
+            <!-- <div class="page-break"></div> -->
+
+            <section class="about">
+                <h2>About</h2>
+                <div class="container">
+                    <p>
+                        This document is automatically generated from the
+                        station correlation reports via a series of python
+                        scripts. As such, please alert the creators of any
+                        apparent issues at the following address
+                        <a href="mailto:tiegem@utas.edu.au">tiegem@utas.edu.au</a>.
+                    </p>
+                    <p>
+                        Station position figures are based on analysis
+                        output from the Paris Observatory Geodetic VLBI
+                        Center.
+                    </p>
+                    <p>
+                        This report was developed by the AuScope VLBI
+                        project, which is managed by the University of
+                        Tasmania, contracted through Geoscience Australia.
+                    </p>
+                    <p>
+                        More information on this project as well as the
+                        source code may be found at the following
+                        <a href="https://github.com/tiegemccarthy/stationFeedbackDB">link</a>.
+                    </p>
+                </div>
+            </section>
+
+            <section class="notes">
+                <h2>Notes</h2>
+                <div class="container">
+                    <p>
+                        <sup>1</sup> This value represents the stations
+                        contribution to the final session fit, it is
+                        extracted directly from the IVS analysis reports.
+                    </p>
+                    <p>
+                        <sup>2</sup> The performance values represent the
+                        fraction of observations used in analysis compared
+                        to scheduled. These values are extracted directly
+                        from the IVS analysis reports. Performance values
+                        are heavily affected by other station outages, and
+                        are not necessarily indicative of issues at the
+                        station.
+                    </p>
+                    <p>
+                        <sup>3</sup> Assignment rate is calculated by
+                        dividing the number of observations assigned to a
+                        station by the maximum observations assigned to any
+                        station in that session. The total observations for
+                        each station per session are extracted from the
+                        correlation reports. Please note that assignment
+                        rates will be much higher for stations in denser
+                        parts of the network.
+                    </p>
+                    <p>
+                        <sup>4</sup> Detection rates are calculated by
+                        dividing the number of observations with Q codes 6
+                        or above by the total number of observations. This
+                        value is meant to give an indication of the
+                        sensitivity of baselines this station participates
+                        in.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </body>
 </html>

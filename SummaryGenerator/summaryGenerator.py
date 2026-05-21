@@ -30,7 +30,8 @@ from SummaryGenerator.database_tools import (
     grabAllStationData,
     grabStations,
 )
-from SummaryGenerator.program_parameters import *
+
+# from SummaryGenerator.program_parameters import *
 
 """
 from SummaryGenerator.scheduleStatistics import (
@@ -55,8 +56,8 @@ from SummaryGenerator.utilities import (
 class StationSummariser:
     station: str
     vgos: bool
-    start_time: datetime
-    stop_time: datetime
+    start_time: datetime  # datetime or Time???
+    stop_time: datetime  # as above
     table: Table
     database: str
     total_sessions: int = 0
@@ -153,7 +154,9 @@ class StationSummariser:
         station_dict_reverse = dict(
             zip(station_dict_temp.values(), station_dict_temp.keys())
         )
-        station_name_2char = station_dict_reverse.get(self.station)
+
+        # flagged as never used:
+        # station_name_2char = station_dict_reverse.get(self.station)
 
         # stat_name_buffered = self.station.ljust(8, '_')
 
@@ -202,6 +205,7 @@ class StationSummariser:
 
         # the list of issues from the correlation reports
         self.problems = problemExtract(table)
+
         logger.info(f"PROBLEMS:\n{self.problems}")
 
         # now onto the table
@@ -228,6 +232,8 @@ class StationSummariser:
                 "Total Obs.",
             ),
         )
+
+        # hmmm
         self.table = self.table.to_pandas()
         table = self.table.drop(columns=columns_to_remove)
 
@@ -287,7 +293,7 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     start_time = Time(start, format="yday", out_subfmt="date")
     stop_time = Time(stop, format="yday", out_subfmt="date")
 
-    vgos = None
+    vgos = False  # arbitrary default value
 
     if search == "v%" and reverse_search == 0:
         vgos = True
