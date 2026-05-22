@@ -2,18 +2,13 @@
 
 import argparse
 import os
-
 import MySQLdb as mariadb
-import yaml
 from astropy.io import ascii
 
-# Source other modules
-import databaseReportDownloader
-import parseFiles
+from databaseGenerator import databaseReportDownloader, parseFiles
 from config import db_conf, logger
 
 dirname = os.path.dirname(__file__)
-
 
 def parseFunc():
     # Argument parsing
