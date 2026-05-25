@@ -62,8 +62,8 @@ logger.setLevel(logging.INFO)  # set default level
 
 ### other miscellaneous settings ###
 
-#stations_config_file = path.dirname(__file__) + "/stations.config"  ### FIXME: merge stations.config and stations-reports.yaml
+#stations_config_file = path.dirname(__file__) + "/stations.config"
 
 stations_config_file = path.abspath(
-    path.join(path.dirname(__file__), "stations-reports.yaml")
+    path.join(path.dirname(__file__), "stations.yaml")
 )

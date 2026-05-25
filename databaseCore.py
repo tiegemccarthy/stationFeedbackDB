@@ -3,7 +3,7 @@
 import argparse
 import os
 import MySQLdb as mariadb
-from astropy.io import ascii
+#from astropy.io import ascii
 
 from stationFeedbackUtils.utilities import stationParse
 from databaseGenerator import databaseReportDownloader, parseFiles
@@ -116,6 +116,10 @@ def main(master_schedule, db_name):
                 # add station data to SQL database
                 for i in range(0, len(station_data)):
                     station = station_data[i]
+
+                    ### DEBUG
+                    logger.debug(f"Station = {station}")
+
                     logger.info(
                         "Adding data for station "
                         + station.name

@@ -153,7 +153,12 @@ class StationSummariser:
         #    os.path.join(os.path.dirname(__file__), "..", "stations-reports.yaml")
         #)
 
+        ### FIXME
+        # where is this actually used:
+
         station_dict_temp = dict(zip(*stationParse(stations_config_file, reports=True)))
+
+
         station_dict_reverse = dict(
             zip(station_dict_temp.values(), station_dict_temp.keys())
         )
