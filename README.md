@@ -116,3 +116,4 @@ No correlator report available.
 - Module-arise more, _i.e._ the database generation could use a module similiar to how updateReports use the SummaryGenerator module.
 - Rename stations-reports.yaml to stations.yaml since now serves dual purposes
 - Generate reports (one off) per session code _e.g._ for R1XXX or for R4XXXX
+- Delete all unnecessary comment blocks.
