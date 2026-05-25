@@ -67,17 +67,10 @@ def load_png(img_filename):
 # config handling #
 ###################
 
-
+"""
 def stationParse(
     stations_config=os.path.dirname(__file__) + "/stations-reports.yaml",
 ):
-    """
-    Reads in configuration file for which stations to produce reports,
-    and returns lists of codes (short, two character station names)
-    and the longer station name codes.
-
-    Updated to take a .yaml file.
-    """
 
     with open(stations_config) as file:
         stations = yaml.safe_load(file)["stations"]
@@ -92,6 +85,7 @@ def stationParse(
         stationNamesLong.append(info["name"])
 
     return stationNames, stationNamesLong
+"""
 
 
 def problemExtract(table_input):

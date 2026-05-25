@@ -7,42 +7,79 @@
 # uses a standard yaml list to specify multiple emails, second entry onwards are CC'ed.
 #
 # That's the plan, anyway.
+#
+# Note:
+# used `sed -E 's/^([[:space:]]*)([A-Za-z]{2}):/\1"\2":/' stations-reports.yaml > tmp`
+# to get quotes around the two-letter codes.
 
 stations:
-  Hb:
+  "Hb":
     name: HOBART12
     report: true
     emails:
       - sullivan.lester@utas.edu.au
-  Yg:
+      - tiegem@utas.edu.au
+  "Yg":
     name: YARRA12M
     report: true
     emails:
       - sullivan.lester@utas.edu.au
-  Ke:
+      - tiegem@utas.edu.au
+  "Ke":
     name: KATH12M
     report: true
     emails:
       - sullivan.lester@utas.edu.au
-  Ht:
+      - tiegem@utas.edu.au
+  "Ht":
     name: HART15M
     report: true
-  Nn:
+  "Nn":
     name: NYALE13N
     report: true
     emails:
       - sullivan.lester@utas.edu.au
-  Ns:
+  "Ns":
     name: NYALE13S
     report: true
     emails:
       - sullivan.lester@utas.edu.au
-  Yj:
+  "Yj":
     name: RAEGYEB
     report: true
-  Sa:
+  "Sa":
     name: RAEGSMAR
     report: true
-  Is:
+  "Is":
     name: ISHIOKA
     report: true
+  "Ho":
+     name: HOBART26
+     report: false
+  "Ys":
+     name: YEBES40M
+     report: false
+  "Kk":
+    name: KOKEE
+  "Kv":
+    name: SEJONG
+  "Ag":
+    name: AGGO
+  "Ma":
+    name: MATERA
+  "Wz":
+    name: WETTZELL
+  "Mc":
+    name: MEDICINA
+  "Ft":
+    name: FORTLEZA
+  "Ww":
+    name: WARK12M
+  "Bd":
+    name: BADARY
+  "Nt":
+    name: NOTO
+  "Sv":
+    name: SVETLOE
+  "On":
+    name: ONSALA60

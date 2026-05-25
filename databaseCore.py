@@ -5,8 +5,9 @@ import os
 import MySQLdb as mariadb
 from astropy.io import ascii
 
+from stationFeedbackUtils.utilities import stationParse
 from databaseGenerator import databaseReportDownloader, parseFiles
-from config import db_conf, logger
+from config import db_conf, logger, stations_config_file
 
 dirname = os.path.dirname(__file__)
 
@@ -35,7 +36,7 @@ def parseFunc():
 # (we may also consider merging the two files entirely...)
 # then this function would be already found in utilities.py
 
-
+"""
 def stationParse(stations_config="stations.config"):
     with open(stations_config) as file:
         station_contents = file.read()
@@ -49,12 +50,12 @@ def stationParse(stations_config="stations.config"):
         stationNames = stationTable["2char"][:]
         stationNamesLong = stationTable["full"][:]
     return stationNames, stationNamesLong
-
+"""
 
 def main(master_schedule, db_name):
 
     # Get stations to process into the database
-    stationNames, stationNamesLong = stationParse(dirname + "/stations.config")
+    stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
 
     # Setup the directories for downloaded files
     if not os.path.exists(dirname + "/analysis_reports"):

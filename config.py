@@ -14,7 +14,7 @@ Two main jobs for this:
 
 import logging
 import sys
-from os import getenv
+from os import getenv, path
 
 from dotenv import load_dotenv
 
@@ -45,12 +45,6 @@ db_conf = {
 }
 email_conf = {"email": getenv("SFB_EMAIL"), "smtp": smtp_conf, "tls": tls_conf}
 
-#### DEBUG
-print("DEUBG-- DB user:", db_conf["user"])
-print("DEUBG-- DB passwd:", db_conf["passwd"])
-print("DEBUG ENV PASS:", repr(getenv("SFB_DB_PASSWD")))
-
-
 ### configure the logger ###
 
 logger = logging.getLogger(__name__)
@@ -65,3 +59,11 @@ handle = logging.StreamHandler(sys.stdout)
 handle.setFormatter(fmt)
 logger.addHandler(handle)
 logger.setLevel(logging.INFO)  # set default level
+
+### other miscellaneous settings ###
+
+#stations_config_file = path.dirname(__file__) + "/stations.config"  ### FIXME: merge stations.config and stations-reports.yaml
+
+stations_config_file = path.abspath(
+    path.join(path.dirname(__file__), "stations-reports.yaml")
+)

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from stationFeedbackUtils.utilities import stationParse
+
 import argparse
 import os
 import re
@@ -18,7 +20,7 @@ from astropy.table import Column, Table, vstack
 from astropy.time import Time
 from reportlab.pdfgen.canvas import Canvas
 
-from config import logger
+from config import logger, stations_config_file
 
 ### TODO
 # do not use * imports...
@@ -48,7 +50,7 @@ from SummaryGenerator.utilities import (
     datetime_to_fractional_year,
     problemExtract,
     save_plt,
-    stationParse,
+#    stationParse,
 )
 
 
@@ -147,10 +149,11 @@ class StationSummariser:
         start_fractional = datetime_to_fractional_year(self.start_time)
         stop_fractional = datetime_to_fractional_year(self.stop_time)
 
-        conf_file = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "stations-reports.yaml")
-        )
-        station_dict_temp = dict(zip(*stationParse(conf_file)))
+        #conf_file = os.path.abspath(
+        #    os.path.join(os.path.dirname(__file__), "..", "stations-reports.yaml")
+        #)
+
+        station_dict_temp = dict(zip(*stationParse(stations_config_file, reports=True)))
         station_dict_reverse = dict(
             zip(station_dict_temp.values(), station_dict_temp.keys())
         )
