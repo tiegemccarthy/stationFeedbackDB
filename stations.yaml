@@ -10,7 +10,7 @@
 #
 # Note:
 # used `sed -E 's/^([[:space:]]*)([A-Za-z]{2}):/\1"\2":/' stations-reports.yaml > tmp`
-# to get quotes around the two-letter codes.
+# to get quotes around the two-letter codes. This was needed since On(sala) = True in yaml...
 
 stations:
   "Hb":

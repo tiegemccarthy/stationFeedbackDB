@@ -12,8 +12,9 @@ from datetime import datetime, timedelta
 # from astropy.io import ascii
 from astropy.time import Time
 
-from config import logger
-from SummaryGenerator import summaryGenerator, utilities
+from config import logger, stations_config_file
+from SummaryGenerator import summaryGenerator
+from StationFeedbackUtils.utilities import stationParse
 
 dirname = os.path.dirname(__file__)
 
@@ -39,14 +40,25 @@ def parseFunc():
         default=None,
         help="""The end date for the report in YYYY:DOY format. Default is today.""",
     )
+
+    parser.add_argument(
+        "--exp-regex",
+        type=str,
+        default=None,
+        help="""This option allows one to filter the DB and generate reports only for those experiment matched by the regex.
+        E.g. one might specify `--exp-regex ^R4.*$` to generate reports for all R4 type experiments in the database.
+        """
+    )
+
     args = parser.parse_args()
 
     return args
 
 
-def main(database_name, start_date=None, end_date=None):
+def main(database_name, start_date=None, end_date=None, exp_regex=None):
     if not os.path.exists(dirname + "/reports"):
         os.makedirs(dirname + "/reports")
+
     # sort out date range...
     today_date = datetime.now()
     if start_date is None or end_date is None:
@@ -58,51 +70,64 @@ def main(database_name, start_date=None, end_date=None):
         start_date = Time(start_date, format="yday")
         end_date = Time(end_date, format="yday")
     logger.info(f"start date = {start_date}")
-    # generate report
-    stationNames, stationNamesLong = utilities.stationParse(
-        dirname + "/stations-reports.yaml"
-    )
-    for station in stationNamesLong:
-        output_name_legacy = (
-            dirname
-            + "/reports/"
-            + station
-            + "_legacy_"
-            + today_date.strftime("%Y%m%d")
-            + ".pdf"
-        )
-        output_name_vgos = (
-            dirname
-            + "/reports/"
-            + station
-            + "_VGOS_"
-            + today_date.strftime("%Y%m%d")
-            + ".pdf"
-        )
-        try:
-            summaryGenerator.main(
-                station,
-                database_name,
-                start_date,
-                end_date,
-                output_name_legacy,
-                "v%",
-                1,
-            )
-        except Exception as e:
-            logger.warning(
-                f"Unable to generate legacy performance report for {str(station)}.\nException: {e}\nCheck whether sufficient data is available."
-            )
-        try:
-            summaryGenerator.main(
-                station, database_name, start_date, end_date, output_name_vgos, "v%", 0
-            )
-        except Exception as e:
-            logger.warning(
-                f"Unable to generate VGOS performance report for {str(station)}.\nException: {e}\nCheck whether sufficient data is available."
-            )
 
+    _, stationNamesLong = stationParse(
+        stations_config_file,
+        reports=True
+    )
+
+    for station in stationNamesLong:
+        if exp_regex:
+            # specific exp type requested:
+            logger.info(f"exp_regex = {exp_regex}")
+
+            output_dir = (
+                dirname
+                + f"/reports/'{exp_regex}'"
+                + station
+                + today_date.strftime("%Y%m%d")
+                + ".pdf"
+            )
+            try:
+                summaryGenerator.main(
+                    station,
+                    database_name,
+                    start_date,
+                    end_date,
+                    output_dir,
+                    exp_regex,
+                    0,
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Unable to generate report for {str(station)}. Exception: {e}."
+                )
+        else:
+            for exp in ["legacy", "VGOS"]:
+
+                output_name = (
+                    dirname
+                    + "/reports/"
+                    + station
+                    + f"_{exp}_"
+                    + today_date.strftime("%Y%m%d")
+                    + ".pdf"
+                )
+                try:
+                    summaryGenerator.main(
+                        station,
+                        database_name,
+                        start_date,
+                        end_date,
+                        output_name,
+                        "v%",
+                        0 if exp == "VGOS" else 1,
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Unable to generate {exp} performance report for {str(station)}.\nException: {e}."
+                    )
 
 if __name__ == "__main__":
     args = parseFunc()
-    main(args.sql_db_name, args.start_date, args.end_date)
+    main(args.sql_db_name, args.start_date, args.end_date, args.exp_regex)

@@ -37,7 +37,8 @@ def stationParse(
     # pull from the config
     for code, info in stations.items():
         if reports:
-            if (not info["report"]):
+            if ("report" not in info or not info["report"]):
+                # when generating reports, we ignore stations that do not have a report flag set to True (whether false or absent).
                 continue
 
         stationNames.append(str(code))

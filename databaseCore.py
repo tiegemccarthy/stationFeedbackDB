@@ -5,8 +5,8 @@ import os
 import MySQLdb as mariadb
 #from astropy.io import ascii
 
-from stationFeedbackUtils.utilities import stationParse
-from databaseGenerator import databaseReportDownloader, parseFiles
+from StationFeedbackUtils.utilities import stationParse
+from DatabaseGenerator import databaseReportDownloader, parseFiles
 from config import db_conf, logger, stations_config_file
 
 dirname = os.path.dirname(__file__)

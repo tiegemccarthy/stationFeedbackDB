@@ -10,7 +10,7 @@ import MySQLdb as mariadb
 #from astropy.io import ascii
 
 from config import db_conf, logger, stations_config_file
-from stationFeedbackUtils.utilities import stationParse
+from StationFeedbackUtils.utilities import stationParse
 
 dirname = os.path.join(os.path.dirname(__file__),"..")
 

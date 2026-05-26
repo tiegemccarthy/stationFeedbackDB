@@ -43,6 +43,7 @@ def extractStationData(
     station_code, database_name, mjd_start, mjd_stop, search="%", like_or_notlike=0
 ):
 
+    # here's the reverse_search_flag:
     if float(like_or_notlike) == 1:
         like = "NOT LIKE"
     else:

@@ -15,7 +15,7 @@ from astropy.table import vstack
 # from astropy.table import Table
 from astropy.time import Time
 
-from stationFeedbackUtils.utilities import stationParse
+from StationFeedbackUtils.utilities import stationParse
 
 from config import stations_config_file
 

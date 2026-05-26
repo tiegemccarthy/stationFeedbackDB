@@ -1,39 +1,65 @@
 #!/usr/bin/env python
 
-from stationFeedbackUtils.utilities import stationParse
-
 import argparse
 import os
 import re
-import textwrap
+#import textwrap
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from pprint import pprint
+from datetime import datetime
+#from datetime import timedelta
+#from pprint import pprint
 
-import matplotlib.pyplot as plt
-import MySQLdb as mariadb
+#import matplotlib.pyplot as plt
+#import MySQLdb as mariadb
 import numpy as np
-import pandas as pd
-from adjustText import adjust_text
-from astropy.io import ascii
-from astropy.table import Column, Table, vstack
+#import pandas as pd
+#from adjustText import adjust_text
+#from astropy.io import ascii
+from astropy.table import Table
+#from astropy.table import Column
+#from astropy.table import  vstack
 from astropy.time import Time
-from reportlab.pdfgen.canvas import Canvas
+#from reportlab.pdfgen.canvas import Canvas
 
-from config import logger, stations_config_file
+from config import logger
+#from StationFeedbackUtils.utilities import stationParse
 
-### TODO
-# do not use * imports...
-from SummaryGenerator.analysis_plots import *
-from SummaryGenerator.benchmarking import *
-from SummaryGenerator.createReport import *
+from SummaryGenerator.stationPosition import (
+    downloadFile,
+    get_station_positions,
+)
+from SummaryGenerator.utilities import (
+    datetime_to_fractional_year,
+    problemExtract,
+    save_plt
+)
+
+from SummaryGenerator.analysis_plots import (
+    wRmsAnalysis,
+    performanceAnalysis,
+    detectRate
+)
+
+from SummaryGenerator.benchmarking import (
+    determineAssignmentRate,
+    plotAssignmentRate,
+    sumTotalObsALL,
+    medWRMSdelALL,
+    numSessionsALL,
+    plotBenchObs,
+    plotBenchSess,
+    plotBenchWRMS
+)
+
+from SummaryGenerator.createReport import (
+    create_report
+)
+
 from SummaryGenerator.database_tools import (
     extractStationData,
     grabAllStationData,
     grabStations,
 )
-
-# from SummaryGenerator.program_parameters import *
 
 """
 from SummaryGenerator.scheduleStatistics import (
@@ -41,25 +67,16 @@ from SummaryGenerator.scheduleStatistics import (
     get_glovdh_piecharts,
 )
 """
-from SummaryGenerator.stationPosition import (
-    downloadFile,
-    file2DF,
-    get_station_positions,
-)
-from SummaryGenerator.utilities import (
-    datetime_to_fractional_year,
-    problemExtract,
-    save_plt,
-#    stationParse,
-)
 
 
 @dataclass
 class StationSummariser:
     station: str
-    vgos: bool
-    start_time: datetime  # datetime or Time???
-    stop_time: datetime  # as above
+    #vgos: bool
+    search: str
+    reverse_search_flag: int
+    start_time: datetime    # FIXME: datetime or Time???
+    stop_time: datetime     # FIXME: as above
     table: Table
     database: str
     total_sessions: int = 0
@@ -107,14 +124,13 @@ class StationSummariser:
             self.detectS_str = "No S-band data present..."
             self.detect_images["S"] = ""
 
-        # Benchmarking figures
-        ######################
-        if self.vgos == True:
-            search = "v%"
-            reverse_search = 0
-        elif self.vgos == False:
-            search = "v%"
-            reverse_search = 1
+        #if self.vgos == True:
+        #    search = "v%"
+        #    reverse_search = 0
+
+        #elif self.vgos == False:
+        #    search = "v%"
+        #    reverse_search = 1
 
         logger.info(f"Start time = {self.start_time}")
 
@@ -124,8 +140,8 @@ class StationSummariser:
             self.database,
             self.start_time,
             self.stop_time,
-            search,
-            reverse_search,
+            self.search,
+            self.reverse_search_flag,
         )
 
         bench_obs_list = sumTotalObsALL(table_list, stat_tab_list)
@@ -156,12 +172,12 @@ class StationSummariser:
         ### FIXME
         # where is this actually used:
 
-        station_dict_temp = dict(zip(*stationParse(stations_config_file, reports=True)))
+        #station_dict_temp = dict(zip(*stationParse(stations_config_file, reports=True)))
 
 
-        station_dict_reverse = dict(
-            zip(station_dict_temp.values(), station_dict_temp.keys())
-        )
+        #station_dict_reverse = dict(
+        #    zip(station_dict_temp.values(), station_dict_temp.keys())
+        #)
 
         # flagged as never used:
         # station_name_2char = station_dict_reverse.get(self.station)
@@ -301,15 +317,20 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     start_time = Time(start, format="yday", out_subfmt="date")
     stop_time = Time(stop, format="yday", out_subfmt="date")
 
-    vgos = False  # arbitrary default value
+    #vgos = False  # arbitrary default value
 
-    if search == "v%" and reverse_search == 0:
-        vgos = True
-    elif search == "v%" and reverse_search == 1:
-        vgos = False
+    #if search == "v%" and reverse_search == 0:
+    #    vgos = True
+    #elif search == "v%" and reverse_search == 1:
+    #    vgos = False
 
     logger.info(f"Report range: {start_time} -> {stop_time}.")
-    logger.info(f"Report type: {'VGOS' if vgos else 'Legacy'}.")
+
+    ### FIXME:
+    # if regex:
+    # ....
+    # else:
+    logger.info(f"Report type: {'VGOS' if (search == 'v%' and reverse_search == 0) else 'Legacy'}.")
 
     # create the info table which will be used to generate the rest of it...
     result, col_names = extractStationData(
@@ -328,7 +349,7 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
         raise ValueError("Mismatched names to data columns.")
 
     # create the dataclass that contains the summary data
-    stat_sum = StationSummariser(stat_code, vgos, start_time, stop_time, table, db_name)
+    stat_sum = StationSummariser(stat_code, search, reverse_search, start_time, stop_time, table, db_name)
 
     # create the PDF report
     print("Generating PDF report...")
