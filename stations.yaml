@@ -17,6 +17,7 @@ stations:
     name: HOBART12
     report: true
     emails:
+      - lucia.mccullum@utas.edu.au
       - sullivan.lester@utas.edu.au
       - tiegem@utas.edu.au
   "Yg":

@@ -2,27 +2,13 @@
 
 import argparse
 import os
-import re
-#import textwrap
 from dataclasses import dataclass, field
 from datetime import datetime
-#from datetime import timedelta
-#from pprint import pprint
-
-#import matplotlib.pyplot as plt
-#import MySQLdb as mariadb
 import numpy as np
-#import pandas as pd
-#from adjustText import adjust_text
-#from astropy.io import ascii
 from astropy.table import Table
-#from astropy.table import Column
-#from astropy.table import  vstack
 from astropy.time import Time
-#from reportlab.pdfgen.canvas import Canvas
 
 from config import logger
-#from StationFeedbackUtils.utilities import stationParse
 
 from SummaryGenerator.stationPosition import (
     downloadFile,
@@ -60,13 +46,6 @@ from SummaryGenerator.database_tools import (
     grabAllStationData,
     grabStations,
 )
-
-"""
-from SummaryGenerator.scheduleStatistics import (
-    get_glovdh_barchart,
-    get_glovdh_piecharts,
-)
-"""
 
 
 @dataclass
@@ -124,14 +103,6 @@ class StationSummariser:
             self.detectS_str = "No S-band data present..."
             self.detect_images["S"] = ""
 
-        #if self.vgos == True:
-        #    search = "v%"
-        #    reverse_search = 0
-
-        #elif self.vgos == False:
-        #    search = "v%"
-        #    reverse_search = 1
-
         logger.info(f"Start time = {self.start_time}")
 
         stat_list = grabStations(self.database)
@@ -165,32 +136,11 @@ class StationSummariser:
         start_fractional = datetime_to_fractional_year(self.start_time)
         stop_fractional = datetime_to_fractional_year(self.stop_time)
 
-        #conf_file = os.path.abspath(
-        #    os.path.join(os.path.dirname(__file__), "..", "stations-reports.yaml")
-        #)
-
         ### FIXME
-        # where is this actually used:
-
-        #station_dict_temp = dict(zip(*stationParse(stations_config_file, reports=True)))
-
-
-        #station_dict_reverse = dict(
-        #    zip(station_dict_temp.values(), station_dict_temp.keys())
-        #)
-
-        # flagged as never used:
-        # station_name_2char = station_dict_reverse.get(self.station)
-
-        # stat_name_buffered = self.station.ljust(8, '_')
-
-        ### FIXME
-        # the downloaded .txt files should be stored in a dedicated directory.
-        # in fixing the above, created a new issue:
         # shouldn't have hardcoded paths, in multiple spots.
         try:
             file_name = f"{self.station}.txt"
-            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"
+            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"      ### FIXME: janky af.
             downloadFile(file_name, data_dir)
             pos_fig_dict = get_station_positions(
                 self.station, data_dir, start_fractional, stop_fractional
@@ -206,23 +156,6 @@ class StationSummariser:
             logger.warning(
                 f"Error creating station position plots. Are you sure the API endpoint is correct? More info: {e}"
             )
-
-        # station schedules
-        ###################
-
-        # try:
-        #     glovdh_dict =  get_glovdh_piecharts(station_name_2char, self.start_time,
-        #                                 self.stop_time, self.vgos)
-        #     self.glovdh_images = {stat_type: save_plt(fig)
-        #             for stat_type, fig in glovdh_dict.items()}
-        # except Exception as e:
-        #     print(f"Problem creating the piecharts:\n{e}")
-
-        # # tack on the barchart comparising the scheduled session counts
-        # try:
-        #     self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(station_name_2char, self.start_time, self.stop_time, self.vgos))})
-        # except Exception as e:
-        #     print(f"Problem creating the bargraphs:\n{e}")
 
         # station problems
         ##################
@@ -317,20 +250,8 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     start_time = Time(start, format="yday", out_subfmt="date")
     stop_time = Time(stop, format="yday", out_subfmt="date")
 
-    #vgos = False  # arbitrary default value
-
-    #if search == "v%" and reverse_search == 0:
-    #    vgos = True
-    #elif search == "v%" and reverse_search == 1:
-    #    vgos = False
-
     logger.info(f"Report range: {start_time} -> {stop_time}.")
-
-    ### FIXME:
-    # if regex:
-    # ....
-    # else:
-    logger.info(f"Report type: {'VGOS' if (search == 'v%' and reverse_search == 0) else 'Legacy'}.")
+    logger.info(f"Report type: {'VGOS' if (search == 'v%' and reverse_search == 0) else ('Legacy' if (search == 'v%' and reverse_search == 0) else f'{search}')}.")
 
     # create the info table which will be used to generate the rest of it...
     result, col_names = extractStationData(

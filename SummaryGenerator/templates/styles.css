@@ -70,7 +70,7 @@ header h1 {
     color: var(--color-primary);
     white-space: nowrap;
     overflow: hidden;
-    font-size: 24px;
+    font-size: 28px;
     margin: 0;
 }
 
@@ -110,7 +110,7 @@ h2 {
 }
 
 h3 {
-    color: var(--color-strong);
+    /* color: var(--color-strong); */
     margin-bottom: 8px;
 }
 

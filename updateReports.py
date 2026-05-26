@@ -5,11 +5,7 @@
 
 import argparse
 import os
-
-# import sys
 from datetime import datetime, timedelta
-
-# from astropy.io import ascii
 from astropy.time import Time
 
 from config import logger, stations_config_file
@@ -46,7 +42,10 @@ def parseFunc():
         type=str,
         default=None,
         help="""This option allows one to filter the DB and generate reports only for those experiment matched by the regex.
-        E.g. one might specify `--exp-regex ^R4.*$` to generate reports for all R4 type experiments in the database.
+        E.g. one might specify `--exp-regex R4%` to generate reports for all R4 type experiments in the database.
+        Note that this regex must be compatible with the standard SQL's "LIKE" operator, _i.e._
+                    % = wildcard multiple characters
+                    _ = wildcard single character
         """
     )
 
@@ -77,14 +76,50 @@ def main(database_name, start_date=None, end_date=None, exp_regex=None):
     )
 
     for station in stationNamesLong:
+
+        exps = ["legacy", "VGOS"]
+
+        if exp_regex:
+            exps.append(f"{exp_regex}")
+
+        for exp in exps:
+
+            output_name = (
+                dirname
+                + "/reports/"
+                + station
+                + f"_{exp}_"
+                + today_date.strftime("%Y%m%d")
+                + ".pdf"
+            )
+            try:
+                summaryGenerator.main(
+                    station,
+                    database_name,
+                    start_date,
+                    end_date,
+                    output_name,
+                    f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "v%",
+                    0 if exp == "VGOS" else 1,
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Unable to generate {exp} performance report for {str(station)}.\nException: {e}."
+                )
+
+        """
+        print(exps)
+        sys.exit()
+
         if exp_regex:
             # specific exp type requested:
             logger.info(f"exp_regex = {exp_regex}")
 
             output_dir = (
                 dirname
-                + f"/reports/'{exp_regex}'"
+                + f"/reports/"
                 + station
+                + f"_{exp_regex}_"
                 + today_date.strftime("%Y%m%d")
                 + ".pdf"
             )
@@ -127,6 +162,8 @@ def main(database_name, start_date=None, end_date=None, exp_regex=None):
                     logger.warning(
                         f"Unable to generate {exp} performance report for {str(station)}.\nException: {e}."
                     )
+
+            """
 
 if __name__ == "__main__":
     args = parseFunc()
