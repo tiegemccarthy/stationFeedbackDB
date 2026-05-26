@@ -14,7 +14,7 @@ Two main jobs for this:
 
 import logging
 import sys
-from os import getenv
+from os import getenv, path
 
 from dotenv import load_dotenv
 
@@ -37,7 +37,12 @@ smtp_conf = {"host": getenv("SFB_SMTP_HOST"), "port": getenv("SFB_SMTP_PORT")}
 tls_conf = {"user": getenv("SFB_TLS_USER"), "passwd": getenv("SFB_TLS_PASSWD")}
 
 # and these are what we 'export':
-db_conf = {"user": getenv("SFB_DB_USER"), "passwd": getenv("SFB_DB_PASSWD")}
+db_conf = {
+    "user": getenv("SFB_DB_USER"),
+    "passwd": getenv("SFB_DB_PASSWD"),
+    "host": getenv("SFB_DB_HOST"),
+    "name": getenv("SFB_DB_NAME"),
+}
 email_conf = {"email": getenv("SFB_EMAIL"), "smtp": smtp_conf, "tls": tls_conf}
 
 ### configure the logger ###
@@ -54,3 +59,11 @@ handle = logging.StreamHandler(sys.stdout)
 handle.setFormatter(fmt)
 logger.addHandler(handle)
 logger.setLevel(logging.INFO)  # set default level
+
+### other miscellaneous settings ###
+
+#stations_config_file = path.dirname(__file__) + "/stations.config"
+
+stations_config_file = path.abspath(
+    path.join(path.dirname(__file__), "stations.yaml")
+)

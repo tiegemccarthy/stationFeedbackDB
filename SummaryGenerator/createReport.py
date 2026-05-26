@@ -49,6 +49,7 @@ def create_report(summary, output_path):
 
     # Function to generate a PDF
     async def generate_pdf(html_content, output_path):
+        browser = None
         try:
             browser = await launch()
             page = await browser.newPage()
@@ -57,9 +58,11 @@ def create_report(summary, output_path):
             await page.pdf(
                 {"path": output_path, "format": "A4", "printBackground": True}
             )
-            await browser.close()
         except Exception as e:
             raise Exception("Could not generate the report.") from e
+        finally:
+            if browser:
+                await browser.close()
 
     #########################
     # Preliminaries:

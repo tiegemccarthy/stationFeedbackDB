@@ -2,18 +2,14 @@
 
 import argparse
 import os
-
 import MySQLdb as mariadb
-import yaml
-from astropy.io import ascii
+#from astropy.io import ascii
 
-# Source other modules
-import databaseReportDownloader
-import parseFiles
-from config import db_conf, logger
+from StationFeedbackUtils.utilities import stationParse
+from DatabaseGenerator import databaseReportDownloader, parseFiles
+from config import db_conf, logger, stations_config_file
 
 dirname = os.path.dirname(__file__)
-
 
 def parseFunc():
     # Argument parsing
@@ -40,7 +36,7 @@ def parseFunc():
 # (we may also consider merging the two files entirely...)
 # then this function would be already found in utilities.py
 
-
+"""
 def stationParse(stations_config="stations.config"):
     with open(stations_config) as file:
         station_contents = file.read()
@@ -54,12 +50,12 @@ def stationParse(stations_config="stations.config"):
         stationNames = stationTable["2char"][:]
         stationNamesLong = stationTable["full"][:]
     return stationNames, stationNamesLong
-
+"""
 
 def main(master_schedule, db_name):
 
     # Get stations to process into the database
-    stationNames, stationNamesLong = stationParse(dirname + "/stations.config")
+    stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
 
     # Setup the directories for downloaded files
     if not os.path.exists(dirname + "/analysis_reports"):
@@ -74,10 +70,10 @@ def main(master_schedule, db_name):
     db_name = str(db_name)
 
     # Load dummy/default user details from configuration file
-    with open(dirname + "/server-config.yaml") as file:
-        db_info = yaml.safe_load(file)["database"]
+    # with open(dirname + "/server-config.yaml") as file:
+    #    db_info = yaml.safe_load(file)["database"]
 
-    conn = mariadb.connect(user=db_info["user"], passwd=db_info["passwd"])
+    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["passwd"])
     cursor = conn.cursor()
     query = "CREATE DATABASE IF NOT EXISTS " + db_name + ";"
     cursor.execute(query)
@@ -120,6 +116,10 @@ def main(master_schedule, db_name):
                 # add station data to SQL database
                 for i in range(0, len(station_data)):
                     station = station_data[i]
+
+                    ### DEBUG
+                    logger.debug(f"Station = {station}")
+
                     logger.info(
                         "Adding data for station "
                         + station.name

@@ -7,11 +7,12 @@ import tarfile
 from ftplib import FTP_TLS
 
 import MySQLdb as mariadb
-from astropy.io import ascii
+#from astropy.io import ascii
 
-from config import db_conf, logger
+from config import db_conf, logger, stations_config_file
+from StationFeedbackUtils.utilities import stationParse
 
-dirname = os.path.dirname(__file__)
+dirname = os.path.join(os.path.dirname(__file__),"..")
 
 
 def parseFunc():
@@ -143,7 +144,7 @@ def corrReportDL(exp_id, vgos_tag):
             )
             return
 
-
+"""
 def stationParse(stations_config=dirname + "/stations.config"):
     with open(stations_config) as file:
         station_contents = file.read()
@@ -158,10 +159,10 @@ def stationParse(stations_config=dirname + "/stations.config"):
         stationNamesLong = stationTable["full"][:]
 
     return stationNames, stationNamesLong
-
+"""
 
 def main(master_schedule, db_name):
-    stationNames, stationNamesLong = stationParse()
+    stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
     schedule = str(master_schedule)
     ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
     ftps.login(user="anonymous", passwd="")

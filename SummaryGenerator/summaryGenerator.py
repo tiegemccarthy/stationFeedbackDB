@@ -2,58 +2,60 @@
 
 import argparse
 import os
-import re
-import textwrap
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from pprint import pprint
-
-import matplotlib.pyplot as plt
-import MySQLdb as mariadb
+from datetime import datetime
 import numpy as np
-import pandas as pd
-from adjustText import adjust_text
-from astropy.io import ascii
-from astropy.table import Column, Table, vstack
+from astropy.table import Table
 from astropy.time import Time
-from reportlab.pdfgen.canvas import Canvas
 
 from config import logger
 
-### TODO
-# do not use * imports...
-from SummaryGenerator.analysis_plots import *
-from SummaryGenerator.benchmarking import *
-from SummaryGenerator.createReport import *
-from SummaryGenerator.database_tools import (
-    extractStationData,
-    grabAllStationData,
-    grabStations,
-)
-from SummaryGenerator.program_parameters import *
-from SummaryGenerator.scheduleStatistics import (
-    get_glovdh_barchart,
-    get_glovdh_piecharts,
-)
 from SummaryGenerator.stationPosition import (
     downloadFile,
-    file2DF,
     get_station_positions,
 )
 from SummaryGenerator.utilities import (
     datetime_to_fractional_year,
     problemExtract,
-    save_plt,
-    stationParse,
+    save_plt
+)
+
+from SummaryGenerator.analysis_plots import (
+    wRmsAnalysis,
+    performanceAnalysis,
+    detectRate
+)
+
+from SummaryGenerator.benchmarking import (
+    determineAssignmentRate,
+    plotAssignmentRate,
+    sumTotalObsALL,
+    medWRMSdelALL,
+    numSessionsALL,
+    plotBenchObs,
+    plotBenchSess,
+    plotBenchWRMS
+)
+
+from SummaryGenerator.createReport import (
+    create_report
+)
+
+from SummaryGenerator.database_tools import (
+    extractStationData,
+    grabAllStationData,
+    grabStations,
 )
 
 
 @dataclass
 class StationSummariser:
     station: str
-    vgos: bool
-    start_time: datetime
-    stop_time: datetime
+    #vgos: bool
+    search: str
+    reverse_search_flag: int
+    start_time: datetime    # FIXME: datetime or Time???
+    stop_time: datetime     # FIXME: as above
     table: Table
     database: str
     total_sessions: int = 0
@@ -101,15 +103,6 @@ class StationSummariser:
             self.detectS_str = "No S-band data present..."
             self.detect_images["S"] = ""
 
-        # Benchmarking figures
-        ######################
-        if self.vgos == True:
-            search = "v%"
-            reverse_search = 0
-        elif self.vgos == False:
-            search = "v%"
-            reverse_search = 1
-
         logger.info(f"Start time = {self.start_time}")
 
         stat_list = grabStations(self.database)
@@ -118,8 +111,8 @@ class StationSummariser:
             self.database,
             self.start_time,
             self.stop_time,
-            search,
-            reverse_search,
+            self.search,
+            self.reverse_search_flag,
         )
 
         bench_obs_list = sumTotalObsALL(table_list, stat_tab_list)
@@ -143,24 +136,11 @@ class StationSummariser:
         start_fractional = datetime_to_fractional_year(self.start_time)
         stop_fractional = datetime_to_fractional_year(self.stop_time)
 
-        conf_file = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "stations-reports.yaml")
-        )
-        station_dict_temp = dict(zip(*stationParse(conf_file)))
-        station_dict_reverse = dict(
-            zip(station_dict_temp.values(), station_dict_temp.keys())
-        )
-        station_name_2char = station_dict_reverse.get(self.station)
-
-        # stat_name_buffered = self.station.ljust(8, '_')
-
         ### FIXME
-        # the downloaded .txt files should be stored in a dedicated directory.
-        # in fixing the above, created a new issue:
         # shouldn't have hardcoded paths, in multiple spots.
         try:
             file_name = f"{self.station}.txt"
-            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"
+            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"      ### FIXME: janky af.
             downloadFile(file_name, data_dir)
             pos_fig_dict = get_station_positions(
                 self.station, data_dir, start_fractional, stop_fractional
@@ -177,28 +157,12 @@ class StationSummariser:
                 f"Error creating station position plots. Are you sure the API endpoint is correct? More info: {e}"
             )
 
-        # station schedules
-        ###################
-
-        # try:
-        #     glovdh_dict =  get_glovdh_piecharts(station_name_2char, self.start_time,
-        #                                 self.stop_time, self.vgos)
-        #     self.glovdh_images = {stat_type: save_plt(fig)
-        #             for stat_type, fig in glovdh_dict.items()}
-        # except Exception as e:
-        #     print(f"Problem creating the piecharts:\n{e}")
-
-        # # tack on the barchart comparising the scheduled session counts
-        # try:
-        #     self.glovdh_images.update({'barchart': save_plt(get_glovdh_barchart(station_name_2char, self.start_time, self.stop_time, self.vgos))})
-        # except Exception as e:
-        #     print(f"Problem creating the bargraphs:\n{e}")
-
         # station problems
         ##################
 
         # the list of issues from the correlation reports
         self.problems = problemExtract(table)
+
         logger.info(f"PROBLEMS:\n{self.problems}")
 
         # now onto the table
@@ -225,6 +189,8 @@ class StationSummariser:
                 "Total Obs.",
             ),
         )
+
+        # hmmm
         self.table = self.table.to_pandas()
         table = self.table.drop(columns=columns_to_remove)
 
@@ -284,15 +250,8 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     start_time = Time(start, format="yday", out_subfmt="date")
     stop_time = Time(stop, format="yday", out_subfmt="date")
 
-    vgos = None
-
-    if search == "v%" and reverse_search == 0:
-        vgos = True
-    elif search == "v%" and reverse_search == 1:
-        vgos = False
-
     logger.info(f"Report range: {start_time} -> {stop_time}.")
-    logger.info(f"Report type: {'VGOS' if vgos else 'Legacy'}.")
+    logger.info(f"Report type: {'VGOS' if (search == 'v%' and reverse_search == 0) else ('Legacy' if (search == 'v%' and reverse_search == 0) else f'{search}')}.")
 
     # create the info table which will be used to generate the rest of it...
     result, col_names = extractStationData(
@@ -304,13 +263,6 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     except Exception as e:
         raise Exception(f"Error creating Table (astropy).\n{e}") from e
 
-    # once we have this we can produce the report elements that sumarise this...
-    if config.ctrl.debug:
-        print("result:")
-        pprint(result)
-        print("col_names:")
-        pprint(col_names)
-
     logger.info(f"Number of columns in result: {len(result[0])}")
     logger.info(f"Number of column names: {len(col_names)}")
 
@@ -318,7 +270,7 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
         raise ValueError("Mismatched names to data columns.")
 
     # create the dataclass that contains the summary data
-    stat_sum = StationSummariser(stat_code, vgos, start_time, stop_time, table, db_name)
+    stat_sum = StationSummariser(stat_code, search, reverse_search, start_time, stop_time, table, db_name)
 
     # create the PDF report
     print("Generating PDF report...")

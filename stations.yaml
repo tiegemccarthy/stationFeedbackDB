@@ -1,0 +1,86 @@
+# stations-reports.yaml
+#
+# List of stations one wants to generate the reports for.
+#
+# Two-letter code specifying entries and long-names as "name" is required.
+# Emails is optional (but required for report send-offs, obviously) and
+# uses a standard yaml list to specify multiple emails, second entry onwards are CC'ed.
+#
+# That's the plan, anyway.
+#
+# Note:
+# used `sed -E 's/^([[:space:]]*)([A-Za-z]{2}):/\1"\2":/' stations-reports.yaml > tmp`
+# to get quotes around the two-letter codes. This was needed since On(sala) = True in yaml...
+
+stations:
+  "Hb":
+    name: HOBART12
+    report: true
+    emails:
+      - lucia.mccullum@utas.edu.au
+      - sullivan.lester@utas.edu.au
+      - tiegem@utas.edu.au
+  "Yg":
+    name: YARRA12M
+    report: true
+    emails:
+      - sullivan.lester@utas.edu.au
+      - tiegem@utas.edu.au
+  "Ke":
+    name: KATH12M
+    report: true
+    emails:
+      - sullivan.lester@utas.edu.au
+      - tiegem@utas.edu.au
+  "Ht":
+    name: HART15M
+    report: true
+  "Nn":
+    name: NYALE13N
+    report: true
+    emails:
+      - sullivan.lester@utas.edu.au
+  "Ns":
+    name: NYALE13S
+    report: true
+    emails:
+      - sullivan.lester@utas.edu.au
+  "Yj":
+    name: RAEGYEB
+    report: true
+  "Sa":
+    name: RAEGSMAR
+    report: true
+  "Is":
+    name: ISHIOKA
+    report: true
+  "Ho":
+     name: HOBART26
+     report: false
+  "Ys":
+     name: YEBES40M
+     report: false
+  "Kk":
+    name: KOKEE
+  "Kv":
+    name: SEJONG
+  "Ag":
+    name: AGGO
+  "Ma":
+    name: MATERA
+  "Wz":
+    name: WETTZELL
+  "Mc":
+    name: MEDICINA
+  "Ft":
+    name: FORTLEZA
+  "Ww":
+    name: WARK12M
+  "Bd":
+    name: BADARY
+  "Nt":
+    name: NOTO
+  "Sv":
+    name: SVETLOE
+  "On":
+    name: ONSALA60

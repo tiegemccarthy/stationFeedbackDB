@@ -11,8 +11,13 @@ import numpy as np
 from astropy.io import ascii
 from astropy.table import vstack
 
+
 # from astropy.table import Table
 from astropy.time import Time
+
+from StationFeedbackUtils.utilities import stationParse
+
+from config import stations_config_file
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -277,6 +282,9 @@ def basnumArray(snr_data, antennas_corr_reference, SEFD_tags):
     return basnum
 
 
+"""
+moved this to databaseUtils.py since used both here and in the ReportDownloader.
+
 def stationParse(stations_config=dirname + "/stations.config"):
     with open(stations_config) as file:
         station_contents = file.read()
@@ -291,10 +299,10 @@ def stationParse(stations_config=dirname + "/stations.config"):
         stationNamesLong = stationTable["full"][:]
 
     return stationNames, stationNamesLong
-
+"""
 
 """
-# we had two definitions of this.
+# we had two definitions of this (see above).
 ### TODO
 # diff the two to know which is the one to keep...
 
@@ -417,7 +425,7 @@ class stationData(object):
 
 
 def main(exp_code):
-    stationNames, stationNamesLong = stationParse()
+    stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
     # setup strings for files
     file_analysis = dirname + "/analysis_reports/" + str(exp_code) + "_report.txt"
     file_spool = dirname + "/analysis_reports/" + str(exp_code) + "_spoolfile.txt"

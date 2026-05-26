@@ -9,7 +9,7 @@ from config import db_conf
 
 def grabStations(sqldb_name):
 
-    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["user"])
+    conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["passwd"])
     cursor = conn.cursor()
     query1 = "USE " + sqldb_name + ";"
     cursor.execute(query1)
@@ -43,6 +43,7 @@ def extractStationData(
     station_code, database_name, mjd_start, mjd_stop, search="%", like_or_notlike=0
 ):
 
+    # here's the reverse_search_flag:
     if float(like_or_notlike) == 1:
         like = "NOT LIKE"
     else:

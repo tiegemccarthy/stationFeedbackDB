@@ -1,251 +1,300 @@
+:root {
+    /* blues */
+    --color-primary: #53778f;
+    --color-strong: #00589f;
+    --color-accent-blue: #5cb1fa;
+    --color-light-blue: #e4f2ff;
+
+    /* yellow */
+    --color-accent: #ffd500;
+
+    /* neutrals */
+    --color-text: #181818;
+    --color-bg: #ffffff;
+    --color-light-grey: #efefef;
+    --color-mid-grey: #dedede;
+
+    /* layout */
+    --gap: 14px;
+    --border-radius: 4px;
+}
+
+/******************
+    page-breaks
+*******************/
+
 @page {
     size: A4;
-    margin: 2mm 2mm;
+    margin: 8mm;
 }
 
 .page-break {
     page-break-before: always;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    display: block;
-    height: 10px;
 }
 
-/*** general ***/
+/******************
+        body
+*******************/
 
-html, body {
-    height: auto;
-    font-family: 'Helvetica', sans-serif;
-    background-color: #fff;
-    color: #333;
-    line-height: 1.2;
+html,
+body {
+    font-family: "Helvetica", Arial, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
     font-size: 14px;
+    line-height: 1.35;
 }
 
 .report {
     max-width: 800px;
     margin: auto;
-    background-color: #fff;
-    padding: 20px;
+    padding: 12px;
 }
 
-/** title bar **/
+/******************
+    header section
+*******************/
 
 header {
     display: flex;
-    flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
-    border-bottom: 3px solid #a3d4ab;
+    border-bottom: 3px solid var(--color-primary);
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+    height: 80px;
 }
 
 header h1 {
     margin: 0;
-    font-size: 24px;
-    color: #155724;
+    color: var(--color-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 28px;
+    margin: 0;
 }
 
-.logo img {
-    height: 5rem;
-    width: auto;
-}
-
-header .heading {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
 
 header p {
     margin: 0;
     padding: 0.05rem;
+    color: var(--color-text);
 }
 
-/*** headings ***/
+.logo {
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/******************
+  headings & text
+*******************/
 
 h1, h2, h3, h4 {
-    color: #0e3124;
-    text-align: left;
+    font-family: "Baskerville", "Garamond", serif;
 }
 
 h2 {
-    font-size: 20px;
-    border-bottom: 2px solid #a3d4ab;
-    padding-bottom: 10px;
-    margin-top: 30px;
+    border-bottom: 2px solid var(--color-accent-blue);
+    padding-bottom: 6px;
+    margin: 30px 0 15px;
 }
 
 h3 {
-    font-size: 16px;
-    font-weight: bold;
-    margin-top: 30px;
+    /* color: var(--color-strong); */
+    margin-bottom: 8px;
 }
 
 h4 {
-    font-size: 14px;
-    font-weight: bold;
-    margin-top: 15px;
+    margin: 5px 0;
 }
 
 h5 {
-    font-size: 12px;
     font-weight: bold;
-    margin-top: 15px;
-    text-align: center
+    margin-bottom: 6px;
+    text-align: center;
 }
 
-/* h3::after {
-    content: "";
-    display: block;
-    width: 100%;
-    max-width: 600px;
-    height: 2px;
-    background-color:  #a3d4ab;
-    margin: 8px auto 0;
-} */
+samp {
+    font-family: monospace;
+    font-weight: 600;
+    color: var(--color-accent-blue);
+}
 
-/*** table stuff ***/
+
+.intro p {
+    margin-bottom: 10px;
+}
+
+
+/***************
+     sections
+****************/
+
+section {
+    padding: 12px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    /*  break-inside: avoid; */
+}
+
+/* containers hold table and text (notes, about) but not the analysis blocks */
+
+.intro,
+.analysis,
+.container {
+    background: var(--color-light-grey);
+    padding: 12px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+/* can delete container since have... */
+
+.notes, .about {
+     break-inside: avoid;
+}
+
+/* analysis subsections layout */
+
+.analysis {
+    break-inside: avoid;
+}
+
+.analysis-content {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+}
+
+.analysis .text-block {
+    flex: 1 1 40%;
+}
+
+.analysis figure {
+    flex: 1 1 60%;
+    max-width: 400px;
+    margin: 0;
+}
+
+.analysis img {
+    width: 100%;
+    height: auto;
+}
+
+/*********************
+  images & figures
+ *********************/
+
+figure {
+    break-inside: avoid;
+}
+
+/* almost every figure is tagged .image and contains an img */
+
+.image img {
+    width: 100%;
+    height: auto;
+    max-height: 260px;
+    object-fit: contain;
+    display: block;
+}
+
+/* side-by-side images (detection images) */
+
+.image-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+.image-block {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+}
+
+/* detection and position plots */
+
+.benchmark-images {
+    text-align: center;
+}
+
+.benchmark-images figure {
+    margin: 20px auto;
+    max-width: 500px;
+    text-align: center;
+}
+
+.benchmark-images img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.position-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+
+.position-images figcaption {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 0.85rem;
+}
+
+/**************
+     tables
+ **************/
 
 .table-container {
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 5px;
+    margin-top: 10px;
+    break-inside: avoid;
 }
 
 .table {
     width: 100%;
-    table-layout: fixed;
     border-collapse: collapse;
-    margin-bottom: 20px;
-    page-break-inside: auto;
-    font-size: 12px;
-    margin-top: 20px;
-    overflow: hidden;
-    page-break-inside: auto;
-    border-collapse: collapse;
-    width: 100%;
+    break-inside: avoid;
+    font-size: 14px;
 }
 
 th {
-    background-color: #f2f2f2;
-    padding: 8px;
-    text-align: left;
-    border: 1px solid #ddd;
+    background: var(--color-light-blue);
+    padding: 4px;
+    border: 1px solid var(--color-mid-grey);
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 td {
-    padding: 8px;
-    border: 1px solid #ddd;
-    text-align: left;
-    word-wrap: break-word;
-    padding: 2px 5px;
-    font-size: 10px;
+    padding: 2px;
+    border: 1px solid var(--color-mid-grey);
 }
 
-tr, td, th {
-    page-break-inside: avoid;
-    font-size: 10px;
-}
-
-/**** problems list ****/
+/************
+    lists
+*************/
 
 .problems-list {
-    background-color: #f8d7da;
-    padding: 15px;
-    border-radius: 5px;
-    margin-top: 20px;
-}
-
-.problems-list p {
-    font-weight: bold;
-}
-
-.problems-list ul {
-    list-style-type: none;
-    padding-left: 20px;
+    background: var(--color-light-blue);
+    padding: 12px;
+    border-radius: var(--border-radius);
 }
 
 .problems-list li {
-    font-size: 12px;
-    margin-bottom: 10px;
-    color: #721c24;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    margin-bottom: 10px;
-}
-
-/*** sections ***/
-
-.summary, .figures, .more-info {
-    margin: 5px;
-    margin-bottom: -30px;
-    padding: 5px;
-}
-
-.intro, .analysis, .detection-rates {
-    padding: 0.5rem;
-    background: #f8f9fa;
-    border-radius: 2px;
-    margin-bottom: -20px;
-}
-
-.about {
-    text-align: center;
-    font-size: 0.8rem;
-    padding: 10px;
-}
-
-/*** images ***/
-
-.image {
-    page-break-inside: avoid;
-    margin-bottom: 2px;
-}
-
-figcaption {
-    font-style: italic;
-    color: #555;
-    font-size: 0.8rem;
-    text-align: center;
-    margin-top: -10px;
-    padding-top: 0;
-    display: block;
-}
-
-.image img {
-    width: 100%;
-    height: 280px;
-    object-fit: contain;
-    border-radius: 0px;
-    page-break-inside: avoid;
-    margin-bottom: 0px;
-}
-
-.position-images img {
-    height: 200px;
-    object-fit: contain;
-}
-
-.glovdh-image {
-    margin-right: 8rem;
-    margin-top: 2rem;
-    padding: 2rem;
-    padding-right: 4rem;
-}
-
-
-/* Testing */
-.figure-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: flex-start;
-}
-.figure-grid .image {
-    flex: 0 1 calc(50% - 20px); /* Two per row */
-    box-sizing: border-box;
+    margin-bottom: 12px;
+    line-height: 1.4;
 }
