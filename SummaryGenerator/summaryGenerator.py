@@ -199,9 +199,6 @@ class StationSummariser:
         )
 
 
-###############
-
-
 def parseFunc():
     """
     pass the program_parameters default config object into the defaults here

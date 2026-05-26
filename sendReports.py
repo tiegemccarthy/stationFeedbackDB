@@ -28,7 +28,7 @@ from pathlib import Path
 
 import yaml
 
-from config import email_conf, logger
+from config import email_conf, logger, stations_config_file
 
 
 def load_server_config():
@@ -115,15 +115,14 @@ def main():
 
     send_from, server, port, user, pw = load_server_config()
 
-    stations_config = os.path.dirname(__file__) + "/stations-reports.yaml"
     reports_dir = os.path.dirname(__file__) + "/reports"
 
-    with open(stations_config) as file:
+    with open(stations_config_file) as file:
         stations = yaml.safe_load(file)["stations"]
 
     # pull name and email
     for _, info in stations.items():
-        if "emails" in info:
+        if info.get("report") and info.get("emails"):
             # station name (long-form code)
             name = info["name"]
             # email text body:

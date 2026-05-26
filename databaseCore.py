@@ -3,13 +3,13 @@
 import argparse
 import os
 import MySQLdb as mariadb
-#from astropy.io import ascii
 
 from StationFeedbackUtils.utilities import stationParse
 from DatabaseGenerator import databaseReportDownloader, parseFiles
 from config import db_conf, logger, stations_config_file
 
 dirname = os.path.dirname(__file__)
+
 
 def parseFunc():
     # Argument parsing
@@ -30,27 +30,6 @@ def parseFunc():
     args = parser.parse_args()
     return args
 
-
-### NOTE
-# the function below uses the .config file but if we were to adapt that to .yaml like as with station-reports config
-# (we may also consider merging the two files entirely...)
-# then this function would be already found in utilities.py
-
-"""
-def stationParse(stations_config="stations.config"):
-    with open(stations_config) as file:
-        station_contents = file.read()
-    stationTable = ascii.read(station_contents, data_start=0, names=["2char", "full"])
-    if (
-        len(stationTable) == 1
-    ):  # important that when one station is present this function still presents it as a one element list for compatibility with the other functions.
-        stationNames = [stationTable[0][0]]
-        stationNamesLong = [stationTable[0][1]]
-    else:
-        stationNames = stationTable["2char"][:]
-        stationNamesLong = stationTable["full"][:]
-    return stationNames, stationNamesLong
-"""
 
 def main(master_schedule, db_name):
 

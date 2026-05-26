@@ -7,6 +7,7 @@ import argparse
 import os
 from datetime import datetime, timedelta
 from astropy.time import Time
+import yaml
 
 from config import logger, stations_config_file
 from SummaryGenerator import summaryGenerator
@@ -49,12 +50,22 @@ def parseFunc():
         """
     )
 
+    parser.add_argument(
+        "--station",
+        type=str,
+        default=None,
+        help="""This option allows one to specify as single station for which to generate a report.
+        This is opposed to the default behaviour of generating reports for all stations positively flagged in the configuration file.
+        The station must be specified using the full station code _e.g._ YARRA12M.
+        """
+    )
+
     args = parser.parse_args()
 
     return args
 
 
-def main(database_name, start_date=None, end_date=None, exp_regex=None):
+def main(database_name, start_date=None, end_date=None, exp_regex=None, specific_station=None):
     if not os.path.exists(dirname + "/reports"):
         os.makedirs(dirname + "/reports")
 
@@ -70,12 +81,37 @@ def main(database_name, start_date=None, end_date=None, exp_regex=None):
         end_date = Time(end_date, format="yday")
     logger.info(f"start date = {start_date}")
 
-    _, stationNamesLong = stationParse(
-        stations_config_file,
-        reports=True
-    )
+    if specific_station:
 
-    for station in stationNamesLong:
+        match = 0
+
+        with open(stations_config_file) as file:
+            stations = yaml.safe_load(file)["stations"]
+
+        for code, info in stations.items():
+            if len(specific_station) == 2:
+                if specific_station == code:
+                    specific_station = info["name"]
+                    match = 1
+                    break
+            if specific_station == info["name"]:
+                match = 1
+                break
+        if match == 0:
+            logger.error("Specified station name/code not configured for the database.")
+            return
+        else:
+            stations_list = [f"{specific_station}"]
+
+    else:
+        _, stationNamesLong = stationParse(
+            stations_config_file,
+            reports=True
+        )
+
+        stations_list = stationNamesLong
+
+    for station in stations_list:
 
         exps = ["legacy", "VGOS"]
 
@@ -100,71 +136,13 @@ def main(database_name, start_date=None, end_date=None, exp_regex=None):
                     end_date,
                     output_name,
                     f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "v%",
-                    0 if exp == "VGOS" else 1,
+                    1 if exp == "legacy" else 0,
                 )
             except Exception as e:
                 logger.warning(
                     f"Unable to generate {exp} performance report for {str(station)}.\nException: {e}."
                 )
 
-        """
-        print(exps)
-        sys.exit()
-
-        if exp_regex:
-            # specific exp type requested:
-            logger.info(f"exp_regex = {exp_regex}")
-
-            output_dir = (
-                dirname
-                + f"/reports/"
-                + station
-                + f"_{exp_regex}_"
-                + today_date.strftime("%Y%m%d")
-                + ".pdf"
-            )
-            try:
-                summaryGenerator.main(
-                    station,
-                    database_name,
-                    start_date,
-                    end_date,
-                    output_dir,
-                    exp_regex,
-                    0,
-                )
-            except Exception as e:
-                logger.warning(
-                    f"Unable to generate report for {str(station)}. Exception: {e}."
-                )
-        else:
-            for exp in ["legacy", "VGOS"]:
-
-                output_name = (
-                    dirname
-                    + "/reports/"
-                    + station
-                    + f"_{exp}_"
-                    + today_date.strftime("%Y%m%d")
-                    + ".pdf"
-                )
-                try:
-                    summaryGenerator.main(
-                        station,
-                        database_name,
-                        start_date,
-                        end_date,
-                        output_name,
-                        "v%",
-                        0 if exp == "VGOS" else 1,
-                    )
-                except Exception as e:
-                    logger.warning(
-                        f"Unable to generate {exp} performance report for {str(station)}.\nException: {e}."
-                    )
-
-            """
-
 if __name__ == "__main__":
     args = parseFunc()
-    main(args.sql_db_name, args.start_date, args.end_date, args.exp_regex)
+    main(args.sql_db_name, args.start_date, args.end_date, args.exp_regex, args.station)
