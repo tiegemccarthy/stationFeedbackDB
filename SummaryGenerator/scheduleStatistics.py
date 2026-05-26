@@ -3,9 +3,13 @@ import argparse
 import os
 import time
 from datetime import datetime
-
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import pytz
+import requests
+
+from config import logger
 
 #
 # Use the API from https://glovdh.ethz.ch/
@@ -18,11 +22,7 @@ import numpy as np
 # TODO
 #   - remove intensives
 #   - filter by VGOS
-import pandas as pd
-import pytz
-import requests
 
-from config import logger
 
 ################################
 

@@ -1,4 +1,3 @@
-from os import path
 import yaml             # pyyaml
 
 # debug
@@ -22,11 +21,6 @@ def stationParse(
 
     """
 
-    """
-    print("---DEBUG---")
-    print(f"stations config file: {stations_config}")
-    """
-
     with open(stations_config) as file:
         stations = yaml.safe_load(file)["stations"]
 
@@ -43,14 +37,5 @@ def stationParse(
 
         stationNames.append(str(code))
         stationNamesLong.append(str(info["name"]))
-
-    """
-    print("---DEBUG---")
-    print("stationNames")
-    print(json.dumps(stationNames, indent=4))
-
-    print("stationNamesLong")
-    print(json.dumps(stationNamesLong, indent=4))
-    """
 
     return stationNames, stationNamesLong

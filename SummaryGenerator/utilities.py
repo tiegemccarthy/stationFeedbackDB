@@ -3,19 +3,13 @@
 #############
 
 import base64
-import os
-
-# from astropy.io import ascii
 import re
 from datetime import datetime
 from io import BytesIO
 
-import yaml  # pyyaml
-
 ################
 # time formats #
 ################
-
 
 def datetime_to_fractional_year(date):
     print(f"in datetime_to_fraction, args: {date}")
@@ -61,31 +55,6 @@ def load_png(img_filename):
     with open(img_filename, "rb") as f:
         img_b64 = base64.b64encode(f.read()).decode("utf-8")
     return img_b64
-
-
-###################
-# config handling #
-###################
-
-"""
-def stationParse(
-    stations_config=os.path.dirname(__file__) + "/stations-reports.yaml",
-):
-
-    with open(stations_config) as file:
-        stations = yaml.safe_load(file)["stations"]
-
-    # initialise what we return
-    stationNames = []
-    stationNamesLong = []
-
-    # pull from the config
-    for code, info in stations.items():
-        stationNames.append(code)
-        stationNamesLong.append(info["name"])
-
-    return stationNames, stationNamesLong
-"""
 
 
 def problemExtract(table_input):

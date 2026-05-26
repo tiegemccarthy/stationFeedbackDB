@@ -17,15 +17,12 @@ stations:
     name: HOBART12
     report: true
     emails:
-      - lucia.mccullum@utas.edu.au
       - sullivan.lester@utas.edu.au
-      - tiegem@utas.edu.au
   "Yg":
     name: YARRA12M
     report: true
     emails:
       - sullivan.lester@utas.edu.au
-      - tiegem@utas.edu.au
   "Ke":
     name: KATH12M
     report: true
@@ -39,7 +36,6 @@ stations:
     name: NYALE13N
     report: true
     emails:
-      - sullivan.lester@utas.edu.au
   "Ns":
     name: NYALE13S
     report: true
@@ -48,18 +44,22 @@ stations:
   "Yj":
     name: RAEGYEB
     report: true
+    emails:
   "Sa":
     name: RAEGSMAR
     report: true
+    emails:
   "Is":
     name: ISHIOKA
     report: true
   "Ho":
      name: HOBART26
      report: false
+     emails:
   "Ys":
      name: YEBES40M
      report: false
+     emails:
   "Kk":
     name: KOKEE
   "Kv":
