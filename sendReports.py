@@ -11,21 +11,21 @@ It assumes, for now, that the reports have been successfully produced.
 
 We follow the design of old Perl scripts that use the postoffice.utas.edu.au SMTP server.
 
+The script attachs all reports that include the station code & either the current day's date
+or were modified in the last twenty-four hours.
+
 ### TODO
 # - check reports exist
 # - how to know what report type is to be sent... or just send all that are available.
-
 """
 
 import os
-
-# import re
 import smtplib
 import ssl
 import sys
 from email.message import EmailMessage
 from pathlib import Path
-
+from datetime import datetime, timedelta
 import yaml
 
 from config import email_conf, logger, stations_config_file
@@ -129,12 +129,20 @@ def main():
             body = f"""
             Please find attached the station reports for {name}.
             """
-            # attach reports:
+
+            date_str = datetime.now().strftime("%Y%m%d")
+
+            # attach reports that either include todays date or were touched in the last 24 hours
             attachments = [
                 os.path.join(reports_dir, f)
                 for f in os.listdir(reports_dir)
-                if f.startswith(name) and f.endswith(".pdf")
+                if f.startswith(name) and f.endswith(".pdf") and (
+                    date_str in f or
+                    datetime.fromtimestamp(os.path.getmtime(os.path.join(reports_dir, f))) >= datetime.now() - timedelta(hours=24)
+                )
             ]
+
+
             if attachments:
                 # split `emails` list into reciepent and cc list
                 send_to = info["emails"][0]
