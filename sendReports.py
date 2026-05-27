@@ -137,11 +137,11 @@ def main():
                 os.path.join(reports_dir, f)
                 for f in os.listdir(reports_dir)
                 if f.startswith(name) and f.endswith(".pdf") and (
-                    date_str in f or
-                    datetime.fromtimestamp(os.path.getmtime(os.path.join(reports_dir, f))) >= datetime.now() - timedelta(hours=24)
+                    date_str in f
+                    # or datetime.fromtimestamp(os.path.getmtime(os.path.join(reports_dir, f))) >= datetime.now() - timedelta(hours=24)
+                    # uncomment the above if sendReports not run on same day as report generation.
                 )
             ]
-
 
             if attachments:
                 # split `emails` list into reciepent and cc list
