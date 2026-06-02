@@ -25,7 +25,7 @@ import ssl
 import sys
 from email.message import EmailMessage
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 import yaml
 
 from config import email_conf, logger, stations_config_file
