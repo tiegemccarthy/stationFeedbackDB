@@ -1,5 +1,7 @@
 # Functions related to generating various plots in the station report
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Column

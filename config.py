@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 # log format: "timestamp-log_level: file-line_number: message".
 fmt = logging.Formatter(
-    "%(asctime)s-%(levelname)s: %(filename)s-%(lineno)d: %(message)s", "%Y.%j.%H:%M:%S"
+    "%(asctime)s-%(levelname)s %(filename)s-%(lineno)d [%(threadName)s]: %(message)s", "%Y.%j.%H:%M:%S"
 )
 
 # logs just go to stdout for the moment

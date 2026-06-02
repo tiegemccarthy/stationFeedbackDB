@@ -8,13 +8,18 @@ import os
 from datetime import datetime, timedelta
 from astropy.time import Time
 import yaml
-
+from typing import Optional, Union
 from config import logger, stations_config_file
 from SummaryGenerator import summaryGenerator
 from StationFeedbackUtils.utilities import stationParse
+from concurrent.futures import ThreadPoolExecutor
+
+### FIXME
+# the conflated use datetime or strings is v. confusing when it comes to types...
+
+
 
 dirname = os.path.dirname(__file__)
-
 
 def parseFunc():
     parser = argparse.ArgumentParser(
@@ -64,8 +69,47 @@ def parseFunc():
 
     return args
 
+def generate_station_summary(
+    station: str,
+    exp: str,
+    exp_regex: Optional[str],
+    database_name: str,
+    today_date: datetime,
+    start_date: Union[str, datetime],
+    end_date: Union[str, datetime],
+):
+        output_name = (
+            dirname
+            + "/reports/"
+            + station
+            + f"_{exp}_"
+            + today_date.strftime("%Y%m%d")
+            + ".pdf"
+        )
+        try:
+            summaryGenerator.main(
+                station,
+                database_name,
+                start_date,
+                end_date,
+                output_name,
+                f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "v%",
+                1 if exp == "legacy" else 0,
+            )
+        except Exception as e:
+            logger.warning(
+                f"Unable to generate {exp} performance report for {str(station)}.\nException: {e}."
+            )
 
-def main(database_name, start_date=None, end_date=None, exp_regex=None, specific_station=None):
+
+def main(
+    database_name: str,
+    start_date: Optional[Union[str, datetime]] = None,
+    end_date: Optional[Union[str, datetime]] = None,
+    exp_regex: Optional[str] = None,
+    specific_station: Optional[str] = None
+):
+
     if not os.path.exists(dirname + "/reports"):
         os.makedirs(dirname + "/reports")
 
@@ -119,29 +163,10 @@ def main(database_name, start_date=None, end_date=None, exp_regex=None, specific
             exps.append(f"{exp_regex}")
 
         for exp in exps:
+            generate_station_summary(station, exp, exp_regex, database_name, today_date, start_date, end_date)
 
-            output_name = (
-                dirname
-                + "/reports/"
-                + station
-                + f"_{exp}_"
-                + today_date.strftime("%Y%m%d")
-                + ".pdf"
-            )
-            try:
-                summaryGenerator.main(
-                    station,
-                    database_name,
-                    start_date,
-                    end_date,
-                    output_name,
-                    f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "v%",
-                    1 if exp == "legacy" else 0,
-                )
-            except Exception as e:
-                logger.warning(
-                    f"Unable to generate {exp} performance report for {str(station)}.\nException: {e}."
-                )
+
+
 
 if __name__ == "__main__":
     args = parseFunc()

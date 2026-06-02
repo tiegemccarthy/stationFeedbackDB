@@ -5,7 +5,7 @@ import os
 import re
 import tarfile
 from ftplib import FTP_TLS
-
+from concurrent.futures import ThreadPoolExecutor
 import MySQLdb as mariadb
 #from astropy.io import ascii
 
@@ -145,158 +145,64 @@ def corrReportDL(exp_id, vgos_tag):
             return
 
 
-def main(master_schedule, db_name):
-    stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
-    schedule = str(master_schedule)
-    ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
-    ftps.login(user="anonymous", passwd="")
-    ftps.prot_p()
-    master_sched_filename = os.path.join(dirname, schedule)
-    mf = open(master_sched_filename, "wb")
-    ftps.sendcmd("TYPE I")
-    ftps.retrbinary("RETR /pub/vlbi/ivscontrol/" + schedule, mf.write)
-    mf.close()
-    # determine year of schedule - different depending on master schedule version...
-    if len(schedule) == 12:  # this is for v1
-        year = "20" + schedule[6:8]
-    else:  # this is for v2
-        year = schedule[6:10]
-    valid_experiment = validExpFinder(os.path.join(dirname, schedule), stationNames)
-    existing_experiments = checkExistingData(str(db_name), stationNamesLong)
-    if existing_experiments == None:
-        experiments_to_download = valid_experiment
+def download_experiment_data(
+    exp: str,
+    year: str,
+):
+    if os.path.isfile(dirname + "/analysis_reports/" + exp.lower() + "_report.txt"):
+        logger.info(
+            "Analysis report already exists for "
+            + exp.lower()
+            + ", skipping file downloads."
+        )
+        return
     else:
-        experiments_to_download = [
-            x for x in valid_experiment if x not in existing_experiments
-        ]
-    for exp in experiments_to_download:
-        if os.path.isfile(dirname + "/analysis_reports/" + exp.lower() + "_report.txt"):
-            logger.info(
-                "Analysis report already exists for "
-                + exp.lower()
-                + ", skipping file downloads."
+        exp = exp.lower()
+        logger.info("Beginning file downloads for experiment " + exp + ".")
+        ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
+        ftps.login(user="anonymous", passwd="")
+        ftps.prot_p()
+        # Download SKED file
+        try:
+            filename_skd = []
+            ftps.retrlines(
+                "LIST /pub/vlbi/ivsdata/aux/"
+                + str(year)
+                + "/"
+                + exp
+                + "/"
+                + exp
+                + ".skd",
+                filename_skd.append,
             )
-            continue
-        else:
-            exp = exp.lower()
-            logger.info("Beginning file downloads for experiment " + exp + ".")
-            ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
-            ftps.login(user="anonymous", passwd="")
-            ftps.prot_p()
-            # Download SKED file
-            try:
-                filename_skd = []
-                ftps.retrlines(
-                    "LIST /pub/vlbi/ivsdata/aux/"
+            if len(filename_skd) > 0:
+                local_filename_skd = os.path.join(
+                    dirname, "skd_files/" + exp + ".skd"
+                )
+                ftps.sendcmd("TYPE I")
+                lf3 = open(local_filename_skd, "wb")
+                ftps.retrbinary(
+                    "RETR /pub/vlbi/ivsdata/aux/"
                     + str(year)
                     + "/"
                     + exp
                     + "/"
                     + exp
                     + ".skd",
-                    filename_skd.append,
+                    lf3.write,
                 )
-                if len(filename_skd) > 0:
-                    local_filename_skd = os.path.join(
-                        dirname, "skd_files/" + exp + ".skd"
-                    )
-                    ftps.sendcmd("TYPE I")
-                    lf3 = open(local_filename_skd, "wb")
-                    ftps.retrbinary(
-                        "RETR /pub/vlbi/ivsdata/aux/"
-                        + str(year)
-                        + "/"
-                        + exp
-                        + "/"
-                        + exp
-                        + ".skd",
-                        lf3.write,
-                    )
-                    lf3.close()
-            except Exception as e:
-                logger.warning(
-                    "No SKED file found for " + exp + f". Exception occurred: {e}"
-                )
+                lf3.close()
+        except Exception as e:
+            logger.warning(
+                "No SKED file found for " + exp + f". Exception occurred: {e}"
+            )
 
-            # Spelling options need to be here because analysis report names are unfortunately not standardised - sometimes they are even different within the same experiment (e.g. 'ivs' and 'IVS')
-            # Now time to download analysis report
-            options = ["ivs", "IVS", "usno", "USNO", "NASA"]
-            for spelling in options:
-                filename_report = []
-                try:
-                    ftps.retrlines(
-                        "LIST /pub/vlbi/ivsdata/aux/"
-                        + str(year)
-                        + "/"
-                        + exp
-                        + "/"
-                        + exp
-                        + "-"
-                        + spelling
-                        + "-analysis-report*",
-                        filename_report.append,
-                    )
-                    if len(filename_report) > 0:
-                        local_filename_report = os.path.join(
-                            dirname, "analysis_reports/" + exp + "_report.txt"
-                        )
-                        ftps.sendcmd("TYPE I")
-                        lf1 = open(local_filename_report, "wb")
-                        ftps.retrbinary(
-                            "RETR /pub/vlbi/ivsdata/aux/"
-                            + str(year)
-                            + "/"
-                            + exp
-                            + "/"
-                            + filename_report[len(filename_report) - 1].split()[8],
-                            lf1.write,
-                        )
-                        lf1.close()
-                        logger.info(
-                            "Analysis report downloaded for experiment " + exp + "."
-                        )
-                        break
-                except Exception:
-                    pass
-            # Download spool file
-            for spelling in options:
-                filename_spool = []
-                try:
-                    ftps.retrlines(
-                        "LIST /pub/vlbi/ivsdata/aux/"
-                        + str(year)
-                        + "/"
-                        + exp
-                        + "/"
-                        + exp
-                        + "-"
-                        + spelling
-                        + "-analysis-spoolfile*",
-                        filename_spool.append,
-                    )
-                    if len(filename_spool) > 0:
-                        local_filename_spool = os.path.join(
-                            dirname, "analysis_reports/" + exp + "_spoolfile.txt"
-                        )
-                        ftps.sendcmd("TYPE I")
-                        lf2 = open(local_filename_spool, "wb")
-                        ftps.retrbinary(
-                            "RETR /pub/vlbi/ivsdata/aux/"
-                            + str(year)
-                            + "/"
-                            + exp
-                            + "/"
-                            + filename_spool[len(filename_report) - 1].split()[8],
-                            lf2.write,
-                        )
-                        lf2.close()
-                        logger.info("Spoolfile downloaded for experiment " + exp + ".")
-                        break
-                except Exception:
-                    pass
-            # Download old style analysis report if it exists.
+        # Spelling options need to be here because analysis report names are unfortunately not standardised - sometimes they are even different within the same experiment (e.g. 'ivs' and 'IVS')
+        # Now time to download analysis report
+        options = ["ivs", "IVS", "usno", "USNO", "NASA"]
+        for spelling in options:
+            filename_report = []
             try:
-                filename_report_old = []
                 ftps.retrlines(
                     "LIST /pub/vlbi/ivsdata/aux/"
                     + str(year)
@@ -304,10 +210,12 @@ def main(master_schedule, db_name):
                     + exp
                     + "/"
                     + exp
-                    + "-analyst.txt",
-                    filename_report_old.append,
+                    + "-"
+                    + spelling
+                    + "-analysis-report*",
+                    filename_report.append,
                 )
-                if len(filename_report_old) > 0:
+                if len(filename_report) > 0:
                     local_filename_report = os.path.join(
                         dirname, "analysis_reports/" + exp + "_report.txt"
                     )
@@ -319,14 +227,133 @@ def main(master_schedule, db_name):
                         + "/"
                         + exp
                         + "/"
-                        + exp
-                        + "-analyst.txt",
+                        + filename_report[len(filename_report) - 1].split()[8],
                         lf1.write,
                     )
                     lf1.close()
+                    logger.info(
+                        "Analysis report downloaded for experiment " + exp + "."
+                    )
+                    break
             except Exception as e:
-                logger.warning(f"Passing exception: {e}")
+                logger.warning(f"Failed to FTP: {e}")
                 pass
+        # Download spool file
+        for spelling in options:
+            filename_spool = []
+            try:
+                ftps.retrlines(
+                    "LIST /pub/vlbi/ivsdata/aux/"
+                    + str(year)
+                    + "/"
+                    + exp
+                    + "/"
+                    + exp
+                    + "-"
+                    + spelling
+                    + "-analysis-spoolfile*",
+                    filename_spool.append,
+                )
+                if len(filename_spool) > 0:
+                    local_filename_spool = os.path.join(
+                        dirname, "analysis_reports/" + exp + "_spoolfile.txt"
+                    )
+                    ftps.sendcmd("TYPE I")
+                    lf2 = open(local_filename_spool, "wb")
+                    ftps.retrbinary(
+                        "RETR /pub/vlbi/ivsdata/aux/"
+                        + str(year)
+                        + "/"
+                        + exp
+                        + "/"
+                        + filename_spool[len(filename_report) - 1].split()[8],
+                        lf2.write,
+                    )
+                    lf2.close()
+                    logger.info("Spoolfile downloaded for experiment " + exp + ".")
+                    break
+            except Exception as e:
+                logger.warning(f"Exception occured while parsing spool file: {e}")
+                pass
+        # Download old style analysis report if it exists.
+        try:
+            filename_report_old = []
+            ftps.retrlines(
+                "LIST /pub/vlbi/ivsdata/aux/"
+                + str(year)
+                + "/"
+                + exp
+                + "/"
+                + exp
+                + "-analyst.txt",
+                filename_report_old.append,
+            )
+            if len(filename_report_old) > 0:
+                local_filename_report = os.path.join(
+                    dirname, "analysis_reports/" + exp + "_report.txt"
+                )
+                ftps.sendcmd("TYPE I")
+                lf1 = open(local_filename_report, "wb")
+                ftps.retrbinary(
+                    "RETR /pub/vlbi/ivsdata/aux/"
+                    + str(year)
+                    + "/"
+                    + exp
+                    + "/"
+                    + exp
+                    + "-analyst.txt",
+                    lf1.write,
+                )
+                lf1.close()
+        except Exception as e:
+            logger.warning(f"Passing exception: {e}")
+            pass
+
+
+def main(
+    master_schedule: str,
+    db_name: str
+):
+    # determines number of threads to handle `download_experiment_data()`
+    worker_thread_count = 4
+
+    stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
+    schedule = str(master_schedule)
+    ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
+    ftps.login(user="anonymous", passwd="")
+    ftps.prot_p()
+    master_sched_filename = os.path.join(dirname, schedule)
+    mf = open(master_sched_filename, "wb")
+    ftps.sendcmd("TYPE I")
+    ftps.retrbinary("RETR /pub/vlbi/ivscontrol/" + schedule, mf.write)
+    mf.close()
+
+    # determine year of schedule - different depending on master schedule version...
+    if len(schedule) == 12:  # this is for v1
+        year = "20" + schedule[6:8]
+    else:  # this is for v2
+        year = schedule[6:10]
+
+    valid_experiment = validExpFinder(os.path.join(dirname, schedule), stationNames)
+    existing_experiments = checkExistingData(str(db_name), stationNamesLong)
+
+    if existing_experiments is None:
+        experiments_to_download = valid_experiment
+    else:
+        experiments_to_download = [
+            x for x in valid_experiment if x not in existing_experiments
+        ]
+
+    #### TODO
+    # similiar to databaseCore this can be parrallelised...
+    #for exp in experiments_to_download:
+    #    download_experiment_data(exp, year)
+    # becomes
+    def download_exp_cl(exp):
+        download_experiment_data(exp, year)
+
+    with ThreadPoolExecutor(max_workers=worker_thread_count) as executor:
+         executor.map(download_exp_cl, experiments_to_download)
 
 
 if __name__ == "__main__":

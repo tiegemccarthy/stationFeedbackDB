@@ -98,6 +98,7 @@ def create_report(summary, output_path):
 
     html_content = template.render(context)
 
+    # hang on, this isn't the filename...
     filename = f"{summary.station}_summary_report.pdf"
 
     if save_html:

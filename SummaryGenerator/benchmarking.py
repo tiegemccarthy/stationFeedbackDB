@@ -1,5 +1,7 @@
 # Functions related to generating the 'benchmarking' figures included in the station report
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 

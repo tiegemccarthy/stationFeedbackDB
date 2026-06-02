@@ -3,7 +3,7 @@
 import argparse
 import os
 import MySQLdb as mariadb
-
+from concurrent.futures import ThreadPoolExecutor
 from StationFeedbackUtils.utilities import stationParse
 from DatabaseGenerator import databaseReportDownloader, parseFiles
 from config import db_conf, logger, stations_config_file
@@ -31,7 +31,89 @@ def parseFunc():
     return args
 
 
+def add_exp_to_db(
+    exp: str,
+    db_name: str,
+):
+    exp = exp.lower()
+    if os.path.isfile(dirname + "/analysis_reports/" + exp + "_report.txt"):
+        try:
+            with open(dirname + "/analysis_reports/" + exp + "_report.txt") as file:
+                meta_data = parseFiles.metaData(file.read(), exp)
+            vgosDB = meta_data[4]
+            databaseReportDownloader.corrReportDL(exp, vgosDB)
+
+            station_data = parseFiles.main(exp)
+
+            ### FIXME: need to look into why there's no data!
+            if not station_data:
+                logger.warning(f"No data available for: {exp}.")
+                return
+
+            # add station data to SQL database
+            for i in range(0, len(station_data)):
+                station = station_data[i]
+
+                ### DEBUG
+                logger.debug(f"Station = {station}")
+
+                logger.info(
+                    "Adding data for station "
+                    + station.name
+                    + " for session "
+                    + exp
+                    + " to database..."
+                )
+                sql_station = """INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N,
+                    W_RMS_del, session_fit, Analyser, vgosDB_tag, Manual_Pcal, Dropped_Chans, Total_Obs, Detect_Rate_X, Detect_Rate_S, Note_Bool, Notes, VGOS_Bool)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""".format(
+                    station_data[i].name
+                )
+                data = [
+                    station.exp_id,
+                    station.performance,
+                    station.perf_uvr,
+                    station.date,
+                    station.date_mjd,
+                    station.posx,
+                    station.posy,
+                    station.posz,
+                    station.posu,
+                    station.pose,
+                    station.posn,
+                    station.wrms_del,
+                    station.sess_fit,
+                    station.analyser,
+                    station.vgosdb,
+                    station.man_pcal,
+                    station.dropped_chans,
+                    station.total_obs,
+                    station.detect_rate_x,
+                    station.detect_rate_s,
+                    station.note_bool,
+                    station.notes,
+                    station.vgos_bool,
+                ]
+                conn = mariadb.connect(
+                    user=db_conf["user"], passwd=db_conf["passwd"], db=str(db_name)
+                )
+                cursor = conn.cursor()
+                cursor.execute(sql_station, data)
+                conn.commit()
+                conn.close()
+        except Exception as e:
+            logger.error(
+                "Error processing analysis report for session "
+                + exp
+                + f". Exception occurred: {e}"
+            )
+            pass
+
+
 def main(master_schedule, db_name):
+
+    # for the concurrent implementation of adding exps to the db
+    worker_thread_count = 8
 
     # Get stations to process into the database
     stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
@@ -43,6 +125,8 @@ def main(master_schedule, db_name):
         os.makedirs(dirname + "/corr_files")
     if not os.path.exists(dirname + "/skd_files"):
         os.makedirs(dirname + "/skd_files")
+
+    ### TODO: `Path` package replaces `os` for the above type things...
 
     # Create mariaDB if it doesn't exist
     master_schedule = str(master_schedule)
@@ -83,73 +167,19 @@ def main(master_schedule, db_name):
         x for x in valid_experiments if x.lower() not in existing_experiments
     ]
     logger.info("Experiments to add to database: " + str(experiments_to_add))
-    for exp in experiments_to_add:
-        exp = exp.lower()
-        if os.path.isfile(dirname + "/analysis_reports/" + exp + "_report.txt"):
-            try:
-                with open(dirname + "/analysis_reports/" + exp + "_report.txt") as file:
-                    meta_data = parseFiles.metaData(file.read(), exp)
-                vgosDB = meta_data[4]
-                databaseReportDownloader.corrReportDL(exp, vgosDB)
-                station_data = parseFiles.main(exp)
-                # add station data to SQL database
-                for i in range(0, len(station_data)):
-                    station = station_data[i]
 
-                    ### DEBUG
-                    logger.debug(f"Station = {station}")
+    ### TODO
+    # at this stage we have a list of independent experiments to get data for and add to the data base
+    # there is no need for this to be sequential...
+    # so replace:
+    #for exp in experiments_to_add:
+    #   add_exp_to_db(exp, db_name)
+    # with:
+    def add_exp_to_db_closure(exp):
+        add_exp_to_db(exp, db_name)
 
-                    logger.info(
-                        "Adding data for station "
-                        + station.name
-                        + " for session "
-                        + exp
-                        + " to database..."
-                    )
-                    sql_station = """INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N,
-                        W_RMS_del, session_fit, Analyser, vgosDB_tag, Manual_Pcal, Dropped_Chans, Total_Obs, Detect_Rate_X, Detect_Rate_S, Note_Bool, Notes, VGOS_Bool)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""".format(
-                        station_data[i].name
-                    )
-                    data = [
-                        station.exp_id,
-                        station.performance,
-                        station.perf_uvr,
-                        station.date,
-                        station.date_mjd,
-                        station.posx,
-                        station.posy,
-                        station.posz,
-                        station.posu,
-                        station.pose,
-                        station.posn,
-                        station.wrms_del,
-                        station.sess_fit,
-                        station.analyser,
-                        station.vgosdb,
-                        station.man_pcal,
-                        station.dropped_chans,
-                        station.total_obs,
-                        station.detect_rate_x,
-                        station.detect_rate_s,
-                        station.note_bool,
-                        station.notes,
-                        station.vgos_bool,
-                    ]
-                    conn = mariadb.connect(
-                        user=db_conf["user"], passwd=db_conf["passwd"], db=str(db_name)
-                    )
-                    cursor = conn.cursor()
-                    cursor.execute(sql_station, data)
-                    conn.commit()
-                    conn.close()
-            except Exception as e:
-                logger.error(
-                    "Error processing analysis report for session "
-                    + exp
-                    + f". Exception occurred: {e}"
-                )
-                pass
+    with ThreadPoolExecutor(max_workers=worker_thread_count) as executor:
+         executor.map(add_exp_to_db_closure, experiments_to_add)
 
 
 if __name__ == "__main__":

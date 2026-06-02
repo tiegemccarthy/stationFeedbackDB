@@ -6,18 +6,18 @@ import re
 import sys
 import warnings
 from datetime import datetime
-
+from typing import List, Optional
 import numpy as np
 from astropy.io import ascii
 from astropy.table import vstack
-
-
-# from astropy.table import Table
 from astropy.time import Time
-
 from StationFeedbackUtils.utilities import stationParse
+from config import stations_config_file, logger
 
-from config import stations_config_file
+
+### TODO
+# - lots of "possibly unbound" issues and a couple of type mis-matches to fix up.
+#
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -354,7 +354,8 @@ def corrMeta(contents):
 
 
 # Set up a class to contain the data values for each station
-class stationData(object):
+class StationData(object):
+
     def __init__(self, name, exp_id):
         # extracted from analysis/spool
         self.name = name
@@ -384,7 +385,10 @@ class stationData(object):
         self.vgos_bool = []
 
 
-def main(exp_code):
+def main(
+    exp_code: str,
+) -> Optional[List[StationData]] :
+
     stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
     # setup strings for files
     file_analysis = dirname + "/analysis_reports/" + str(exp_code) + "_report.txt"
@@ -406,7 +410,7 @@ def main(exp_code):
             sections[2], stationNamesLong
         )
     else:
-        print("No analysis file available.")
+        logger.info("No analysis file available.")
         return
 
     # Read in spool file
@@ -416,7 +420,7 @@ def main(exp_code):
         position = stationPositions(contents_spool, stationNamesLong)
         delays = delayRMS(contents_spool, stationNamesLong)
     else:
-        print("No spool file available.")
+        logger.info("No spool file available.")
 
     # Read in corr file
     start_date = None
@@ -530,7 +534,7 @@ def main(exp_code):
             or position[i][0] not in invalid_data_flags
             or delays[i] not in invalid_data_flags
         ):
-            station = stationData(stationNamesLong[i], exp_code)
+            station = StationData(stationNamesLong[i], exp_code)
             station.date = meta[2]
             station.date_mjd = meta[3]
             station.vgosdb = meta[4]
