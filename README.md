@@ -44,6 +44,31 @@ sudo mariadb-secure-installation
 ```
 This involves creating a password for the root mariadb user, and accepting the default selections otherwise.
 
+Install git:
+```
+sudo apt install git
+```
+Within whichever desired directory, get the repository code by running:
+```
+git clone https://github.com/tiegemccarthy/stationFeedbackDB.git
+```
+
+The process of installing the virtual python3 environment depends on the chosen approach, I've been using `uv` of late, which is not available in `apt` by default but may be easily installed (_c.f._ `docs.astral.sh/uv`). The following steps use `uv` and assume you've already installed it.
+
+```
+cd stationFeedbackDB
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+The penultimate step is configuration of the environment. The required keys are found in `.env.example` file provided for your convienence.
+```
+cp .env.example .env
+```
+Then add appropriate values to `.env`.
+
+Finally, run `databaseCore.py` to initialise the first stage of the system. See the next section below for further information. 
 
 ### Pipeline
 
