@@ -27,7 +27,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from datetime import datetime
 import yaml
-
+from typing import List
 from config import email_conf, logger, stations_config_file
 
 
@@ -46,16 +46,16 @@ def load_server_config():
 
 
 def send_email(
-    send_to,
-    cc_list,
-    attachments,
-    subject,
-    body,
-    send_from,
-    smtp_server,
-    smtp_port,
-    tls_user,
-    tls_passwd,
+    send_to: str,
+    cc_list: List[str],
+    attachments: List[str],
+    subject: str,
+    body: str,
+    send_from: str,
+    smtp_server: str,
+    smtp_port: int,
+    tls_user: str,
+    tls_passwd: str,
 ):
     """
     Construct and send an email.

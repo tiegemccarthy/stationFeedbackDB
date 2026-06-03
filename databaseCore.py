@@ -10,6 +10,10 @@ from config import db_conf, logger, stations_config_file
 
 dirname = os.path.dirname(__file__)
 
+"""
+TODO
+- should use Path package rather than os.path.
+"""
 
 def parseFunc():
     # Argument parsing
@@ -54,16 +58,14 @@ def add_exp_to_db(
             for i in range(0, len(station_data)):
                 station = station_data[i]
 
-                ### DEBUG
-                logger.debug(f"Station = {station}")
-
                 logger.info(
                     "Adding data for station "
                     + station.name
                     + " for session "
                     + exp
-                    + " to database..."
+                    + " to database."
                 )
+
                 sql_station = """INSERT IGNORE INTO {} (ExpID, Performance, Performance_UsedVsRecov, Date, Date_MJD, Pos_X, Pos_Y, Pos_Z, Pos_U, Pos_E, Pos_N,
                     W_RMS_del, session_fit, Analyser, vgosDB_tag, Manual_Pcal, Dropped_Chans, Total_Obs, Detect_Rate_X, Detect_Rate_S, Note_Bool, Notes, VGOS_Bool)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""".format(
@@ -102,15 +104,14 @@ def add_exp_to_db(
                 conn.commit()
                 conn.close()
         except Exception as e:
-            logger.error(
-                "Error processing analysis report for session "
-                + exp
-                + f". Exception occurred: {e}"
-            )
+            logger.error(f"While processing the stations for this experiment {exp} an exception occurred: {e}. Moving on.")
             pass
 
 
-def main(master_schedule, db_name):
+def main(
+    master_schedule: str,
+    db_name: str
+):
 
     # for the concurrent implementation of adding exps to the db
     worker_thread_count = 8
@@ -126,25 +127,25 @@ def main(master_schedule, db_name):
     if not os.path.exists(dirname + "/skd_files"):
         os.makedirs(dirname + "/skd_files")
 
-    ### TODO: `Path` package replaces `os` for the above type things...
-
     # Create mariaDB if it doesn't exist
     master_schedule = str(master_schedule)
     db_name = str(db_name)
 
-    # Load dummy/default user details from configuration file
-    # with open(dirname + "/server-config.yaml") as file:
-    #    db_info = yaml.safe_load(file)["database"]
-
+    # try
     conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["passwd"])
     cursor = conn.cursor()
     query = "CREATE DATABASE IF NOT EXISTS " + db_name + ";"
     cursor.execute(query)
     conn.commit()
+    logger.info(f"Database {db_name} exists. Access details: {db_conf['user']}, {db_conf['passwd']}.")
+
+    # try
     query = "USE " + db_name
     cursor.execute(query)
     conn.commit()
+
     for ant in stationNamesLong:
+        logger.info(f"Checking/generating table for antenna {ant}.")
         query_content = """ (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, Performance decimal(4,3) NOT NULL, Performance_UsedVsRecov decimal(4,3), Date DATETIME , Date_MJD decimal(9,2), Pos_X decimal(14,2), Pos_Y decimal(14,2),
             Pos_Z decimal(14,2), Pos_U decimal(14,2), Pos_E decimal(14,2), Pos_N decimal(14,2), W_RMS_del decimal(5,2), session_fit decimal(5,2), Total_Obs decimal(9,2),Detect_Rate_X decimal(5,3), Detect_Rate_S decimal(5,3), Manual_Pcal BIT(1),
             Dropped_Chans VARCHAR(1500), Note_Bool BIT(1), Notes VARCHAR(500), Analyser VARCHAR(10) NOT NULL, vgosDB_tag VARCHAR(18), VGOS_Bool BIT(1));"""
@@ -152,6 +153,8 @@ def main(master_schedule, db_name):
         cursor.execute(query)
         conn.commit()
     conn.close()
+
+    logger.info(f"Downloading files found in {master_schedule} for data not in {db_name}.")
     # Download any SKD/Analysis/Spool/Corr files that are in the master schedule but not yet in the database.
     databaseReportDownloader.main(
         master_schedule, db_name
@@ -168,7 +171,6 @@ def main(master_schedule, db_name):
     ]
     logger.info("Experiments to add to database: " + str(experiments_to_add))
 
-    ### TODO
     # at this stage we have a list of independent experiments to get data for and add to the data base
     # there is no need for this to be sequential...
     # so replace:

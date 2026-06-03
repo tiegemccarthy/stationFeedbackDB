@@ -2,14 +2,10 @@ import asyncio
 import os
 from dataclasses import asdict
 from datetime import datetime
-
 import django
 from django.conf import settings
 from django.template import Context, Template
-
-# import base64
 from pyppeteer import launch
-
 from config import logger
 from SummaryGenerator.utilities import load_png
 

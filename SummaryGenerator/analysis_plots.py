@@ -5,13 +5,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Column
-
-# from astropy.table import Table, vstack
 from astropy.time import Time
-
 from config import logger
-
-# from pprint import pprint
 from SummaryGenerator.utilities import save_plt
 
 
@@ -28,7 +23,7 @@ def wRmsAnalysis(table_input):
 
     # Determine the median W.RMS delay
     wrms_med_str = str(np.median(table["W_RMS_del"]))
-    print(wrms_med_str)
+    logger.info(wrms_med_str)
 
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))
@@ -214,7 +209,7 @@ def detectRate(table_input, band):
 
     # Determine the median detection rate
     rate_str = str(round(np.median(table[col_name]) * 100, 1)) + "%"
-    print(band, rate_str)
+    logger.info(band, rate_str)
 
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))

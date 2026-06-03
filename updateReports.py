@@ -12,12 +12,9 @@ from typing import Optional, Union
 from config import logger, stations_config_file
 from SummaryGenerator import summaryGenerator
 from StationFeedbackUtils.utilities import stationParse
-from concurrent.futures import ThreadPoolExecutor
 
 ### FIXME
 # the conflated use datetime or strings is v. confusing when it comes to types...
-
-
 
 dirname = os.path.dirname(__file__)
 
@@ -69,6 +66,7 @@ def parseFunc():
 
     return args
 
+
 def generate_station_summary(
     station: str,
     exp: str,
@@ -87,6 +85,7 @@ def generate_station_summary(
             + ".pdf"
         )
         try:
+            logger.info(f"Generating report for {exp}. Saving to {output_name}.")
             summaryGenerator.main(
                 station,
                 database_name,
@@ -113,17 +112,20 @@ def main(
     if not os.path.exists(dirname + "/reports"):
         os.makedirs(dirname + "/reports")
 
-    # sort out date range...
     today_date = datetime.now()
+
+    # we get a string as input, maybe
+    # and if not create a datetime object. Which we now just force into a string.
+
     if start_date is None or end_date is None:
-        end_date = Time(today_date).to_value("yday", subfmt="date")
-        start_date = (Time(today_date) - timedelta(days=180)).to_value(
+        end_date = str(Time(today_date).to_value("yday", subfmt="date"))
+        start_date = str((Time(today_date) - timedelta(days=180)).to_value(
             "yday", subfmt="date"
-        )
+        ))
     else:
-        start_date = Time(start_date, format="yday")
-        end_date = Time(end_date, format="yday")
-    logger.info(f"start date = {start_date}")
+        start_date = str(Time(start_date, format="yday"))
+        end_date = str(Time(end_date, format="yday"))
+    logger.info(f"Report time range: start date = {start_date}, end_date = {end_date}.")
 
     if specific_station:
 
@@ -164,8 +166,6 @@ def main(
 
         for exp in exps:
             generate_station_summary(station, exp, exp_regex, database_name, today_date, start_date, end_date)
-
-
 
 
 if __name__ == "__main__":

@@ -4,14 +4,12 @@ import argparse
 import os
 import sys
 import warnings
-
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas
 import wget
-
 from config import logger
 
 if not sys.warnoptions:

@@ -7,13 +7,13 @@ from datetime import datetime
 import numpy as np
 from astropy.table import Table
 from astropy.time import Time
-
 from config import logger
 
 from SummaryGenerator.stationPosition import (
     downloadFile,
     get_station_positions,
 )
+
 from SummaryGenerator.utilities import (
     datetime_to_fractional_year,
     problemExtract,
@@ -78,7 +78,7 @@ class StationSummariser:
 
     def __post_init__(self):
 
-        self.start_time = self.start_time.iso
+        self.start_time = self.start_time.iso                   ### FIXME: iso not attribute of datetime ???
         self.stop_time = self.stop_time.iso
 
         logger.info(f"start: {self.start_time}")
@@ -102,8 +102,6 @@ class StationSummariser:
         except Exception:
             self.detectS_str = "No S-band data present..."
             self.detect_images["S"] = ""
-
-        logger.info(f"Start time = {self.start_time}")
 
         stat_list = grabStations(self.database)
         stat_tab_list, table_list = grabAllStationData(
@@ -161,7 +159,7 @@ class StationSummariser:
         ##################
 
         # the list of issues from the correlation reports
-        self.problems = problemExtract(table)
+        self.problems = problemExtract(table)                   ### TODO: sort out typing here
 
         logger.info(f"PROBLEMS:\n{self.problems}")
 
@@ -190,7 +188,7 @@ class StationSummariser:
             ),
         )
 
-        # hmmm
+        ### FIXME: type issues here.
         self.table = self.table.to_pandas()
         table = self.table.drop(columns=columns_to_remove)
 
@@ -244,7 +242,7 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
 
     logger.info(f"Generating Summary for Station {stat_code}.")
 
-    start_time = Time(start, format="yday", out_subfmt="date")
+    start_time = Time(start, format="yday", out_subfmt="date")              ### FIXME: use datetime not Time, so as consistent with other timestamps
     stop_time = Time(stop, format="yday", out_subfmt="date")
 
     logger.info(f"Report range: {start_time} -> {stop_time}.")
@@ -270,7 +268,7 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     stat_sum = StationSummariser(stat_code, search, reverse_search, start_time, stop_time, table, db_name)
 
     # create the PDF report
-    print("Generating PDF report...")
+    logger.info("Generating PDF report...")
     create_report(stat_sum, output_name)
 
     return

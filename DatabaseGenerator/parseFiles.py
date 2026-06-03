@@ -14,7 +14,6 @@ from astropy.time import Time
 from StationFeedbackUtils.utilities import stationParse
 from config import stations_config_file, logger
 
-
 ### TODO
 # - lots of "possibly unbound" issues and a couple of type mis-matches to fix up.
 #
@@ -39,8 +38,13 @@ def parseFunc():
 
 
 def problemFinder(
-    text_section, stations
-):  # searches first section of text for a problem, creates two lists one with a boolean value, the other with at least 1 line of the string where a problem is mentioned
+    text_section: str,
+    stations: List[str],
+):
+    """
+    searches first section of text for a problem, creates two lists one with a boolean value, the other with at least 1 line of the string where a problem is mentioned
+    """
+
     problem_bool = []
     problem_string = []
     for ant in stations:
@@ -55,13 +59,18 @@ def problemFinder(
     return problem_bool, problem_string
 
 
-def percent2decimal(percent_string):
+def percent2decimal(percent_string: str):
     return float(percent_string.strip("%")) / 100
 
 
 def stationPerformance(
-    text_section, stations
-):  # Extracts the percentage of useable scans for each station.
+    text_section: str,
+    stations: List[str],
+):
+    """
+    Extracts the percentage of useable scans for each station.
+    """
+
     station_performance = []
     for ant in stations:
         regex = ant + ".*"
@@ -440,7 +449,7 @@ def main(
         # Isolate the report sections relevant for this processing
         relevant_section = extractRelevantSections(corr_section, report_version)
         if len(relevant_section) < 4:
-            print("Incompatible correlator report format.")
+            logger.warning("Incompatible correlator report format.")
         # Determine what section contains what info - sometimes variable...
         notes_section = " "  # Occasionally a corr report has no notes section, this could be cleaned up using a try later on, bit of a kludge
         for i in range(0, len(relevant_section)):
@@ -461,7 +470,7 @@ def main(
             stations_section, report_version
         )
         if len(antennas_corr_reference) == 0:
-            print("No stations defined in correlator report!")
+            logger.warning("No stations defined in correlator report!")
 
         # Qcode table stats
         if ":X" in qcode_section:
@@ -508,7 +517,7 @@ def main(
                 q_code_data_S.append([None, None, None])
         notes_bool, notes = noteFinder(notes_section, stationNames)
     else:
-        print("No correlator report available.")
+        logger.info("No correlator report available.")
     # Determine whether session is a VGOS/broadband session from skd file
     # For some reason R1 sessions are the only S/X session that have content in this section, will need to filter that
     vgos = False  # Default assumption

@@ -7,8 +7,7 @@ import tarfile
 from ftplib import FTP_TLS
 from concurrent.futures import ThreadPoolExecutor
 import MySQLdb as mariadb
-#from astropy.io import ascii
-
+from typing import List
 from config import db_conf, logger, stations_config_file
 from StationFeedbackUtils.utilities import stationParse
 
@@ -32,7 +31,13 @@ def parseFunc():
     return args
 
 
-def checkExistingData(db_name, stations):
+def checkExistingData(
+    db_name: str,
+    stations: List[str],
+):
+
+    logger.info(f"Checking current data in the {db_name}.")
+
     # db_name should be the name of the auscope database (as a string) we want to query for
     #  unique existing experiment IDs
     conn = mariadb.connect(user=db_conf["user"], passwd=db_conf["passwd"], db=db_name)
@@ -52,7 +57,13 @@ def checkExistingData(db_name, stations):
     return unique_existing_experiments
 
 
-def validExpFinder(master_schedule, station_names):
+def validExpFinder(
+    master_schedule: str,
+    station_names: List[str],
+):
+
+    logger.info("Validating experiments.")
+
     schedule = str(master_schedule)
     with open(schedule) as file:
         schedule_contents = file.readlines()
@@ -80,9 +91,13 @@ def validExpFinder(master_schedule, station_names):
     return valid_experiment
 
 
-def corrReportDL(exp_id, vgos_tag):
+def corrReportDL(
+    exp_id,
+    vgos_tag,
+):
     exp_id = str(exp_id)
     vgos_tag = str(vgos_tag)
+
     if exp_id in vgos_tag:
         year = vgos_tag[0:4]
     else:
@@ -98,6 +113,8 @@ def corrReportDL(exp_id, vgos_tag):
         )
         return
     else:
+        logger.info(f"Downloading correlation report for {exp_id}.")
+
         ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
         ftps.login(user="anonymous", passwd="tiegem@utas.edu.au")
         ftps.prot_p()
@@ -236,7 +253,7 @@ def download_experiment_data(
                     )
                     break
             except Exception as e:
-                logger.warning(f"Failed to FTP: {e}")
+                logger.warning(f"Failed to retieve analysis reports from FTP server. Exception: {e}.")
                 pass
         # Download spool file
         for spelling in options:
@@ -266,7 +283,7 @@ def download_experiment_data(
                         + "/"
                         + exp
                         + "/"
-                        + filename_spool[len(filename_report) - 1].split()[8],
+                        + filename_spool[len(filename_report) - 1].split()[8],              ### Is this right?
                         lf2.write,
                     )
                     lf2.close()
@@ -305,6 +322,8 @@ def download_experiment_data(
                     lf1.write,
                 )
                 lf1.close()
+                logger.info("Downloaded old-style analysis report.")
+
         except Exception as e:
             logger.warning(f"Passing exception: {e}")
             pass
@@ -322,6 +341,7 @@ def main(
     ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
     ftps.login(user="anonymous", passwd="")
     ftps.prot_p()
+
     master_sched_filename = os.path.join(dirname, schedule)
     mf = open(master_sched_filename, "wb")
     ftps.sendcmd("TYPE I")
@@ -334,7 +354,10 @@ def main(
     else:  # this is for v2
         year = schedule[6:10]
 
+    logger.info("Checking valid experiments.")
     valid_experiment = validExpFinder(os.path.join(dirname, schedule), stationNames)
+
+    logger.info("Getting existing experiments.")
     existing_experiments = checkExistingData(str(db_name), stationNamesLong)
 
     if existing_experiments is None:
@@ -352,6 +375,7 @@ def main(
     def download_exp_cl(exp):
         download_experiment_data(exp, year)
 
+    logger.info("Executing threadpool for experiments to download.")
     with ThreadPoolExecutor(max_workers=worker_thread_count) as executor:
          executor.map(download_exp_cl, experiments_to_download)
 
