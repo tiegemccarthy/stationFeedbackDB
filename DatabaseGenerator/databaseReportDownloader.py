@@ -283,7 +283,7 @@ def download_experiment_data(
                         + "/"
                         + exp
                         + "/"
-                        + filename_spool[len(filename_report) - 1].split()[8],              ### Is this right?
+                        + filename_spool[len(filename_spool) - 1].split()[8],
                         lf2.write,
                     )
                     lf2.close()

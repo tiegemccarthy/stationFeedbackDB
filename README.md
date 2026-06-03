@@ -26,6 +26,24 @@ Prior to running the project code, manually or as a cronjob, the following prere
 - Completed `.env` file. The `.env.example` is a template of the keys, which may be copied and renamed to `.env` and completed appropriately.
 Note that the values relating to SMTP and TLS are only required if running the automatic report emailing component of the project (see below) and may be removed otherwise. The values to be set here are determined by the settings of one's SMTP server.
 
+#### Fresh Debian Example
+
+Assuming `sudo`-enabled user, the following steps may be used to install all pre-requiste software and the repository itself:
+
+First, as always, but optionally:
+```
+sudo apt update && sudo apt upgrade
+```
+Install mariadb:
+```
+sudo apt install mariadb-server mariadb-client -y
+```
+Then configure it:
+```
+sudo mariadb-secure-installation
+```
+This involves creating a password for the root mariadb user, and accepting the default selections otherwise.
+
 
 ### Pipeline
 
@@ -58,9 +76,7 @@ There are 4 locations for possible changes to configuration of the project, thes
 
 - `.env`: contains secret configuration details not to be made public.
 
-- `stations-reports.yaml`: lists stations for which reports are generated and the corresponding contact emails for those stations
-
-- `stations.config`: list stations included in the databases and analysis.
+- `stations-reports.yaml`: lists stations for which the database if populated, reports are generated and the corresponding contact emails for those stations.
 
 - `config.py`: internal configuration file for the python project. In this file such things as the location of the logging output may be set.
 
