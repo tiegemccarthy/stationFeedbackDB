@@ -5,7 +5,10 @@ from datetime import datetime
 import django
 from django.conf import settings
 from django.template import Context, Template
+
 from pyppeteer import launch
+from playwright.sync_api import sync_playwright
+
 from config import logger
 from SummaryGenerator.utilities import load_png
 
@@ -44,7 +47,7 @@ def create_report(summary, output_path):
     # use pyppeteer to convert the html pages to pdf
 
     # Function to generate a PDF
-    async def generate_pdf(html_content, output_path):
+    async def generate_pdf_pyppeteer(html_content, output_path):
         browser = None
         try:
             browser = await launch()
@@ -59,6 +62,23 @@ def create_report(summary, output_path):
         finally:
             if browser:
                 await browser.close()
+
+    ### V2, using playwright, eventual goal to get thread safety
+
+    def generate_pdf_sync(html_content, output_path):
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+
+            page.set_content(html_content)
+            page.pdf(
+                path=output_path,
+                format="A4",
+                print_background=True
+            )
+
+            browser.close()
+
 
     #########################
     # Preliminaries:
@@ -109,6 +129,7 @@ def create_report(summary, output_path):
     # output_path = os.path.join(reports_dir, filename)
 
     # Generate the PDF
-    asyncio.run(generate_pdf(html_content, output_path))
+    #asyncio.run(generate_pdf(html_content, output_path))
+    generate_pdf_sync(html_content, output_path)
 
     logger.info(f"PDF generated and saved to {output_path}")

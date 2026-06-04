@@ -12,6 +12,7 @@ from typing import Optional, Union
 from config import logger, stations_config_file
 from SummaryGenerator import summaryGenerator
 from StationFeedbackUtils.utilities import stationParse
+from concurrent.futures import ThreadPoolExecutor
 
 ### FIXME
 # the conflated use datetime or strings is v. confusing when it comes to types...
@@ -109,6 +110,9 @@ def main(
     specific_station: Optional[str] = None
 ):
 
+    worker_thread_count = 5
+
+
     if not os.path.exists(dirname + "/reports"):
         os.makedirs(dirname + "/reports")
 
@@ -157,6 +161,9 @@ def main(
 
         stations_list = stationNamesLong
 
+
+    tasks = []
+
     for station in stations_list:
 
         exps = ["legacy", "VGOS"]
@@ -165,7 +172,29 @@ def main(
             exps.append(f"{exp_regex}")
 
         for exp in exps:
-            generate_station_summary(station, exp, exp_regex, database_name, today_date, start_date, end_date)
+            tasks.append((station, exp))
+            #generate_station_summary(station, exp, exp_regex, database_name, today_date, start_date, end_date)
+
+    def run_task(task):
+        station, exp = task
+
+        logger.info(f"START {station} {exp}")
+
+        generate_station_summary(
+            station,
+            exp,
+            exp_regex,
+            database_name,
+            today_date,
+            start_date,
+            end_date
+        )
+
+        logger.info(f"DONE {station} {exp}")
+
+    with ThreadPoolExecutor(max_workers=worker_thread_count) as executor:
+        executor.map(run_task, tasks)
+
 
 
 if __name__ == "__main__":

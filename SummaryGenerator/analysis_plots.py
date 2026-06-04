@@ -209,7 +209,7 @@ def detectRate(table_input, band):
 
     # Determine the median detection rate
     rate_str = str(round(np.median(table[col_name]) * 100, 1)) + "%"
-    logger.info(band, rate_str)
+    logger.info(f"band = {band}, rate_str = {rate_str}")
 
     # Create the figure
     fig, ax = plt.subplots(figsize=(7, 4.5))

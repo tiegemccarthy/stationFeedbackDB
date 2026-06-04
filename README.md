@@ -23,6 +23,11 @@ Prior to running the project code, manually or as a cronjob, the following prere
 
 - Python3 virtual environment with required packages loaded (running `pip install -r requirements` inside the activated virtual environment will do this).
 
+- We use the `Playwright` package to emulate a browser and convert from `.html` to `.pdf`. After a first install of this package, one must run:
+```
+playwright install
+```
+
 - Completed `.env` file. The `.env.example` is a template of the keys, which may be copied and renamed to `.env` and completed appropriately.
 Note that the values relating to SMTP and TLS are only required if running the automatic report emailing component of the project (see below) and may be removed otherwise. The values to be set here are determined by the settings of one's SMTP server.
 
@@ -61,6 +66,8 @@ uv venv
 source .venv/bin/activate
 uv pip install -r requirements.txt
 ```
+
+As already mentioned above, once the `playwright` package is installed, one must run `playwright install` to update the internal browers.
 
 The penultimate step is configuration of the environment. The required keys are found in `.env.example` file provided for your convienence.
 ```
