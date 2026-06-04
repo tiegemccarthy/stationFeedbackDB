@@ -7,13 +7,14 @@ from datetime import datetime
 import numpy as np
 from astropy.table import Table
 from astropy.time import Time
-
 from config import logger
+
 
 from SummaryGenerator.stationPosition import (
     downloadFile,
     get_station_positions,
 )
+
 from SummaryGenerator.utilities import (
     datetime_to_fractional_year,
     problemExtract,
@@ -51,7 +52,6 @@ from SummaryGenerator.database_tools import (
 @dataclass
 class StationSummariser:
     station: str
-    #vgos: bool
     search: str
     reverse_search_flag: int
     start_time: datetime    # FIXME: datetime or Time???
@@ -76,9 +76,15 @@ class StationSummariser:
     table_data: str = ""
     more_info: str = ""
 
+    # don't want the dataclass to auto-init this one since we compute it based of other parameters
+    vgos: bool = field(init=False)
+
     def __post_init__(self):
 
-        self.start_time = self.start_time.iso
+        # set vgos flag (controls template)
+        self.vgos = True if (self.search == 'v%' and self.reverse_search_flag == 0) else False
+
+        self.start_time = self.start_time.iso                   ### FIXME: iso not attribute of datetime ???
         self.stop_time = self.stop_time.iso
 
         logger.info(f"start: {self.start_time}")
@@ -94,7 +100,6 @@ class StationSummariser:
         self.performance_analysis, self.perf_img = performanceAnalysis(table)
 
         # detections
-        ############
         self.detectX_str, self.detect_images["X"] = detectRate(table, "X")
 
         try:
@@ -102,8 +107,6 @@ class StationSummariser:
         except Exception:
             self.detectS_str = "No S-band data present..."
             self.detect_images["S"] = ""
-
-        logger.info(f"Start time = {self.start_time}")
 
         stat_list = grabStations(self.database)
         stat_tab_list, table_list = grabAllStationData(
@@ -130,7 +133,6 @@ class StationSummariser:
         self.ass_rate_str, self.ass_rate_img = plotAssignmentRate(ass_rate_list)
 
         # station position
-        ##################
 
         # handle the fractional time format expected of this:
         start_fractional = datetime_to_fractional_year(self.start_time)
@@ -140,7 +142,7 @@ class StationSummariser:
         # shouldn't have hardcoded paths, in multiple spots.
         try:
             file_name = f"{self.station}.txt"
-            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"      ### FIXME: janky af.
+            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"      ### FIXME: janky.
             downloadFile(file_name, data_dir)
             pos_fig_dict = get_station_positions(
                 self.station, data_dir, start_fractional, stop_fractional
@@ -158,10 +160,9 @@ class StationSummariser:
             )
 
         # station problems
-        ##################
 
         # the list of issues from the correlation reports
-        self.problems = problemExtract(table)
+        self.problems = problemExtract(table)                   ### TODO: sort out typing here
 
         logger.info(f"PROBLEMS:\n{self.problems}")
 
@@ -190,8 +191,7 @@ class StationSummariser:
             ),
         )
 
-        # hmmm
-        self.table = self.table.to_pandas()
+        self.table = self.table.to_pandas()                         ### FIXME: type issues here.
         table = self.table.drop(columns=columns_to_remove)
 
         self.table_data = table.to_html(
@@ -244,7 +244,7 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
 
     logger.info(f"Generating Summary for Station {stat_code}.")
 
-    start_time = Time(start, format="yday", out_subfmt="date")
+    start_time = Time(start, format="yday", out_subfmt="date")              ### FIXME: use datetime not Time, so as consistent with other timestamps
     stop_time = Time(stop, format="yday", out_subfmt="date")
 
     logger.info(f"Report range: {start_time} -> {stop_time}.")
@@ -270,7 +270,7 @@ def main(stat_code, db_name, start, stop, output_name, search="%", reverse_searc
     stat_sum = StationSummariser(stat_code, search, reverse_search, start_time, stop_time, table, db_name)
 
     # create the PDF report
-    print("Generating PDF report...")
+    logger.info("Generating PDF report...")
     create_report(stat_sum, output_name)
 
     return

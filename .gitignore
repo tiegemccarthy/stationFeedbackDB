@@ -1,10 +1,12 @@
+# secret settings c.f. .env.example
 .env
-# stupid mac/finder files
+# mac/finder files
 **._*
 # pycharm config stuff
 **__pycache__**
-**.idea**
 **.venv**
+# ide things
+**.idea**
 # the actual final reports
 **reports/
 **.pdf
@@ -14,14 +16,13 @@
 **_v2*
 **.tmp
 **junk
-**.txt
 **.test
 **.ipynb
 # the pipenv config
 Pipfile
 # the glovdh api cache
 **.csv
-#
+# more test stuff
 ESL-NOTES.md
 test-run.sh
 **.bak

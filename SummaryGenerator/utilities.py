@@ -12,7 +12,6 @@ from io import BytesIO
 ################
 
 def datetime_to_fractional_year(date):
-    print(f"in datetime_to_fraction, args: {date}")
 
     dt = datetime.strptime(date, "%Y-%m-%d")
     year = dt.year

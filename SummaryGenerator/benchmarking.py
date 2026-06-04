@@ -4,7 +4,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-
+from config import logger
 from SummaryGenerator.utilities import save_plt
 
 
@@ -13,7 +13,7 @@ def determineAssignmentRate(table_list, stat_tab_list, target_stat):
     try:
         station_index = np.where(np.array(stat_tab_list) == target_stat)[0][0]
     except IndexError:
-        print("Station code not found in the data.")
+        logger.error("Station code not found in the data.")
         return None
 
     # Calculate assignment rate for each experiment for a given station

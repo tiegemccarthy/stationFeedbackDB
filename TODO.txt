@@ -1,0 +1,36 @@
+TODO
+====
+
+- Reports are working, but currently can only be generated with this script which isn't very flexible. Need to add some flexibility then probably split the reports side off into its own repository.
+
+- Update the report scripts to use the new VGOS boolean value in the database.
+
+- Re-do the end of the file parsing script so that invalid analysis reports don't stop data from being added to the database.
+
+- Extract number of scheduled and number of successful scans for each station for use in assignment rate.
+
+- Perhaps add in default behaviour that the database attempts to add sessions from the past 2 years, this can be overridden to update for older sessions?
+
+- Do we use shortname?
+
+- How much of the spool files do we use?
+
+- Condense reports: more figures per page.
+
+- More informative log outputs on errors.
+
+- Investigate RVXXX session file formatting.
+
+- Secondary analysis reports if first is bad (IVS is the offical analysis center's reports).
+
+- Add info about disk space (approximately 10GB per year for VGOS DBs) requirements etc for the project.
+
+- Module-arise more, _i.e._ the database generation could use a module similiar to how updateReports use the SummaryGenerator module.
+
+- Rename stations-reports.yaml to stations.yaml since now serves dual purposes.
+
+- Generate reports (one off) per session code _e.g._ for R1XXX or for R4XXXX.
+
+- Delete all unnecessary comment blocks.
+
+- All output goes to log file except for progress bars produced by one of the downloading packages in updateReports.

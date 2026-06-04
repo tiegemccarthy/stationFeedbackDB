@@ -3,7 +3,6 @@ import argparse
 import os
 import time
 from datetime import datetime
-
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -11,7 +10,6 @@ import numpy as np
 import pandas as pd
 import pytz
 import requests
-
 from config import logger
 
 #
@@ -291,7 +289,7 @@ def get_glovdh_piecharts(station, start, stop, is_vgos):
     :return: dict of plots
     """
 
-    print(
+    logger.info(
         f"Getting (& creating) Glovdh Api charts for {station} between {start} - {stop}"
     )
 
