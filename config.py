@@ -67,10 +67,10 @@ fmt = logging.Formatter(
 )
 
 # log to file
-#handle = logging.FileHandler(log_file_path)
+handle = logging.FileHandler(log_file_path)
 
 # debug: log to stdout
-handle = logging.StreamHandler(sys.stdout)
+#handle = logging.StreamHandler(sys.stdout)
 
 handle.setFormatter(fmt)
 logger.addHandler(handle)
