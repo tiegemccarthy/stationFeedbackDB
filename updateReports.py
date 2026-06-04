@@ -40,19 +40,14 @@ def parseFunc():
         default=None,
         help="""The end date for the report in YYYY:DOY format. Default is today.""",
     )
-
     parser.add_argument(
         "--exp-regex",
         type=str,
         default=None,
         help="""This option allows one to filter the DB and generate reports only for those experiment matched by the regex.
-        E.g. one might specify `--exp-regex R4%` to generate reports for all R4 type experiments in the database.
-        Note that this regex must be compatible with the standard SQL's "LIKE" operator, _i.e._
-                    % = wildcard multiple characters
-                    _ = wildcard single character
-        """
+        Note that this regex isn't real regex but rather SQL wildcard and must be compatible with the standard SQL's 'LIKE' operator.
+        """,
     )
-
     parser.add_argument(
         "--station",
         type=str,
@@ -60,9 +55,8 @@ def parseFunc():
         help="""This option allows one to specify as single station for which to generate a report.
         This is opposed to the default behaviour of generating reports for all stations positively flagged in the configuration file.
         The station must be specified using the full station code _e.g._ YARRA12M.
-        """
+        """,
     )
-
     args = parser.parse_args()
 
     return args

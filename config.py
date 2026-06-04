@@ -15,7 +15,7 @@ Two main jobs for this:
 import logging
 import sys
 from os import getenv, path
-
+from pathlib import Path
 from dotenv import load_dotenv
 
 ### load the environment ###
@@ -47,6 +47,18 @@ email_conf = {"email": getenv("SFB_EMAIL"), "smtp": smtp_conf, "tls": tls_conf}
 
 ### configure the logger ###
 
+log_output_dir = "/var/log/ivs_station_fb_logs"
+log_output_file = "stationFeedback.log"
+
+# 1. make log output directory
+
+log_dir_path = Path(log_output_dir)
+log_dir_path.mkdir(parents=True, exist_ok=True)
+
+log_file_path = log_dir_path / log_output_file
+
+# 2. set up logger
+
 logger = logging.getLogger(__name__)
 
 # log format: "timestamp-log_level: file-line_number: message".
@@ -54,8 +66,12 @@ fmt = logging.Formatter(
     "%(asctime)s-%(levelname)s %(filename)s-%(lineno)d [%(threadName)s]: %(message)s", "%Y.%j.%H:%M:%S"
 )
 
-# logs just go to stdout for the moment
+# log to file
+#handle = logging.FileHandler(log_file_path)
+
+# debug: log to stdout
 handle = logging.StreamHandler(sys.stdout)
+
 handle.setFormatter(fmt)
 logger.addHandler(handle)
 logger.setLevel(logging.INFO)  # set default level

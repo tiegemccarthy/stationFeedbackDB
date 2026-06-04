@@ -31,6 +31,8 @@ playwright install
 - Completed `.env` file. The `.env.example` is a template of the keys, which may be copied and renamed to `.env` and completed appropriately.
 Note that the values relating to SMTP and TLS are only required if running the automatic report emailing component of the project (see below) and may be removed otherwise. The values to be set here are determined by the settings of one's SMTP server.
 
+- A log output directory with the correct permissions. The path and file name for logging (along with all other log settings) are set-up in `config.py`.
+
 #### Fresh Debian Example
 
 Assuming `sudo`-enabled user, the following steps may be used to install all pre-requiste software and the repository itself:
@@ -68,6 +70,12 @@ uv pip install -r requirements.txt
 ```
 
 As already mentioned above, once the `playwright` package is installed, one must run `playwright install` to update the internal browers.
+
+Next create and allow write permissiions on a directory to store the log outputs. By default the output logg directory is `ivs_station_fb_logs` but this may be changed in `config.py`, and so:
+```
+sudo mkdir /var/log/ivs_station_fb_logs
+sudo chmod 666 /var/log/ivs_station_fb_logs/
+```
 
 The penultimate step is configuration of the environment. The required keys are found in `.env.example` file provided for your convienence.
 ```

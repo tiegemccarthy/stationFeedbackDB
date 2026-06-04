@@ -1,14 +1,10 @@
-import asyncio
 import os
 from dataclasses import asdict
 from datetime import datetime
-import django
+from django import setup
 from django.conf import settings
 from django.template import Context, Template
-
-from pyppeteer import launch
 from playwright.sync_api import sync_playwright
-
 from config import logger
 from SummaryGenerator.utilities import load_png
 
@@ -30,7 +26,8 @@ def create_report(summary, output_path):
             ]
         )
 
-        django.setup()
+        # django
+        setup()
 
     #########################
     # load up the templates
@@ -42,28 +39,6 @@ def create_report(summary, output_path):
 
     with open(template_path, "r") as file:
         html_template = file.read()
-
-    #########################
-    # use pyppeteer to convert the html pages to pdf
-
-    # Function to generate a PDF
-    async def generate_pdf_pyppeteer(html_content, output_path):
-        browser = None
-        try:
-            browser = await launch()
-            page = await browser.newPage()
-            await page.setContent(html_content)
-            await page.emulateMedia("screen")  # screen or print
-            await page.pdf(
-                {"path": output_path, "format": "A4", "printBackground": True}
-            )
-        except Exception as e:
-            raise Exception("Could not generate the report.") from e
-        finally:
-            if browser:
-                await browser.close()
-
-    ### V2, using playwright, eventual goal to get thread safety
 
     def generate_pdf_sync(html_content, output_path):
         with sync_playwright() as p:
