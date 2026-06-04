@@ -8,14 +8,13 @@ import os
 from datetime import datetime, timedelta
 from astropy.time import Time
 import yaml
-from typing import Optional, Union
+from typing import Optional, Union                          ### FIXME we are using most recent python now => can replace this.
 from config import logger, stations_config_file
 from SummaryGenerator import summaryGenerator
 from StationFeedbackUtils.utilities import stationParse
 from concurrent.futures import ThreadPoolExecutor
 
-### FIXME
-# the conflated use datetime or strings is v. confusing when it comes to types...
+### FIXME: the conflated use of datetime or strings is v. confusing when it comes to types...
 
 dirname = os.path.dirname(__file__)
 
@@ -87,8 +86,8 @@ def generate_station_summary(
                 start_date,
                 end_date,
                 output_name,
-                f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "v%",
-                1 if exp == "legacy" else 0,
+                f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "v%",    # search value
+                1 if exp == "legacy" else 0,                                        # reverse search switch
             )
         except Exception as e:
             logger.warning(
@@ -104,8 +103,7 @@ def main(
     specific_station: Optional[str] = None
 ):
 
-    worker_thread_count = 5
-
+    worker_thread_count = 5                             ### TODO: explore what's a good value for this.
 
     if not os.path.exists(dirname + "/reports"):
         os.makedirs(dirname + "/reports")

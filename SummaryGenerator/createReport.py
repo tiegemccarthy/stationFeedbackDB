@@ -11,10 +11,8 @@ from SummaryGenerator.utilities import load_png
 # control
 save_html = True
 
-
 def create_report(summary, output_path):
 
-    #########################
     # Set up django to use the templating funcitonality only
     if not settings.configured:
         settings.configure(
@@ -26,13 +24,10 @@ def create_report(summary, output_path):
             ]
         )
 
-        # django
+        # django setup template
         setup()
 
-    #########################
-    # load up the templates
-
-    # Read the HTML template from file
+    # Read & load the HTML template from file
     template_path = os.path.join(
         os.path.dirname(__file__), "templates/report_template.html"
     )
@@ -42,28 +37,26 @@ def create_report(summary, output_path):
 
     def generate_pdf_sync(html_content, output_path):
         with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page()
+            browser = None
+            try:
+                browser = p.chromium.launch()
+                page = browser.new_page()
 
-            page.set_content(html_content)
-            page.pdf(
-                path=output_path,
-                format="A4",
-                print_background=True
-            )
-
-            browser.close()
-
-
-    #########################
-    # Preliminaries:
+                page.set_content(html_content)
+                page.pdf(
+                    path=output_path,
+                    format="A4",
+                    print_background=True
+                )
+            except Exception as e:
+                logger.error("Error while opening browser and saving html to pdf.")
+            finally:
+                if browser:
+                    browser.close()
 
     # Ensure the reports directory exists
     reports_dir = os.path.join(os.path.dirname(__file__), "reports")
     os.makedirs(reports_dir, exist_ok=True)
-
-    #########################
-    # Generate the actual reports
 
     # Load the css
     css_path = os.path.join(os.path.dirname(__file__), "templates", "styles.css")
@@ -81,7 +74,7 @@ def create_report(summary, output_path):
     ivs_logo = load_png(ivs_logo_path)
 
     # Stamp the time of the report generation
-    ts = datetime.utcnow().strftime("%Y-%j")
+    ts = datetime.utcnow().strftime("%Y-%j")                            ### FIXME: deprecation warning for utcnow()
 
     context = Context(
         {**asdict(summary), "ivs_logo": ivs_logo, "report_ts": ts, "css": css_content}
@@ -101,10 +94,9 @@ def create_report(summary, output_path):
         logger.info(f"HTML preview generated: {html_output_path}")
 
     # Define the output path for the PDF
-    # output_path = os.path.join(reports_dir, filename)
+    # output_path = os.path.join(reports_dir, filename)         ### hmmm
 
     # Generate the PDF
-    #asyncio.run(generate_pdf(html_content, output_path))
     generate_pdf_sync(html_content, output_path)
 
     logger.info(f"PDF generated and saved to {output_path}")
