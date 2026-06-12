@@ -3,9 +3,9 @@
 import MySQLdb as mariadb
 from astropy.table import Table
 from astropy.time import Time
-
 from config import db_conf
-
+from typing import List
+import numpy as np
 
 def grabStations(sqldb_name):
 
@@ -21,16 +21,24 @@ def grabStations(sqldb_name):
 
 
 def grabAllStationData(
-    stat_list, db_name, start_time, stop_time, search, reverse_search
-):
-    start_time = Time(start_time)
-    stop_time = Time(stop_time)
+    stat_list: List[str],
+    db_name: str,
+    start_time: Time,
+    stop_time: Time,
+    search: str,
+    reverse_search: int,
+) -> tuple[List[str], List[Table]]:
+
+    #start_time = Time(start_time)
+    #stop_time = Time(stop_time)
+
     table_list = []
     stat_in_tab_list = []
     for code in stat_list:
         result, col_names = extractStationData(
             code[0], db_name, start_time.mjd, stop_time.mjd, search, reverse_search
         )
+
         if len(result) > 0:
             table = Table(rows=result, names=col_names)
             table_list.append(table)
@@ -40,11 +48,16 @@ def grabAllStationData(
 
 
 def extractStationData(
-    station_code, database_name, mjd_start, mjd_stop, search="%", like_or_notlike=0
-):
+    station_code: str,
+    database_name: str,
+    mjd_start: np.float64,                          # type(Time.now().mjd) = np.float64
+    mjd_stop: np.float64,
+    search: str = "%",
+    like_or_notlike: int = 0,
+) -> tuple[List[str],List[str]]:
 
     # here's the reverse_search_flag:
-    if float(like_or_notlike) == 1:
+    if int(like_or_notlike) == 1:
         like = "NOT LIKE"
     else:
         like = "LIKE"
@@ -68,6 +81,7 @@ def extractStationData(
         + str(mjd_stop)
         + " ORDER BY DATE ASC;"
     )
+
     cursor.execute(query)
     result = cursor.fetchall()
     col_names = [

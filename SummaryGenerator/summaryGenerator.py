@@ -1,32 +1,27 @@
 #!/usr/bin/env python
 
 import argparse
-import os
 from dataclasses import dataclass, field
 from datetime import datetime
 import numpy as np
+from typing import List, Union
 from astropy.table import Table
 from astropy.time import Time
-from config import logger
-
-
+from config import logger, base_dir
 from SummaryGenerator.stationPosition import (
     downloadFile,
     get_station_positions,
 )
-
 from SummaryGenerator.utilities import (
-    datetime_to_fractional_year,
+    #datetime_to_fractional_year,
     problemExtract,
     save_plt
 )
-
 from SummaryGenerator.analysis_plots import (
     wRmsAnalysis,
     performanceAnalysis,
     detectRate
 )
-
 from SummaryGenerator.benchmarking import (
     determineAssignmentRate,
     plotAssignmentRate,
@@ -37,11 +32,9 @@ from SummaryGenerator.benchmarking import (
     plotBenchSess,
     plotBenchWRMS
 )
-
 from SummaryGenerator.createReport import (
     create_report
 )
-
 from SummaryGenerator.database_tools import (
     extractStationData,
     grabAllStationData,
@@ -54,8 +47,8 @@ class StationSummariser:
     station: str
     search: str
     reverse_search_flag: int
-    start_time: datetime    # FIXME: datetime or Time???
-    stop_time: datetime     # FIXME: as above
+    start_time: Time
+    stop_time: Time
     table: Table
     database: str
     total_sessions: int = 0
@@ -72,7 +65,7 @@ class StationSummariser:
     benchmark_images: dict[str, str] = field(default_factory=dict)
     pos_images: dict[str, str] = field(default_factory=dict)
     glovdh_images: dict[str, str] = field(default_factory=dict)
-    problems: str = ""
+    problems: List[str] = field(default_factory=list)
     table_data: str = ""
     more_info: str = ""
 
@@ -84,8 +77,8 @@ class StationSummariser:
         # set vgos flag (controls template)
         self.vgos = True if (self.search == 'v%' and self.reverse_search_flag == 0) else False
 
-        self.start_time = self.start_time.iso                   ### FIXME: iso not attribute of datetime ???
-        self.stop_time = self.stop_time.iso
+        #self.start_time = self.start_time.iso
+        #self.stop_time = self.stop_time.iso
 
         logger.info(f"start: {self.start_time}")
         logger.info(f"stop: {self.stop_time}")
@@ -94,7 +87,7 @@ class StationSummariser:
         logger.info(f"table:\n{table}")
 
         self.total_sessions = len(table["ExpID"])
-        self.total_observations = int(np.nansum(table["Total_Obs"].astype(float)))
+        self.total_observations = int(np.nansum(table["Total_Obs"].astype(float)))      ### TODO: check this.
 
         self.wrms_analysis, self.wrms_img = wRmsAnalysis(table)
         self.performance_analysis, self.perf_img = performanceAnalysis(table)
@@ -104,11 +97,16 @@ class StationSummariser:
 
         try:
             self.detectS_str, self.detect_images["S"] = detectRate(table, "S")
-        except Exception:
+        except Exception as e:
+            logger.info(f"Exception {e} while determining detection rates.")
             self.detectS_str = "No S-band data present..."
             self.detect_images["S"] = ""
 
+        ### TODO:
+        # try-catch clauses like the above for everything
+
         stat_list = grabStations(self.database)
+
         stat_tab_list, table_list = grabAllStationData(
             stat_list,
             self.database,
@@ -135,17 +133,19 @@ class StationSummariser:
         # station position
 
         # handle the fractional time format expected of this:
-        start_fractional = datetime_to_fractional_year(self.start_time)
-        stop_fractional = datetime_to_fractional_year(self.stop_time)
+        #start_fractional = datetime_to_fractional_year(self.start_time)
+        #stop_fractional = datetime_to_fractional_year(self.stop_time)
+        # Since we only use Time now, we can use Time.decimalyear:.6f, see below.
 
         ### FIXME
         # shouldn't have hardcoded paths, in multiple spots.
         try:
             file_name = f"{self.station}.txt"
-            data_dir = f"{os.path.dirname(__file__)}/../station_position_data"      ### FIXME: janky.
+            data_dir = f"{base_dir}/station_position_data"      ### FIXME: janky.
+
             downloadFile(file_name, data_dir)
             pos_fig_dict = get_station_positions(
-                self.station, data_dir, start_fractional, stop_fractional
+                self.station, data_dir,  f"{self.start_time.decimalyear:.6f}",  f"{self.stop_time.decimalyear:.6f}"
             )
             self.pos_images = {
                 coord: save_plt(fig) for coord, fig in pos_fig_dict.items()
@@ -240,20 +240,45 @@ def parseFunc():
     return args
 
 
-def main(stat_code, db_name, start, stop, output_name, search="%", reverse_search=0):
+def main(
+    stat_code: str,
+    db_name: str,
+    start: Union[Time,str],                 ### FIXME: should be Time, or handled like updateReports.main
+    stop: Union[Time,str],                  ### FIXME: as above
+    output_name: str,
+    search: str="%",
+    reverse_search: int = 0,
+):
 
     logger.info(f"Generating Summary for Station {stat_code}.")
 
-    start_time = Time(start, format="yday", out_subfmt="date")              ### FIXME: use datetime not Time, so as consistent with other timestamps
+    start_time = Time(start, format="yday", out_subfmt="date")
     stop_time = Time(stop, format="yday", out_subfmt="date")
 
-    logger.info(f"Report range: {start_time} -> {stop_time}.")
+    logger.debug(f"DEBUG: start_time = {start_time}")
+    logger.debug(f"DEBUG: stop_time = {stop_time}")
+
+    logger.info(f"Report range (mjd): {start_time.mjd} -> {stop_time.mjd}.")
     logger.info(f"Report type: {'VGOS' if (search == 'v%' and reverse_search == 0) else ('Legacy' if (search == 'v%' and reverse_search == 0) else f'{search}')}.")
 
-    # create the info table which will be used to generate the rest of it...
-    result, col_names = extractStationData(
-        stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search
-    )
+    try:
+        # create the info table which will be used to generate the rest of it...
+        result, col_names = extractStationData(
+            stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search
+        )
+
+        if len(result) == 0:
+            logger.warning(
+                f"No database rows returned for station {stat_code} "
+                f"with search='{search}' reverse_search={reverse_search} "
+                f"and date range: {start_time.mjd} -> {stop_time.mjd}!"
+            )
+            raise Exception("No data!")
+
+
+    except Exception as e:
+        raise Exception(f"Error extracting station data: {e}") from e
+
     # turn this into an astropy table datastructure
     try:
         table = Table(rows=result, names=col_names)

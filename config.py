@@ -13,10 +13,13 @@ Two main jobs for this:
 """
 
 import logging
-import sys
 from os import getenv, path
 from pathlib import Path
 from dotenv import load_dotenv
+
+### useful globals:
+
+base_dir = path.dirname(__file__)
 
 ### load the environment ###
 
@@ -44,6 +47,10 @@ db_conf = {
     "name": getenv("SFB_DB_NAME"),
 }
 email_conf = {"email": getenv("SFB_EMAIL"), "smtp": smtp_conf, "tls": tls_conf}
+
+### cddis ftp set-up ###
+
+cddis_ftp = {"host": "gdc.cddis.eosdis.nasa.gov", "user": "anonymous", "passwd": "tiegem@utas.edu.au", "timeout": 20}    ### FIXME: the credentials need to be in the .env
 
 ### configure the logger ###
 
@@ -74,7 +81,7 @@ handle = logging.FileHandler(log_file_path)
 
 handle.setFormatter(fmt)
 logger.addHandler(handle)
-logger.setLevel(logging.INFO)  # set default level
+logger.setLevel(logging.DEBUG)  # set default level
 
 ### other miscellaneous settings ###
 

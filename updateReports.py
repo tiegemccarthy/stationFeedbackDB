@@ -5,18 +5,17 @@
 
 import argparse
 import os
-from datetime import datetime, timedelta
-from astropy.time import Time
+from astropy.time import Time, TimeDelta
 import yaml
-from typing import Optional, Union                          ### FIXME we are using most recent python now => can replace this.
-from config import logger, stations_config_file
+from typing import Optional, Union                          ### FIXME if we are using most recent python now => can replace this.
+from config import logger, stations_config_file, base_dir
 from SummaryGenerator import summaryGenerator
 from StationFeedbackUtils.utilities import stationParse
 from concurrent.futures import ThreadPoolExecutor
 
 ### FIXME: the conflated use of datetime or strings is v. confusing when it comes to types...
 
-dirname = os.path.dirname(__file__)
+#dirname = os.path.dirname(__file__)
 
 def parseFunc():
     parser = argparse.ArgumentParser(
@@ -66,20 +65,19 @@ def generate_station_summary(
     exp: str,
     exp_regex: Optional[str],
     database_name: str,
-    today_date: datetime,
-    start_date: Union[str, datetime],
-    end_date: Union[str, datetime],
+    # today_date: Time,
+    start_date: Union[Time, str],
+    end_date: Union[Time, str],
 ):
         output_name = (
-            dirname
+            base_dir
             + "/reports/"
             + station
             + f"_{exp}_"
-            + today_date.strftime("%Y%m%d")
+            + Time.now().strftime("%Y%m%d")
             + ".pdf"
         )
         try:
-            logger.info(f"Generating report for {exp}. Saving to {output_name}.")
             summaryGenerator.main(
                 station,
                 database_name,
@@ -89,6 +87,8 @@ def generate_station_summary(
                 f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "v%",    # search value
                 1 if exp == "legacy" else 0,                                        # reverse search switch
             )
+            # success:
+            logger.info(f"Generated report for {exp}. Saved to {output_name}.")
         except Exception as e:
             logger.warning(
                 f"Unable to generate {exp} performance report for {str(station)}.\nException: {e}."
@@ -97,30 +97,44 @@ def generate_station_summary(
 
 def main(
     database_name: str,
-    start_date: Optional[Union[str, datetime]] = None,
-    end_date: Optional[Union[str, datetime]] = None,
-    exp_regex: Optional[str] = None,
-    specific_station: Optional[str] = None
+    start_date: Optional[Union[str, Time]],             # optional union since may be passed as argument (and string)
+    end_date: Optional[Union[str, Time]],
+    exp_regex: Optional[str],
+    specific_station: Optional[str],
 ):
+    # what's the expected input format of the dates?
 
     worker_thread_count = 5                             ### TODO: explore what's a good value for this.
 
-    if not os.path.exists(dirname + "/reports"):
-        os.makedirs(dirname + "/reports")
+    default_daterange_days = 180
 
-    today_date = datetime.now()
+    if not os.path.exists(base_dir + "/reports"):
+        os.makedirs(base_dir + "/reports")
+
+    #today_date = datetime.now()
 
     # we get a string as input, maybe
     # and if not create a datetime object. Which we now just force into a string.
 
-    if start_date is None or end_date is None:
-        end_date = str(Time(today_date).to_value("yday", subfmt="date"))
-        start_date = str((Time(today_date) - timedelta(days=180)).to_value(
-            "yday", subfmt="date"
-        ))
+    ### FIXME: should be able to provide one or the other of start and end dates.
+
+    if start_date is not None and end_date is not None:
+
+
+        ### FIXME: should only do this if start, end are strings.
+        start_date = Time(start_date, format="yday")
+        end_date = Time(end_date, format="yday")
+
+
     else:
-        start_date = str(Time(start_date, format="yday"))
-        end_date = str(Time(end_date, format="yday"))
+        today = Time.now()
+
+        if start_date is None:
+            start_date = today - TimeDelta(default_daterange_days, format="jd")
+
+        if end_date is None:
+            end_date = today
+
     logger.info(f"Report time range: start date = {start_date}, end_date = {end_date}.")
 
     if specific_station:
@@ -146,13 +160,10 @@ def main(
             stations_list = [f"{specific_station}"]
 
     else:
-        _, stationNamesLong = stationParse(
+        _, stations_list = stationParse(
             stations_config_file,
             reports=True
         )
-
-        stations_list = stationNamesLong
-
 
     tasks = []
 
@@ -171,22 +182,23 @@ def main(
         station, exp = task
 
         logger.info(f"START {station} {exp}")
-
-        generate_station_summary(
-            station,
-            exp,
-            exp_regex,
-            database_name,
-            today_date,
-            start_date,
-            end_date
-        )
+        try:
+            generate_station_summary(
+                station,
+                exp,
+                exp_regex,
+                database_name,
+                # today_date,
+                start_date,
+                end_date
+            )
+        except Exception:
+            logger.exception("Exception occurred while generating the summary report.")
 
         logger.info(f"DONE {station} {exp}")
 
     with ThreadPoolExecutor(max_workers=worker_thread_count) as executor:
         executor.map(run_task, tasks)
-
 
 
 if __name__ == "__main__":

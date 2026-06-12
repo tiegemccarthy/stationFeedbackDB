@@ -37,4 +37,4 @@ test-run.sh
 **master*.txt
 **example-*
 **.bak
-
+**.tgz

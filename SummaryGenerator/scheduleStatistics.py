@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytz
 import requests
-from config import logger
+from config import logger, base_dir
 
 #
 # Use the API from https://glovdh.ethz.ch/
@@ -344,7 +344,7 @@ def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
 
     # CACHE_FILE = "glovdh_api_cached_sessions.csv"
 
-    CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
+    CACHE_DIR = os.path.join(base_dir, "cache")
     os.makedirs(CACHE_DIR, exist_ok=True)
     CACHE_FILE = os.path.join(CACHE_DIR, "glovdh_api_cached_sessions.csv")
 

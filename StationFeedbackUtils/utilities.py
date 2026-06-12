@@ -3,9 +3,45 @@ import yaml             # pyyaml
 # debug
 # import json
 
+from config import base_dir
+
+### FIXME
+# implement some checks in these
+# actually use them
+
+### FIXME: these should be Paths or at least os.path.join()
+# e.g.
+# os.path.join(
+#    base_dir, "skd_files/" + exp + ".skd"
+# )
+
+
+def analysis_report_path(
+    exp: str,
+):
+    return f"{base_dir}/analysis_reports/{exp}_report.txt"
+
+
+def spool_file_path(
+    exp: str,
+):
+    return f"{base_dir}/analysis_reports/{exp}_spoolfile.txt"
+
+
+def corr_file_path(
+    exp: str,
+):
+    return f"{base_dir}/corr_files/{exp}.corr"
+
+
+def skd_file_path(
+    exp: str,
+):
+    return f"{base_dir}/skd_files/{exp}.skd"
+
 
 def stationParse(
-    stations_config,
+    stations_config: str,               # path to "stations.yaml"
     reports=False
 ):
     """
