@@ -262,7 +262,12 @@ figure {
 
 .table-container {
     margin-top: 10px;
+    break-before: auto;
     break-inside: avoid;
+}
+
+.table-container h2 {
+    break-before: avoid;
 }
 
 .table {

@@ -10,6 +10,9 @@ config.py
 Two main jobs for this:
 1. Loads the environment variables.
 2. Configures the logger, to be imported into main scripts.
+
+It also, only temporarily, includes hard-coded credentials for FTPing into CDDIS server.
+
 """
 
 import logging
@@ -54,6 +57,9 @@ cddis_ftp = {"host": "gdc.cddis.eosdis.nasa.gov", "user": "anonymous", "passwd":
 
 ### configure the logger ###
 
+### FIXME
+# if else for log on stdout via bool
+
 log_output_dir = "/var/log/ivs_station_fb_logs"
 log_output_file = "stationFeedback.log"
 
@@ -70,7 +76,7 @@ logger = logging.getLogger(__name__)
 
 # log format: "timestamp-log_level: file-line_number: message".
 fmt = logging.Formatter(
-    "%(asctime)s-%(levelname)s %(filename)s-%(lineno)d [%(threadName)s]: %(message)s", "%Y.%j.%H:%M:%S"
+    "[%(asctime)s-%(levelname)s] %(threadName)s-%(filename)s-%(lineno)d: %(message)s", "%Y.%j.%H:%M:%S"
 )
 
 # log to file

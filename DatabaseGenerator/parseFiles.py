@@ -738,6 +738,10 @@ def main(
     # Define some invalid data flags
     invalid_data_flags = (None, "NULL", "-999")
     station_objects = []
+
+    logger.debug(f"DEBUG {exp_code}: station Names: {stationNames}")
+    logger.debug(f"DEBUG {exp_code}: performance: {performance}")
+
     for i in range(0, len(stationNames)):
         if (
             performance[i] not in invalid_data_flags                         ### FIXME: sometimes throws an index out of bound

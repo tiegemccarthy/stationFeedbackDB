@@ -33,7 +33,7 @@ def wRmsAnalysis(table_input):
 
     if not len(table) > 0:
         logger.warning(f"Table length = {len(table)}. No valid data to calculate Wrms.")
-        # raise Exception("No data.")
+        raise Exception("No data.")
 
     time_data = Column(table["Date"], dtype=Time)
 
@@ -80,6 +80,10 @@ def wRmsAnalysis(table_input):
     fig.tight_layout()
     img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
+
+    ### TODO
+    # debug
+    # save to file
 
     return wrms_med_str, img_b64
 

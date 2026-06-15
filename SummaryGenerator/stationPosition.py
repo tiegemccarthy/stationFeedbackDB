@@ -11,6 +11,8 @@ import numpy as np
 import pandas
 import wget
 from config import logger, base_dir
+from astropy.time import Time
+
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -78,11 +80,9 @@ def file2DF(file_name: str, data_dir: str) -> pandas.DataFrame:
     return df
 
 
-### FIXME
-# pos_string isn't included in the calls in main
-# so it needs a defaul value.
 def plotPos(df: pandas.DataFrame, startdate, stopdate, lim, pos_string):
 
+    ### FIXME: startdate type should be Time not float.
     f, ax = plt.subplots(figsize=(12, 4))
 
     # Time frame filter
@@ -113,7 +113,7 @@ def plotPos(df: pandas.DataFrame, startdate, stopdate, lim, pos_string):
 
     # Set y-limits
     median_val = np.nanmedian(df.where(df["date"] > startdate)[pos_string])
-    ax.set_ylim(median_val - lim, median_val + lim)
+    ax.set_ylim(float(median_val - lim), float(median_val + lim))
 
     # Add labels and legend
     ax.set_xlabel("Date (Years)")
@@ -150,6 +150,7 @@ def get_station_positions(STATION_NAME: str, data_dir: str, start_date, stop_dat
     return fig_dict
 
 
+### deprecated
 def main(STATION_NAME, start_date):
     start_date = float(start_date)
     coords = ["X", "Y", "Z", "U", "E", "N"]
@@ -160,7 +161,7 @@ def main(STATION_NAME, start_date):
     downloadFile(STATION_NAME, data_dir)
     pos_df = file2DF(STATION_NAME, data_dir)
 
-    fX, axX = plotPos(pos_df, start_date, 500, "X")
+    fX, axX = plotPos(pos_df, start_date, 500, "X")             ### FIXME: parameters are supposed to include a stop date!
     fY, axY = plotPos(pos_df, start_date, 500, "Y")
     fZ, axZ = plotPos(pos_df, start_date, 500, "Z")
     plt.show()

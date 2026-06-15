@@ -84,16 +84,31 @@ class StationSummariser:
         logger.info(f"stop: {self.stop_time}")
 
         table = self.table
-        logger.info(f"table:\n{table}")
+        # logger.info(f"table:\n{table}")
 
         self.total_sessions = len(table["ExpID"])
         self.total_observations = int(np.nansum(table["Total_Obs"].astype(float)))      ### TODO: check this.
 
-        self.wrms_analysis, self.wrms_img = wRmsAnalysis(table)
-        self.performance_analysis, self.perf_img = performanceAnalysis(table)
+        # w rms
+        try:
+            self.wrms_analysis, self.wrms_img = wRmsAnalysis(table)
+        except Exception as e:
+            logger.exception(f"WRMS Analysis exception occurred: {e}. Passing.")
+            pass
+
+        # performance
+        try:
+            self.performance_analysis, self.perf_img = performanceAnalysis(table)
+        except Exception as e:
+            logger.exception(f"Exception occurred while generating performance anaylsis: {e}. Passing")
+            pass
 
         # detections
-        self.detectX_str, self.detect_images["X"] = detectRate(table, "X")
+        try:
+            self.detectX_str, self.detect_images["X"] = detectRate(table, "X")
+        except Exception as e:
+            logger.exception(f"{e} occurred while calculating detection rates. Passing.")
+            pass
 
         try:
             self.detectS_str, self.detect_images["S"] = detectRate(table, "S")
@@ -101,9 +116,6 @@ class StationSummariser:
             logger.info(f"Exception {e} while determining detection rates.")
             self.detectS_str = "No S-band data present..."
             self.detect_images["S"] = ""
-
-        ### TODO:
-        # try-catch clauses like the above for everything
 
         stat_list = grabStations(self.database)
 
@@ -164,7 +176,10 @@ class StationSummariser:
         # the list of issues from the correlation reports
         self.problems = problemExtract(table)                   ### TODO: sort out typing here
 
-        logger.info(f"PROBLEMS:\n{self.problems}")
+        if len(self.problems) == 0:
+            logger.warning("No Problems. Unlikely...")
+
+        # logger.info(f"PROBLEMS:\n{self.problems}")
 
         # now onto the table
         columns_to_remove = [

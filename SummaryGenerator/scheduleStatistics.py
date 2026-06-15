@@ -100,7 +100,7 @@ def get_station_statistics(station):
 
 ################################
 
-
+### TODO: delete as no longer using.
 def plot_pie_chart(data, labels, title, filename):
     """
     Produce a basic pie chart.
@@ -159,7 +159,7 @@ def plot_pie_chart(data, labels, title, filename):
 
     return fig
 
-
+### TODO: delete as no longer using.
 def plot_sessions(args, data):
     """
     Given the api data, convert it to dataframes & filter the relevant parts to feed into the plotter.
@@ -189,7 +189,7 @@ def plot_sessions(args, data):
         f"{args.station.lower()}_session_piechart.png",
     )
 
-
+### TODO: delete as no longer using.
 def plot_scans_and_observations(args, station_data, stats_data):
     """
     Given the api data, convert it to dataframes & filter the relevant parts to feed into the plotter.
@@ -278,7 +278,7 @@ def process_n_plot(station, start_time, stop_time, stat_type, is_vgos):
             f"{station.lower()}_yearly_{stat_type}.png",
         )
 
-
+### TODO: delete as no longer using.
 def get_glovdh_piecharts(station, start, stop, is_vgos):
     """
     where
@@ -336,7 +336,7 @@ def filter_by_session_type(df, is_vgos):
 
     return df
 
-
+### TODO: delete as no longer using.
 # use types here to help pyright sort out what's going on.
 def get_glovdh_barchart(station, time_start, time_stop, is_vgos):
 

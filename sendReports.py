@@ -25,7 +25,7 @@ import ssl
 import sys
 from email.message import EmailMessage
 from pathlib import Path
-from datetime import datetime                   ### FIXME: use Time and TimeDelta, not datetime.
+from datetime import datetime                   ### FIXME: use Time and TimeDelta, not datetime, so as consistent with everything else.
 #from astropy.time import Time
 import yaml
 from typing import List
