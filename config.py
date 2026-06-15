@@ -19,6 +19,7 @@ import logging
 from os import getenv, path
 from pathlib import Path
 from dotenv import load_dotenv
+import sys
 
 ### useful globals:
 
@@ -57,33 +58,31 @@ cddis_ftp = {"host": "gdc.cddis.eosdis.nasa.gov", "user": "anonymous", "passwd":
 
 ### configure the logger ###
 
-### FIXME
-# if else for log on stdout via bool
-
-log_output_dir = "/var/log/ivs_station_fb_logs"
-log_output_file = "stationFeedback.log"
-
-# 1. make log output directory
-
-log_dir_path = Path(log_output_dir)
-log_dir_path.mkdir(parents=True, exist_ok=True)
-
-log_file_path = log_dir_path / log_output_file
-
-# 2. set up logger
-
-logger = logging.getLogger(__name__)
-
 # log format: "timestamp-log_level: file-line_number: message".
 fmt = logging.Formatter(
     "[%(asctime)s-%(levelname)s] %(threadName)s-%(filename)s-%(lineno)d: %(message)s", "%Y.%j.%H:%M:%S"
 )
 
-# log to file
-handle = logging.FileHandler(log_file_path)
+# Choose whether to log to stdout or to a file.
 
-# debug: log to stdout
-#handle = logging.StreamHandler(sys.stdout)
+log_2_stdout = True  # set to False to log to file instead.
+
+if log_2_stdout:
+    handle = logging.StreamHandler(sys.stdout)
+else:
+    log_output_dir = "/var/log/ivs_station_fb_logs"
+    log_output_file = "stationFeedback.log"
+    #  make log output directory
+    log_dir_path = Path(log_output_dir)
+    log_dir_path.mkdir(parents=True, exist_ok=True)
+
+    log_file_path = log_dir_path / log_output_file
+    handle = logging.FileHandler(log_file_path)
+
+
+# set up logger
+
+logger = logging.getLogger(__name__)
 
 handle.setFormatter(fmt)
 logger.addHandler(handle)

@@ -104,7 +104,7 @@ def main(
 ):
     # what's the expected input format of the dates?
 
-    worker_thread_count = 5                             ### TODO: explore what's a good value for this.
+    worker_thread_count = 1                             ### TODO: explore what's a good value for this.
 
     default_daterange_days = 180
 
