@@ -659,7 +659,7 @@ def main(
 
     if not meta:
         logger.warning(f"Failed to read metadata from analysis report for {exp_code}, returning.")
-        return None
+        pass
 
     # Read in spool file
     position, delays = read_spool(spool_file_path(str(exp_code).lower()), stationNamesLong)
