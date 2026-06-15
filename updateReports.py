@@ -11,7 +11,6 @@ from typing import Optional, Union                          ### FIXME if we are 
 from config import logger, stations_config_file, base_dir
 from SummaryGenerator import summaryGenerator
 from StationFeedbackUtils.utilities import stationParse
-from concurrent.futures import ThreadPoolExecutor
 
 ### FIXME: the conflated use of datetime or strings is v. confusing when it comes to types...
 
@@ -104,8 +103,6 @@ def main(
 ):
     # what's the expected input format of the dates?
 
-    worker_thread_count = 1                             ### TODO: explore what's a good value for this.
-
     default_daterange_days = 180
 
     if not os.path.exists(base_dir + "/reports"):
@@ -165,8 +162,6 @@ def main(
             reports=True
         )
 
-    tasks = []
-
     for station in stations_list:
 
         exps = ["legacy", "VGOS"]
@@ -175,30 +170,18 @@ def main(
             exps.append(f"{exp_regex}")
 
         for exp in exps:
-            tasks.append((station, exp))
-            #generate_station_summary(station, exp, exp_regex, database_name, today_date, start_date, end_date)
-
-    def run_task(task):
-        station, exp = task
-
-        logger.info(f"START {station} {exp}")
-        try:
-            generate_station_summary(
-                station,
-                exp,
-                exp_regex,
-                database_name,
-                # today_date,
-                start_date,
-                end_date
-            )
-        except Exception:
-            logger.exception("Exception occurred while generating the summary report.")
-
-        logger.info(f"DONE {station} {exp}")
-
-    with ThreadPoolExecutor(max_workers=worker_thread_count) as executor:
-        executor.map(run_task, tasks)
+            try:
+                generate_station_summary(
+                    station,
+                    exp,
+                    exp_regex,
+                    database_name,
+                    start_date,
+                    end_date
+                )
+                logger.info(f"DONE {station} {exp}")
+            except Exception:
+                logger.exception("Exception occurred while generating the summary report.")
 
 
 if __name__ == "__main__":
