@@ -41,13 +41,21 @@ sudo apt update && sudo apt upgrade
 ```
 Install mariadb:
 ```
-sudo apt install mariadb-server mariadb-client -y
+sudo apt install mariadb-server mariadb-client libmysqlclient-dev -y
 ```
 Then configure it:
 ```
 sudo mariadb-secure-installation
 ```
 This involves creating a password for the root mariadb user, and accepting the default selections otherwise.
+
+Next create the dedicated mariadb user for this project database, _e.g._
+```
+$ sudo mariadb
+> CREATE USER 'auscope'@localhost IDENTIFIED BY 'password';
+> GRANT ALL PRIVILEGES ON *.* TO 'auscope'@localhost IDENTIFIED BY 'password';
+```
+
 
 Install git:
 ```
@@ -56,6 +64,11 @@ sudo apt install git
 Within whichever desired directory, get the repository code by running:
 ```
 git clone https://github.com/tiegemccarthy/stationFeedbackDB.git
+```
+
+If it's a minimal Debian install, one will also need:
+```
+sudo apt install -y pkg-config build-essential python3-dev
 ```
 
 The process of installing the virtual python3 environment depends on the chosen approach, I've been using `uv` of late, which is not available in `apt` by default but may be easily installed (_c.f._ `docs.astral.sh/uv`). The following steps use `uv` and assume you've already installed it.

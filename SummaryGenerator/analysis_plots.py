@@ -1,7 +1,5 @@
 # Functions related to generating various plots in the station report
 
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Column
@@ -14,11 +12,29 @@ def wRmsAnalysis(table_input):
     table = table_input.copy()
 
     # filter dummy data
+
     bad_data = []
-    for i in range(0, len(table["W_RMS_del"])):
-        if table["W_RMS_del"][i] == -999:
+
+    for i in range(len(table["W_RMS_del"])):                 # or  len(table["W_RMS_del"])?
+
+        wrms = table["W_RMS_del"][i]
+        date = table["Date"][i]
+
+        #print(f"Date: {date}")
+        #print(f"WRMS: {wrms}")
+
+        if int(wrms) == -999:            # TODO: other conditions, e.g. date is None
             bad_data.append(i)
+            continue
+
     table.remove_rows(bad_data)
+
+    logger.info(f"Valid WRMS rows: {len(table)}")
+
+    if not len(table) > 0:
+        logger.warning(f"Table length = {len(table)}. No valid data to calculate Wrms.")
+        raise Exception("No data.")
+
     time_data = Column(table["Date"], dtype=Time)
 
     # Determine the median W.RMS delay
@@ -56,13 +72,18 @@ def wRmsAnalysis(table_input):
     ax.set_ylabel("W.RMS (ps)")
     # ax.set_title('Station W.RMS vs. Time')
     ax.grid(axis="y", alpha=0.3, linestyle="--", zorder=0)
-    ax.set_xlim(np.min(time_data), np.max(time_data))
+    #ax.set_xlim(np.min(time_data), np.max(time_data))
     ax.tick_params(axis="x", labelrotation=45)
 
-    ### save figure
+    # save figure
     img_filename = "wRMS.png"
+    fig.tight_layout()
     img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
+
+    ### TODO
+    # debug
+    # save to file
 
     return wrms_med_str, img_b64
 
@@ -76,6 +97,8 @@ def performanceAnalysis(table_input):
         if table["Performance"][i] == 0:
             bad_data.append(i)
     table.remove_rows(bad_data)
+
+
     time_data = Column(table["Date"], dtype=Time)
 
     # Write out the median performance string
@@ -101,7 +124,7 @@ def performanceAnalysis(table_input):
     ax.set_xlim(np.min(time_data), np.max(time_data))
     ax.tick_params(axis="x", labelrotation=45)
 
-    ### save figure
+    # save figure
     img_filename = "performance.png"
     img_b64 = save_plt(plt, img_filename)
     plt.close(fig)
@@ -109,11 +132,10 @@ def performanceAnalysis(table_input):
     return perf_str, img_b64
 
 
+"""
 def posAnalysis(table_input, coord):
-    """
-    Currently this function is not used in the report generation
-    Is this still true?
-    """
+
+    #Currently this function is not used in the report generation. Is this still true?
 
     table = table_input.copy()
 
@@ -139,6 +161,7 @@ def posAnalysis(table_input, coord):
         if table[col_name][i] == 0:
             bad_data.append(i)
     table.remove_rows(bad_data)
+
     time_data = Column(table["Date"], dtype=Time)
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -159,7 +182,7 @@ def posAnalysis(table_input, coord):
     plt.close(fig)
 
     return img_filename, img_b64
-
+"""
 
 def usedVsRecoveredAnalysis(table_input):
     # Currently this function is not used in the report generation
@@ -175,6 +198,11 @@ def usedVsRecoveredAnalysis(table_input):
         ):
             bad_data.append(i)
     table.remove_rows(bad_data)
+
+    if len(table) == 0:
+        logger.warning("No valid performance rows")
+
+
     time_data = Column(table["Date"], dtype=Time)
 
     # Create the figure
@@ -205,6 +233,10 @@ def detectRate(table_input, band):
         if table[col_name][i] == 0 or table[col_name][i] is None:
             bad_data.append(i)
     table.remove_rows(bad_data)
+
+    if len(table) == 0:
+         logger.warning(f"No valid detection-rate rows for band {band}")
+
     time_data = Column(table["Date"], dtype=Time)
 
     # Determine the median detection rate

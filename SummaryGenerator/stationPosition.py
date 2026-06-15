@@ -10,13 +10,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas
 import wget
-from config import logger
+from config import logger, base_dir
+from astropy.time import Time
+
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
-
-dirname = os.path.dirname(__file__)
-
 
 def parseFunc():
     parser = argparse.ArgumentParser(
@@ -58,7 +57,6 @@ def downloadFile(file_name: str, data_dir: str):
 def file2DF(file_name: str, data_dir: str) -> pandas.DataFrame:
 
     file = os.path.join(data_dir, file_name)
-    logger.debug(f"FILEPATH = {file} !!!!")
 
     dataframe_colnames = [
         "date",
@@ -76,23 +74,21 @@ def file2DF(file_name: str, data_dir: str) -> pandas.DataFrame:
         "dN",
     ]  # , 'station', 'vgosDB']
     df = pandas.read_csv(
-        file, names=dataframe_colnames, header=0, skiprows=2, delimiter="\s+"
+        file, names=dataframe_colnames, header=0, skiprows=2, delimiter=r"\s+"
     )
 
     return df
 
 
-### FIXME
-# pos_string isn't included in the calls in main
-# so it needs a defaul value.
 def plotPos(df: pandas.DataFrame, startdate, stopdate, lim, pos_string):
 
+    ### FIXME: startdate type should be Time not float.
     f, ax = plt.subplots(figsize=(12, 4))
 
     # Time frame filter
     date_mask = (df["date"] > startdate) & (df["date"] < stopdate)
 
-    logger.info(f"Min Date: {df['date'].min()}, Max Date: {df['date'].max()}")
+    logger.debug(f"Min Date: {df['date'].min()}, Max Date: {df['date'].max()}")
 
     # Attempt to determine session type from vgosDB string
     # r1r4_mask = np.where(date_mask & (df['vgosDB'].str.contains('-r.')))[0]
@@ -117,7 +113,7 @@ def plotPos(df: pandas.DataFrame, startdate, stopdate, lim, pos_string):
 
     # Set y-limits
     median_val = np.nanmedian(df.where(df["date"] > startdate)[pos_string])
-    ax.set_ylim(median_val - lim, median_val + lim)
+    ax.set_ylim(float(median_val - lim), float(median_val + lim))
 
     # Add labels and legend
     ax.set_xlabel("Date (Years)")
@@ -154,17 +150,18 @@ def get_station_positions(STATION_NAME: str, data_dir: str, start_date, stop_dat
     return fig_dict
 
 
+### deprecated
 def main(STATION_NAME, start_date):
     start_date = float(start_date)
     coords = ["X", "Y", "Z", "U", "E", "N"]
 
     # use os.path for this...
-    data_dir = f"{dirname}/../station_position_data"
+    data_dir = f"{base_dir}/station_position_data"
 
     downloadFile(STATION_NAME, data_dir)
     pos_df = file2DF(STATION_NAME, data_dir)
 
-    fX, axX = plotPos(pos_df, start_date, 500, "X")
+    fX, axX = plotPos(pos_df, start_date, 500, "X")             ### FIXME: parameters are supposed to include a stop date!
     fY, axY = plotPos(pos_df, start_date, 500, "Y")
     fZ, axZ = plotPos(pos_df, start_date, 500, "Z")
     plt.show()

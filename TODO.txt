@@ -34,3 +34,5 @@ TODO
 - Delete all unnecessary comment blocks.
 
 - All output goes to log file except for progress bars produced by one of the downloading packages in updateReports.
+
+- Move all dowloaded data files directories into a parent "data" directory.

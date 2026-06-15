@@ -8,10 +8,10 @@ from ftplib import FTP_TLS
 from concurrent.futures import ThreadPoolExecutor
 import MySQLdb as mariadb
 from typing import List
-from config import db_conf, logger, stations_config_file
-from StationFeedbackUtils.utilities import stationParse
+from config import db_conf, logger, stations_config_file, base_dir, cddis_ftp
+from StationFeedbackUtils.utilities import stationParse, corr_file_path, analysis_report_path, skd_file_path, spool_file_path
 
-dirname = os.path.join(os.path.dirname(__file__),"..")
+#dirname = os.path.join(os.path.dirname(__file__),"..")
 
 
 def parseFunc():
@@ -91,12 +91,62 @@ def validExpFinder(
     return valid_experiment
 
 
+def extract_and_delete_corr_tar(exp_id: str, tag: str):
+
+    tar_path = base_dir + "/" + tag + ".tgz"
+
+    if os.path.isfile(tar_path):
+        logger.debug("Tar exists. Extracting.")
+
+        try:
+            with tarfile.open(tar_path) as tar:
+                default_name = f"{tag}/History/{tag}_V000_kMk4.hist"
+                target = None
+
+                if default_name in tar.getnames():
+                    logger.debug(f"Found target with default name: {default_name}")
+                    target = default_name
+                else:
+                    regex = re.compile(r".*V...\.hist")
+                    for file in tar.getnames():
+                        if re.match(regex, file):
+                            target = file
+                            break
+
+                if target:
+                    member = tar.getmember(target)
+                    src = tar.extractfile(member)
+
+                    if src is None:
+                        logger.error(f"Failure on member {member} extraction from tar {tar_path}.")
+                        return
+
+                    with src:
+                        with open(corr_file_path(exp_id), "wb") as dst:
+                            dst.write(src.read())
+                            logger.debug(f"Extracted data from {target} to {dst}.")
+
+                else:
+                    logger.warning("No target in tar found!")
+                    return
+        except Exception as e:
+            logger.error(f"Exception occured while extracing tar: {e}")
+        finally:
+            logger.debug(f"Deleting tgz for {tag}.")
+            try:
+                os.remove(base_dir + "/" + tag + ".tgz")
+            except Exception as e:
+                logger.error(f"Error occurred while deleting the tar file... {e}")
+                raise Exception from e
+
+
+
 def corrReportDL(
-    exp_id,
-    vgos_tag,
+    exp_id: str,
+    vgos_tag: str,
 ):
-    exp_id = str(exp_id)
-    vgos_tag = str(vgos_tag)
+    #exp_id = str(exp_id)
+    #vgos_tag = str(vgos_tag)
 
     if exp_id in vgos_tag:
         year = vgos_tag[0:4]
@@ -105,68 +155,92 @@ def corrReportDL(
     tag = str(vgos_tag.rstrip())
     exp_id = str(exp_id)
     vgos_exists = []
-    if os.path.isfile(dirname + "/corr_files/" + exp_id + ".corr"):
+
+    if os.path.isfile(corr_file_path(exp_id)):
         logger.info(
             "Corr report already exists for experiment "
             + exp_id
             + ", skipping re-download."
         )
-        return
+
     else:
         logger.info(f"Downloading correlation report for {exp_id}.")
 
-        ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
-        ftps.login(user="anonymous", passwd="tiegem@utas.edu.au")
-        ftps.prot_p()
-        try:
-            ftps.retrlines(
-                "LIST /pub/vlbi/ivsdata/vgosdb/" + year + "/" + tag + ".tgz",
-                vgos_exists.append,
-            )
-            if len(vgos_exists) > 0:
-                local_filename = os.path.join(dirname, tag + ".tgz")
-                ftps.sendcmd("TYPE I")
-                lf = open(local_filename, "wb")
-                ftps.retrbinary(
-                    "RETR /pub/vlbi/ivsdata/vgosdb/" + year + "/" + tag + ".tgz",
-                    lf.write,
+        with FTP_TLS(
+            host=cddis_ftp["host"],
+            timeout=cddis_ftp["timeout"],
+        ) as ftps:
+            ftps.login(user=cddis_ftp["user"], passwd=cddis_ftp["passwd"])
+            ftps.prot_p()
+            try:
+                ftps.retrlines(
+                    "LIST /pub/vlbi/ivsdata/vgosdb/" + year + "/" + tag + ".tgz",
+                    vgos_exists.append,
                 )
-                lf.close()
-                tar = tarfile.open(dirname + "/" + tag + ".tgz")
-                if tag + "/History/" + tag + "_V000_kMk4.hist" in tar.getnames():
-                    member = tar.getmember(tag + "/History/" + tag + "_V000_kMk4.hist")
-                    member.name = dirname + "/corr_files/" + exp_id + ".corr"
-                    tar.extract(member)
-                    tar.close()
-                else:
-                    file_list = tar.getnames()
-                    regex = re.compile(".*V...\.hist")
-                    for file in file_list:
-                        if re.match(regex, file):
-                            member = tar.getmember(file)
-                            member.name = dirname + "/corr_files/" + exp_id + ".corr"
-                            tar.extract(member)
-                            tar.close()
-                            break
-                os.remove(dirname + "/" + tag + ".tgz")
-                logger.info(
-                    "Corr report download complete for experiment " + exp_id + "."
+                if len(vgos_exists) > 0:
+                    local_filename = os.path.join(base_dir, tag + ".tgz")
+                    ftps.sendcmd("TYPE I")
+                    lf = open(local_filename, "wb")
+                    ftps.retrbinary(
+                        "RETR /pub/vlbi/ivsdata/vgosdb/" + year + "/" + tag + ".tgz",
+                        lf.write,
+                    )
+                    lf.close()
+
+                    extract_and_delete_corr_tar(exp_id, tag)
+
+                    """
+                    tar = tarfile.open(base_dir + "/" + tag + ".tgz")
+
+                    if tag + "/History/" + tag + "_V000_kMk4.hist" in tar.getnames():
+                        member = tar.getmember(tag + "/History/" + tag + "_V000_kMk4.hist")
+                        #member.name = base_dir + "/corr_files/" + exp_id + ".corr"
+                        member.name = corr_file_path(exp_id)
+                        tar.extract(member)
+                        tar.close()
+                    else:
+                        file_list = tar.getnames()
+                        regex = re.compile(r'.*V...\.hist')
+                        for file in file_list:
+                            if re.match(regex, file):
+                                member = tar.getmember(file)
+                                #member.name = base_dir + "/corr_files/" + exp_id + ".corr"
+                                member.name = corr_file_path(exp_id)
+                                tar.extract(member)
+                                tar.close()
+                                break
+
+                    logger.debug(f"Deleting tgz for {tag}.")
+                    try:
+                        os.remove(base_dir + "/" + tag + ".tgz")
+                    except Exception as e:
+                        logger.error(f"Error occurred: {e}")
+                    """
+
+                    logger.info(
+                        "Corr report download complete for experiment " + exp_id + "."
+                    )
+
+            except Exception as e:
+                logger.warning(
+                    "Corr report not available for experiment "
+                    + exp_id
+                    + f". Exception occurred: {e}. Not raising."
                 )
-                return
-        except Exception as e:
-            logger.warning(
-                "Corr report not available for experiment "
-                + exp_id
-                + f". Exception occurred: {e}"
-            )
-            return
+            finally:
+                ftps.quit()
+
+    return
 
 
 def download_experiment_data(
     exp: str,
     year: str,
 ):
-    if os.path.isfile(dirname + "/analysis_reports/" + exp.lower() + "_report.txt"):
+
+    exp = exp.lower()
+
+    if os.path.isfile(analysis_report_path(exp)):
         logger.info(
             "Analysis report already exists for "
             + exp.lower()
@@ -174,11 +248,12 @@ def download_experiment_data(
         )
         return
     else:
-        exp = exp.lower()
+
         logger.info("Beginning file downloads for experiment " + exp + ".")
         ftps = FTP_TLS(host="gdc.cddis.eosdis.nasa.gov")
         ftps.login(user="anonymous", passwd="")
         ftps.prot_p()
+
         # Download SKED file
         try:
             filename_skd = []
@@ -193,9 +268,8 @@ def download_experiment_data(
                 filename_skd.append,
             )
             if len(filename_skd) > 0:
-                local_filename_skd = os.path.join(
-                    dirname, "skd_files/" + exp + ".skd"
-                )
+                local_filename_skd = skd_file_path(exp)
+
                 ftps.sendcmd("TYPE I")
                 lf3 = open(local_filename_skd, "wb")
                 ftps.retrbinary(
@@ -233,9 +307,8 @@ def download_experiment_data(
                     filename_report.append,
                 )
                 if len(filename_report) > 0:
-                    local_filename_report = os.path.join(
-                        dirname, "analysis_reports/" + exp + "_report.txt"
-                    )
+                    local_filename_report = analysis_report_path(exp)
+
                     ftps.sendcmd("TYPE I")
                     lf1 = open(local_filename_report, "wb")
                     ftps.retrbinary(
@@ -255,6 +328,7 @@ def download_experiment_data(
             except Exception as e:
                 logger.warning(f"Failed to retieve analysis reports from FTP server. Exception: {e}.")
                 pass
+
         # Download spool file
         for spelling in options:
             filename_spool = []
@@ -272,9 +346,8 @@ def download_experiment_data(
                     filename_spool.append,
                 )
                 if len(filename_spool) > 0:
-                    local_filename_spool = os.path.join(
-                        dirname, "analysis_reports/" + exp + "_spoolfile.txt"
-                    )
+                    local_filename_spool = spool_file_path(exp)
+
                     ftps.sendcmd("TYPE I")
                     lf2 = open(local_filename_spool, "wb")
                     ftps.retrbinary(
@@ -292,6 +365,7 @@ def download_experiment_data(
             except Exception as e:
                 logger.warning(f"Exception occured while parsing spool file: {e}")
                 pass
+
         # Download old style analysis report if it exists.
         try:
             filename_report_old = []
@@ -306,9 +380,8 @@ def download_experiment_data(
                 filename_report_old.append,
             )
             if len(filename_report_old) > 0:
-                local_filename_report = os.path.join(
-                    dirname, "analysis_reports/" + exp + "_report.txt"
-                )
+                local_filename_report = analysis_report_path(exp)
+
                 ftps.sendcmd("TYPE I")
                 lf1 = open(local_filename_report, "wb")
                 ftps.retrbinary(
@@ -334,7 +407,7 @@ def main(
     db_name: str
 ):
     # determines number of threads to handle `download_experiment_data()`
-    worker_thread_count = 4
+    worker_thread_count = 4                                                                  ### FIXME: should be a config variable
 
     stationNames, stationNamesLong = stationParse(stations_config_file, reports=False)
     schedule = str(master_schedule)
@@ -342,7 +415,7 @@ def main(
     ftps.login(user="anonymous", passwd="")
     ftps.prot_p()
 
-    master_sched_filename = os.path.join(dirname, schedule)
+    master_sched_filename = os.path.join(base_dir, schedule)
     mf = open(master_sched_filename, "wb")
     ftps.sendcmd("TYPE I")
     ftps.retrbinary("RETR /pub/vlbi/ivscontrol/" + schedule, mf.write)
@@ -355,7 +428,7 @@ def main(
         year = schedule[6:10]
 
     logger.info("Checking valid experiments.")
-    valid_experiment = validExpFinder(os.path.join(dirname, schedule), stationNames)
+    valid_experiment = validExpFinder(os.path.join(base_dir, schedule), stationNames)
 
     logger.info("Getting existing experiments.")
     existing_experiments = checkExistingData(str(db_name), stationNamesLong)

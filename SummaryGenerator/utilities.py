@@ -4,13 +4,17 @@
 
 import base64
 import re
-from datetime import datetime
+#from datetime import datetime
 from io import BytesIO
+from typing import List
 
 ################
 # time formats #
 ################
 
+### FIXME: we use Time not datetime!
+### TODO: delete me: replaced with Time.decimalyear
+"""
 def datetime_to_fractional_year(date):
 
     dt = datetime.strptime(date, "%Y-%m-%d")
@@ -24,13 +28,14 @@ def datetime_to_fractional_year(date):
 
     return f"{year + fraction:.6f}"
 
+"""
 
 ##########
 # images #
 ##########
 
 
-def save_plt(plt, img_filename=""):
+def save_plt(plt, img_filename: str=""):
     """
     we leave the vestigal filename defaulting to none
     & the commented out section below, as i suspect
@@ -46,7 +51,7 @@ def save_plt(plt, img_filename=""):
     return img_b64
 
 
-def load_png(img_filename):
+def load_png(img_filename: str):
     """
     Read a file and returns its base64-encoded string.
     """
@@ -56,7 +61,11 @@ def load_png(img_filename):
     return img_b64
 
 
-def problemExtract(table_input):
+########
+# misc #
+########
+
+def problemExtract(table_input) -> List[str]:
     """
     no line wrapping, let the css handle this.
     swapped replace with regex to catch the rogue ';'
