@@ -11,8 +11,6 @@ from typing import List
 from config import db_conf, logger, stations_config_file, base_dir, cddis_ftp
 from StationFeedbackUtils.utilities import stationParse, corr_file_path, analysis_report_path, skd_file_path, spool_file_path
 
-#dirname = os.path.join(os.path.dirname(__file__),"..")
-
 
 def parseFunc():
     parser = argparse.ArgumentParser(
@@ -145,8 +143,6 @@ def corrReportDL(
     exp_id: str,
     vgos_tag: str,
 ):
-    #exp_id = str(exp_id)
-    #vgos_tag = str(vgos_tag)
 
     if exp_id in vgos_tag:
         year = vgos_tag[0:4]
@@ -188,34 +184,6 @@ def corrReportDL(
                     lf.close()
 
                     extract_and_delete_corr_tar(exp_id, tag)
-
-                    """
-                    tar = tarfile.open(base_dir + "/" + tag + ".tgz")
-
-                    if tag + "/History/" + tag + "_V000_kMk4.hist" in tar.getnames():
-                        member = tar.getmember(tag + "/History/" + tag + "_V000_kMk4.hist")
-                        #member.name = base_dir + "/corr_files/" + exp_id + ".corr"
-                        member.name = corr_file_path(exp_id)
-                        tar.extract(member)
-                        tar.close()
-                    else:
-                        file_list = tar.getnames()
-                        regex = re.compile(r'.*V...\.hist')
-                        for file in file_list:
-                            if re.match(regex, file):
-                                member = tar.getmember(file)
-                                #member.name = base_dir + "/corr_files/" + exp_id + ".corr"
-                                member.name = corr_file_path(exp_id)
-                                tar.extract(member)
-                                tar.close()
-                                break
-
-                    logger.debug(f"Deleting tgz for {tag}.")
-                    try:
-                        os.remove(base_dir + "/" + tag + ".tgz")
-                    except Exception as e:
-                        logger.error(f"Error occurred: {e}")
-                    """
 
                     logger.info(
                         "Corr report download complete for experiment " + exp_id + "."

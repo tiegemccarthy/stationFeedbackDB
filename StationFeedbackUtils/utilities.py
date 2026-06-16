@@ -1,19 +1,9 @@
 import yaml             # pyyaml
-
-# debug
-# import json
-
 from config import base_dir
 
-### FIXME
-# implement some checks in these
-# actually use them
-
-### FIXME: these should be Paths or at least os.path.join()
-# e.g.
-# os.path.join(
-#    base_dir, "skd_files/" + exp + ".skd"
-# )
+"""
+Some 'universal' utilities used through the project.
+"""
 
 
 def analysis_report_path(
@@ -38,6 +28,14 @@ def skd_file_path(
     exp: str,
 ):
     return f"{base_dir}/skd_files/{exp}.skd"
+
+### FIXME:
+# - these should be Paths or at least os.path.join()
+# e.g.
+# os.path.join(
+#    base_dir, "skd_files/" + exp + ".skd"
+# )
+# - implement some checks in these
 
 
 def stationParse(

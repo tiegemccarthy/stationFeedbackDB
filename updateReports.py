@@ -68,7 +68,7 @@ def generate_station_summary(
     start_date: Union[Time, str],
     end_date: Union[Time, str],
 ):
-        output_name = (
+        output_name = str(
             base_dir
             + "/reports/"
             + station
@@ -117,11 +117,9 @@ def main(
 
     if start_date is not None and end_date is not None:
 
-
         ### FIXME: should only do this if start, end are strings.
         start_date = Time(start_date, format="yday")
         end_date = Time(end_date, format="yday")
-
 
     else:
         today = Time.now()

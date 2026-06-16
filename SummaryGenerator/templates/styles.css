@@ -262,19 +262,20 @@ figure {
 
 .table-container {
     margin-top: 10px;
-    break-before: auto;
-    break-inside: avoid;
+    /* break-before: auto; */
+    /* break-inside: avoid; */
 }
 
 .table-container h2 {
     break-before: avoid;
+    /* break-after: avoid; */
 }
 
 .table {
     width: 100%;
     border-collapse: collapse;
-    break-inside: avoid;
-    font-size: 14px;
+    /* break-inside: avoid; */
+    font-size: 12px;
 }
 
 th {
