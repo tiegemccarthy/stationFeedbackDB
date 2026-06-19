@@ -259,7 +259,7 @@ def extractRelevantSections(
     """
 
     if version == 3:
-        relevant_tags = ["STATION", "DROP", "MANUAL", "SNR", "NOTE", "QCODES"]
+        relevant_tags = ["STATION", "DROP_CHANNELS", "MANUAL", "SNR", "NOTE", "QCODES", "CHANNELS"]
     else:
         relevant_tags = ["STATION", "DROP", "MANUAL", "SNR"]
     relevant_sections = []
@@ -496,7 +496,7 @@ def corrMeta(contents):
 def determine_vgos_bool_from_skd(exp_code):
     # Determine whether session is a VGOS/broadband session from skd file
     # For some reason R1 sessions are the only S/X session that have content in this section, will need to filter that
-
+    # This is now deprecated, and replaced with checking channel numbers from correlator report
     skd_file = skd_file_path(str(exp_code).lower())
 
     if os.path.isfile(skd_file):
@@ -512,6 +512,24 @@ def determine_vgos_bool_from_skd(exp_code):
                      return True
 
     return False
+
+def determine_vgos_bool_from_corr(text_section):
+    """
+    This function takes a block of text, and determines the max channel number (> ~16 indicates VGOS)
+    The input of this function is a text section from the correlator report.
+    This is horrible code - I need to fix it when I have more time
+    """
+    chan_list = []
+    for line in text_section.split("\n"):
+        if len(line.split()) == 3:
+            chan_list.append(line.split()[0][1:3])
+    # convert channel numbers to ints
+    chan_list.pop(0)
+    chan_list = [int(x) for x in chan_list]
+    # if max number > 30, return true, else false
+    vgos_bool = np.max(chan_list) > 30
+
+    return vgos_bool
 
 
 def read_analysis(
@@ -713,12 +731,16 @@ def main(
                 stations_section = relevant_section[i]
             if "DROP_CHANNELS" in relevant_section[i].split()[0]:
                 dropchans_section = relevant_section[i]
+            if "CHANNELS" in relevant_section[i].split()[0] and "DROP_CHANNELS" not in relevant_section[i].split()[0]: 
+                channels_section = relevant_section[i]
             if "MANUAL_PCAL" in relevant_section[i].split()[0]:
                 mpcal_section = relevant_section[i]
             if "NOTES" in relevant_section[i].split()[0]:
                 notes_section = relevant_section[i]
 
         dropped_channels = droppedChannels(dropchans_section, stationNames)
+
+        vgos_bool = determine_vgos_bool_from_corr(channels_section)
 
         manual_pcal = manualPcal(mpcal_section, stationNames)
 
@@ -738,9 +760,6 @@ def main(
     # Define some invalid data flags
     invalid_data_flags = (None, "NULL", "-999")
     station_objects = []
-
-    logger.debug(f"DEBUG {exp_code}: station Names: {stationNames}")
-    logger.debug(f"DEBUG {exp_code}: performance: {performance}")
 
     for i in range(0, len(stationNames)):
         if (
@@ -770,7 +789,7 @@ def main(
             station.detect_rate_s = q_code_data_S[i][0]
             station.note_bool = notes_bool[i]
             station.notes = notes[i]
-            station.vgos_bool = determine_vgos_bool_from_skd(exp_code)
+            station.vgos_bool = vgos_bool
 
             station_objects.append(station)
 
