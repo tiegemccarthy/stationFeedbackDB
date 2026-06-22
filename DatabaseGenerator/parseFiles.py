@@ -523,13 +523,30 @@ def determine_vgos_bool_from_corr(text_section):
     for line in text_section.split("\n"):
         if len(line.split()) == 3:
             chan_list.append(line.split()[0][1:3])
+    
+    # If no channels found or list is empty after filtering, return False
+    if not chan_list:
+        logger.warning("No channels found in correlator report")
+        return False
+    
     # convert channel numbers to ints
-    chan_list.pop(0)
-    chan_list = [int(x) for x in chan_list]
+    try:
+        chan_list.pop(0)  # Remove first element (might be header)
+        chan_list = [int(x) for x in chan_list]
+    except (ValueError, IndexError) as e:
+        logger.error(f"Error parsing channel numbers: {e}. chan_list was: {chan_list}")
+        return False
+    
     # if max number > 30, return true, else false
+    if not chan_list:
+        logger.warning("No valid channel numbers after filtering")
+        return False
+        
     vgos_bool = np.max(chan_list) > 30
-
-    return vgos_bool
+    logger.debug(f"Channel numbers: {chan_list}, max: {np.max(chan_list)}, vgos_bool: {vgos_bool}")
+    
+    # Convert numpy.bool_ to native Python bool to ensure compatibility with database drivers
+    return bool(vgos_bool)
 
 
 def read_analysis(
@@ -692,6 +709,7 @@ def main(
     dropchans_section = ""
     mpcal_section = ""
     stations_section = ""
+    channels_section = ""
     notes_section = " "  # Occasionally a corr report has no notes section, this could be cleaned up using a try later on, bit of a kludge
     dropped_channels = []
     manual_pcal = []
@@ -741,6 +759,8 @@ def main(
         dropped_channels = droppedChannels(dropchans_section, stationNames)
 
         vgos_bool = determine_vgos_bool_from_corr(channels_section)
+        logger.debug(f"{exp_code} vgos_bool: {vgos_bool}")
+
 
         manual_pcal = manualPcal(mpcal_section, stationNames)
 
