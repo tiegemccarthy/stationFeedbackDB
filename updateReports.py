@@ -68,6 +68,7 @@ def generate_station_summary(
     # today_date: Time,
     start_date: Union[Time, str],
     end_date: Union[Time, str],
+    vgos_bool: bool = False
 ):
         output_name = (
             base_dir
@@ -84,8 +85,9 @@ def generate_station_summary(
                 start_date,
                 end_date,
                 output_name,
-                f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "v%",    # search value
-                1 if exp == "legacy" else 0,                                        # reverse search switch
+                f"{exp_regex}" if exp_regex and exp == f"{exp_regex}" else "%",    # search value
+                0,
+                False if exp =='legacy' else True
             )
             # success:
             logger.info(f"Generated report for {exp}. Saved to {output_name}.")
