@@ -32,6 +32,9 @@ stations:
   "Ht":
     name: HART15M
     report: true
+  "Hv":
+    name: HARTVGS
+    report: true
   "Nn":
     name: NYALE13N
     report: true
@@ -62,6 +65,16 @@ stations:
      emails:
   "Kk":
     name: KOKEE
+  "K2":
+    name: KOKEE12M
+  "Mg":
+    name: MACGO12M
+  "On":
+    name: ONSALA60
+  "Oe":
+    name: ONSA13NE
+  "Ow":
+    name: ONSA13SW
   "Kv":
     name: SEJONG
   "Ag":
@@ -70,6 +83,12 @@ stations:
     name: MATERA
   "Wz":
     name: WETTZELL
+  "Wn":
+    name: WETTZ13N
+  "Ws":
+    name: WETTZ13S
+  "Wf":
+    name: WESTFORD
   "Mc":
     name: MEDICINA
   "Ft":
@@ -82,5 +101,21 @@ stations:
     name: NOTO
   "Sv":
     name: SVETLOE
-  "On":
-    name: ONSALA60
+  "Gs":
+    name: GGAO12M
+  "Kv":
+    name: SEJONG
+  "Sv":
+    name: SVETLOE
+  "S6":
+    name: SESHAN13
+  "T1":
+    name: TIANMA13
+  "T6":
+    name: TIANMA65
+  "Ur":
+    name: URUMQI
+  "Um":
+    name: URUMQI13
+  "Zc":
+    name: ZELENCHK

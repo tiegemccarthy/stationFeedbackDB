@@ -51,6 +51,7 @@ class StationSummariser:
     stop_time: Time
     table: Table
     database: str
+    vgos_bool: bool
     total_sessions: int = 0
     total_observations: int = 0
     wrms_analysis: str = ""
@@ -75,7 +76,8 @@ class StationSummariser:
     def __post_init__(self):
 
         # set vgos flag (controls template)
-        self.vgos = True if (self.search == 'v%' and self.reverse_search_flag == 0) else False
+        #self.vgos = True if (self.search == 'v%' and self.reverse_search_flag == 0) else False
+        self.vgos = True if (self.vgos_bool == True) else False
 
         #self.start_time = self.start_time.iso
         #self.stop_time = self.stop_time.iso
@@ -119,6 +121,8 @@ class StationSummariser:
 
         stat_list = grabStations(self.database)
 
+
+        logger.debug(f"self.vgos: {self.vgos} and self.vgos_bool: {self.vgos_bool}")
         stat_tab_list, table_list = grabAllStationData(
             stat_list,
             self.database,
@@ -126,6 +130,7 @@ class StationSummariser:
             self.stop_time,
             self.search,
             self.reverse_search_flag,
+            self.vgos
         )
 
         bench_obs_list = sumTotalObsALL(table_list, stat_tab_list)
@@ -263,6 +268,7 @@ def main(
     output_name: str,
     search: str="%",
     reverse_search: int = 0,
+    vgos_bool: bool = False
 ):
 
     logger.info(f"Generating Summary for Station {stat_code}.")
@@ -279,7 +285,7 @@ def main(
     try:
         # create the info table which will be used to generate the rest of it...
         result, col_names = extractStationData(
-            stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search
+            stat_code, db_name, start_time.mjd, stop_time.mjd, search, reverse_search, vgos_bool
         )
 
         if len(result) == 0:
@@ -307,7 +313,7 @@ def main(
         raise ValueError("Mismatched names to data columns.")
 
     # create the dataclass that contains the summary data
-    stat_sum = StationSummariser(stat_code, search, reverse_search, start_time, stop_time, table, db_name)
+    stat_sum = StationSummariser(stat_code, search, reverse_search, start_time, stop_time, table, db_name, vgos_bool)
 
     # create the PDF report
     logger.info("Generating PDF report...")
