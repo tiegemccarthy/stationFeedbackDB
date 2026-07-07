@@ -130,11 +130,9 @@ samp {
     color: var(--color-accent-blue);
 }
 
-
 .intro p {
     margin-bottom: 10px;
 }
-
 
 /***************
      sections
@@ -283,11 +281,13 @@ th {
     padding: 4px;
     border: 1px solid var(--color-mid-grey);
     white-space: nowrap;
+    text-align: left;
 }
 
 td {
     padding: 2px;
     border: 1px solid var(--color-mid-grey);
+    text-align: center;
 }
 
 /************

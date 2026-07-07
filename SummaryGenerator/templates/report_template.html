@@ -198,10 +198,10 @@
                 {% if detect_images %}
                 <div class="detection-images section">
 
-                    <div class="image-row">
+                    <div {% if not vgos %}class="image-row"{% endif %}>
                         {% for band, img in detect_images.items %}
                             {% if img and vgos %}
-                            <div class="image-block">
+                            <div>
                                 <h5>Combined band</h5>
                                 <figure class="image">
                                     <img src="data:image/png;base64,{{ img }}" alt="{{ band }}">
