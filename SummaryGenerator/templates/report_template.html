@@ -163,7 +163,10 @@
             {% if detectX_img or detectS_str or detect_images %}
             <section class="analysis">
                 <h2>Detection Rates</u><sup>4</sup></h2>
-
+                {% if vgos %}
+                <div class="analysis-content">
+                    <div class="text-block">
+                {% endif %}
                 <p>
                     Detection rates are measured as the ratio between
                     number of successful detections (with quality code >
@@ -194,7 +197,9 @@
                     </strong>
                 </p>
                 {% endif %}
-
+                {% if vgos %}
+                    </div>
+                {% endif %}
                 {% if detect_images %}
                 <div class="detection-images section">
 
@@ -218,6 +223,9 @@
                             {% endif %}
                         {% endfor %}
                     </div>
+                </div>
+                {% endif %}
+                {% if vgos %}
                 </div>
                 {% endif %}
             </section>
