@@ -17,6 +17,9 @@ or were modified in the last twenty-four hours.
 ### TODO
 # - check reports exist
 # - how to know what report type is to be sent... or just send all that are available.
+# - add command line options
+#   > -n or --dry-run for run without sending.
+#   > -s or --station to specify a single station.
 """
 
 import os
@@ -25,11 +28,12 @@ import ssl
 import sys
 from email.message import EmailMessage
 from pathlib import Path
-from datetime import datetime                   ### FIXME: use Time and TimeDelta, not datetime, so as consistent with everything else.
-#from astropy.time import Time
+#from datetime import datetime                   ### FIXME: use Time and TimeDelta, not datetime, so as consistent with everything else.
+from astropy.time import Time
 import yaml
 from typing import List
 from config import email_conf, logger, stations_config_file
+import argparse
 
 
 def load_server_config():
@@ -57,6 +61,7 @@ def send_email(
     smtp_port: int,
     tls_user: str,
     tls_passwd: str,
+    fake_it: bool,
 ):
     """
     Construct and send an email.
@@ -98,7 +103,12 @@ def send_email(
             smtp.starttls(context=context)
             smtp.ehlo()
             smtp.login(tls_user, tls_passwd)
-            smtp.send_message(msg)
+
+            if fake_it:
+                logger.info("Running dry, email not sent.")
+            else:
+                smtp.send_message(msg)
+
     except Exception as e:
         logger.error(f"Fatal exception: {e}")
         sys.exit(f"Error sending email: {e}")
@@ -109,7 +119,10 @@ def send_email(
         logger.info(f"carbon-copying {', '.join(cc_list)}")
 
 
-def main():
+def main(
+    dry_run: bool,
+    specific_stations: None | list[str],
+):
     """
     basically, for stations in station-reports.yaml if email then... send email
     """
@@ -120,29 +133,50 @@ def main():
 
     with open(stations_config_file) as file:
         stations = yaml.safe_load(file)["stations"]
+        logger.debug(f"loaded configuration file: {stations_config_file}.")
+
+    # if specific_stations is None, then send to all correctly-configured stations
+    # otherwise only send to those in the specific_stations list
+    # an inefficent two-pass approach
+
+    if specific_stations is None:
+        specific_stations = []
+        for stat_code in stations:
+            specific_stations.append(stat_code)
+
+    logger.debug(f"Stations to send reports to (if availabe &c): {specific_stations}")
 
     # pull name and email
-    for _, info in stations.items():
-        if info.get("report") and info.get("emails"):
+    for stat_code, info in stations.items():
+        if stat_code in specific_stations and info.get("report") and info.get("emails"):
+
             # station name (long-form code)
             name = info["name"]
+            logger.info(f"Processing {stat_code}/{name}")
+
             # email text body:
             body = f"""
+            Thank you for participating in this project.
+
             Please find attached the station reports for {name}.
+
+            This project is still in the early stages of development and feedback is welcome.
+            Please contact either sullivan.lester@utas.edu.au or tiegem@utas.edu.au with any problems, suggestions or feedback.
+
+            Please do not reply to this email.
             """
 
-            date_str = datetime.now().strftime("%Y%m%d")
+            # attach reports that either include todays date:
+            date_str = str(Time.now().strftime("%Y%m%d"))
 
-            # attach reports that either include todays date or were touched in the last 24 hours
             attachments = [
                 os.path.join(reports_dir, f)
                 for f in os.listdir(reports_dir)
-                if f.startswith(name) and f.endswith(".pdf") and (
-                    date_str in f
-                    # or datetime.fromtimestamp(os.path.getmtime(os.path.join(reports_dir, f))) >= datetime.now() - timedelta(hours=24)
-                    # uncomment the above if sendReports not run on same day as report generation.
-                )
+                if f.startswith(name) and f.endswith(".pdf") and date_str in f
             ]
+
+            ### FIXME
+            # attaching only today's report is pretty fragile, need to think about this.
 
             if attachments:
                 # split `emails` list into reciepent and cc list
@@ -160,8 +194,39 @@ def main():
                     smtp_port=port,
                     tls_user=user,
                     tls_passwd=pw,
+                    fake_it=dry_run
                 )
+            else:
+                logger.info("No appropriate attachements found. Nothing sent. Probably the reports are too old, run updateReports.")
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser(
+        description="Given a configuration file (stations.yaml), attach the appropriate reports and email to the associated addresses"
+    )
+
+    # boolean tack
+    parser.add_argument(
+        "-n",
+        "--dry-run",
+        help="does not send the emails, useful for debugging the configuration file",
+        action="store_true",
+    )
+
+    # comma seperate list of specific stations
+    parser.add_argument(
+        "-s",
+        "--stations",
+        type=str,
+        help="a single station or comma-seperated list of stations to which reports will be sent (assumes emails assigned in configuration file)",
+    )
+
+    args = parser.parse_args()
+
+    # construct a list from the inputted stations to send reports to:
+    stations = None
+    if args.stations is not None:
+        stations = args.stations.split(",")
+
+    main(args.dry_run, stations)

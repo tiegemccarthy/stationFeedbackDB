@@ -8,6 +8,7 @@ from typing import List, Union
 from astropy.table import Table
 from astropy.time import Time
 from config import logger, base_dir
+
 from SummaryGenerator.stationPosition import (
     downloadFile,
     get_station_positions,

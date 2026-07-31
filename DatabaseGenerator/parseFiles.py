@@ -24,7 +24,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 # Set up a class to contain the data values for each station
-class StationData(object):
+class StationData:
 
     def __init__(self, name, exp_id):
         # extracted from analysis/spool
@@ -185,7 +185,8 @@ def sessionFit(text_section: str) -> str:
 
 
 def stationPositions(
-    text_section: str, stations: List[str]
+    text_section: str,
+    stations: List[str],
 ) -> List[str]:
     # extracts station positons from the spoolfile
 
@@ -523,12 +524,12 @@ def determine_vgos_bool_from_corr(text_section):
     for line in text_section.split("\n"):
         if len(line.split()) == 3:
             chan_list.append(line.split()[0][1:3])
-    
+
     # If no channels found or list is empty after filtering, return False
     if not chan_list:
         logger.warning("No channels found in correlator report")
         return False
-    
+
     # convert channel numbers to ints
     try:
         chan_list.pop(0)  # Remove first element (might be header)
@@ -536,15 +537,15 @@ def determine_vgos_bool_from_corr(text_section):
     except (ValueError, IndexError) as e:
         logger.error(f"Error parsing channel numbers: {e}. chan_list was: {chan_list}")
         return False
-    
+
     # if max number > 30, return true, else false
     if not chan_list:
         logger.warning("No valid channel numbers after filtering")
         return False
-        
+
     vgos_bool = np.max(chan_list) > 30
     logger.debug(f"Channel numbers: {chan_list}, max: {np.max(chan_list)}, vgos_bool: {vgos_bool}")
-    
+
     # Convert numpy.bool_ to native Python bool to ensure compatibility with database drivers
     return bool(vgos_bool)
 
@@ -749,7 +750,7 @@ def main(
                 stations_section = relevant_section[i]
             if "DROP_CHANNELS" in relevant_section[i].split()[0]:
                 dropchans_section = relevant_section[i]
-            if "CHANNELS" in relevant_section[i].split()[0] and "DROP_CHANNELS" not in relevant_section[i].split()[0]: 
+            if "CHANNELS" in relevant_section[i].split()[0] and "DROP_CHANNELS" not in relevant_section[i].split()[0]:
                 channels_section = relevant_section[i]
             if "MANUAL_PCAL" in relevant_section[i].split()[0]:
                 mpcal_section = relevant_section[i]

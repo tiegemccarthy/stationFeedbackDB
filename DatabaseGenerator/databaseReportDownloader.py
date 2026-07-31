@@ -119,8 +119,7 @@ def extract_and_delete_corr_tar(exp_id: str, tag: str):
                         logger.error(f"Failure on member {member} extraction from tar {tar_path}.")
                         return
 
-                    with src:
-                        with open(corr_file_path(exp_id), "wb") as dst:
+                    with src and open(corr_file_path(exp_id), "wb") as dst:
                             dst.write(src.read())
                             logger.debug(f"Extracted data from {target} to {dst}.")
 
@@ -138,11 +137,10 @@ def extract_and_delete_corr_tar(exp_id: str, tag: str):
                 raise Exception from e
 
 
-
 def corrReportDL(
     exp_id: str,
     vgos_tag: str,
-):
+) -> None:
 
     if exp_id in vgos_tag:
         year = vgos_tag[0:4]
@@ -197,8 +195,6 @@ def corrReportDL(
                 )
             finally:
                 ftps.quit()
-
-    return
 
 
 def download_experiment_data(
@@ -408,7 +404,6 @@ def main(
             x for x in valid_experiment if x not in existing_experiments
         ]
 
-    #### TODO
     # similiar to databaseCore this can be parrallelised...
     #for exp in experiments_to_download:
     #    download_experiment_data(exp, year)

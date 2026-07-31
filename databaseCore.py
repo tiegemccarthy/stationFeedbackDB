@@ -239,7 +239,7 @@ def main(
         try:
             add_exp_to_db(exp, db_name)
         except Exception as e:
-            logger.error(f"Failed to add exp {exp} to the database. Exception occurred: {e}.")
+            logger.exception(f"Failed to add exp {exp} to the database. Exception occurred: {e}.")
 
     logger.info("Adding data to to the database.")
 
