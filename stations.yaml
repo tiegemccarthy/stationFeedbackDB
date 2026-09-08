@@ -17,84 +17,134 @@ stations:
     name: HOBART12
     report: true
     emails:
+      - lucia.mccallum@utas.edu.au
+      - auscope-operations@list.utas.edu.au
+      - tiegem@utas.edu.au
       - sullivan.lester@utas.edu.au
   "Yg":
     name: YARRA12M
     report: true
     emails:
+      - lucia.mccallum@utas.edu.au
+      - auscope-operations@list.utas.edu.au
+      - tiegem@utas.edu.au
       - sullivan.lester@utas.edu.au
   "Ke":
     name: KATH12M
     report: true
     emails:
+      - lucia.mccallum@utas.edu.au
+      - auscope-operations@list.utas.edu.au
       - sullivan.lester@utas.edu.au
       - tiegem@utas.edu.au
   "Ht":
     name: HART15M
     report: true
+    emails:
+      - vlbi@hartrao.ac.za
+      - tiegem@utas.edu.au
+      - sullivan.lester@utas.edu.au
   "Hv":
     name: HARTVGS
     report: true
+    emails:
+      - vlbi@hartrao.ac.za
+      - tiegem@utas.edu.au
+      - sullivan.lester@utas.edu.au
   "Nn":
     name: NYALE13N
     report: true
     emails:
+      - susanagarcia.espada@kartverket.no
+      - tiegem@utas.edu.au
+      - sullivan.lester@utas.edu.au
   "Ns":
     name: NYALE13S
     report: true
     emails:
+      - susanagarcia.espada@kartverket.no
+      - tiegem@utas.edu.au
       - sullivan.lester@utas.edu.au
   "Yj":
     name: RAEGYEB
     report: true
     emails:
+      - jalopezperez@transportes.gob.es
+      - vlbitech@list.oan.es
+      - tiegem@utas.edu.au
+      - sullivan.lester@utas.edu.au
   "Sa":
     name: RAEGSMAR
     report: true
     emails:
+      - jalopezperez@transportes.gob.es
+      - tiegem@utas.edu.au
+      - sullivan.lester@utas.edu.au
+  "Mc":
+    name: MEDICINA
+    report: true
+    emails:
+      - vlbioperations@med.ira.inaf.it
+      - tiegem@utas.edu.au
+      - sullivan.lester@utas.edu.au
+  "Ww":
+    name: WARK12M
+    report: true
+    emails:
+      - axl.rogers@spaceops.nz
+      - tiegem@utas.edu.au
+      - sullivan.lester@utas.edu.au
   "Is":
     name: ISHIOKA
     report: true
+    emails:
+      - gis-1_oper@gxb.mlit.go.jp
+      - tiegem@utas.edu.au
+      - sullivan.lester@utas.edu.au
   "Ho":
-     name: HOBART26
-     report: false
-     emails:
+    name: HOBART26
+    report: false
   "Ys":
-     name: YEBES40M
-     report: false
-     emails:
-  "Kk":
-    name: KOKEE
-  "K2":
-    name: KOKEE12M
-  "Mg":
-    name: MACGO12M
-  "On":
-    name: ONSALA60
-  "Oe":
-    name: ONSA13NE
-  "Ow":
-    name: ONSA13SW
-  "Kv":
-    name: SEJONG
-  "Ag":
-    name: AGGO
-  "Ma":
-    name: MATERA
-  "Wz":
-    name: WETTZELL
-  "Wn":
-    name: WETTZ13N
-  "Ws":
-    name: WETTZ13S
-  "Wf":
-    name: WESTFORD
-  "Mc":
-    name: MEDICINA
+    name: YEBES40M
+    report: false
   "Ft":
     name: FORTLEZA
-  "Ww":
-    name: WARK12M
+  "Kk":
+    name: KOKEE
+    report: false
+  "K2":
+    name: KOKEE12M
+    report: false
+  "Mg":
+    name: MACGO12M
+    report: false
+  "On":
+    name: ONSALA60
+    report: false
+  "Oe":
+    name: ONSA13NE
+    report: false
+  "Ow":
+    name: ONSA13SW
+    report: false
+  "Ag":
+    name: AGGO
+    report: false
+  "Ma":
+    name: MATERA
+    report: false
+  "Wz":
+    name: WETTZELL
+    report: false
+  "Wn":
+    name: WETTZ13N
+    report: false
+  "Ws":
+    name: WETTZ13S
+    report: false
+  "Wf":
+    name: WESTFORD
+    report: false
   "Bd":
     name: BADARY
   "Nt":
@@ -105,8 +155,6 @@ stations:
     name: GGAO12M
   "Kv":
     name: SEJONG
-  "Sv":
-    name: SVETLOE
   "S6":
     name: SESHAN13
   "T1":

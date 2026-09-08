@@ -114,7 +114,9 @@ def plotPos(df: pandas.DataFrame, startdate, stopdate, lim, pos_string):
     # Set y-limits
     median_val = np.nanmedian(df.where(df["date"] > startdate)[pos_string])
     ax.set_ylim(float(median_val - lim), float(median_val + lim))
-
+    
+    # Set x-limits
+    ax.set_xlim(startdate, stopdate)
     # Add labels and legend
     ax.set_xlabel("Date (Years)")
     ax.set_ylabel(pos_string + " Position (mm)")

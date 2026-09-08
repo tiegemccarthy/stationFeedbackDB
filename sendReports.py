@@ -128,7 +128,14 @@ def main():
             name = info["name"]
             # email text body:
             body = f"""
+            Thank you for participating in this project.
+            
             Please find attached the station reports for {name}.
+
+            This project is still in the early stages of development and feedback is welcome. 
+            Please contact either sullivan.lester@utas.edu.au or tiegem@utas.edu.au with any problems, suggestions or feedback.
+
+            Please do not reply to this email.
             """
 
             date_str = datetime.now().strftime("%Y%m%d")
