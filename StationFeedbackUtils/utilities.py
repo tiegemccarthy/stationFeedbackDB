@@ -39,6 +39,11 @@ def skd_file_path(
 ):
     return f"{base_dir}/skd_files/{exp}.skd"
 
+def vgosDB_path(
+    vgosDB_tag: str,
+):
+    return f"{base_dir}/vgosDB_files/{vgosDB_tag}.tgz"
+
 
 def stationParse(
     stations_config: str,               # path to "stations.yaml"

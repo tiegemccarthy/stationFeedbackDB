@@ -3,6 +3,7 @@
 import argparse
 import os
 import re
+import shutil
 import sys
 import warnings
 from datetime import datetime                   ### used to get the date from the metadata, better suited for this than Astropy's Time...
@@ -11,12 +12,22 @@ import numpy as np
 from astropy.io import ascii
 from astropy.table import vstack
 from astropy.time import Time
+import netCDF4 as nc
+import tarfile
+
+# Sourcing modules from parent directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+target_dir = os.path.join(current_dir, '../')
+sys.path.append(os.path.abspath(target_dir))
+
+
 from StationFeedbackUtils.utilities import (
     stationParse,
     analysis_report_path,
     skd_file_path,
     corr_file_path,
-    spool_file_path
+    spool_file_path,
+    vgosDB_path
 )
 from config import stations_config_file, logger
 
@@ -462,7 +473,6 @@ def extractQcodeInfo(qcode_table):
 
     return qcode_table["station"], good / (good + bad), good / total, good + bad
 
-
 def corrMeta(contents):
     """
     Pull start time and VGOSDB metadata from the correlation report.
@@ -682,6 +692,129 @@ def get_xs_qcode_data(
     return q_code_data_X, q_code_data_S
 
 
+def extractBaseline(nc_dataset):
+    first_station_bytes = nc_dataset['Baseline'][:,0].tolist()
+    second_station_bytes = nc_dataset['Baseline'][:,1].tolist()
+    first_station_list = []
+    second_station_list = []
+    for i in range(0,len(first_station_bytes)):
+        first_station = ''.join([str(s, encoding='UTF-8') for s in first_station_bytes[i]])
+        second_station = ''.join([str(s, encoding='UTF-8') for s in second_station_bytes[i]])
+        first_station_list.append(first_station.strip(' '))
+        second_station_list.append(second_station.strip(' ')) # Can strip whitespace here as we are done with nuSolve
+        
+    return first_station_list, second_station_list
+
+def extractQcode(qc_dataset):
+    qcode_bytes_list = qc_dataset['QualityCode'][:].tolist()
+    qcode_list = []
+    for i in range(0,len(qcode_bytes_list)):
+        if not isinstance(qcode_bytes_list[i], bytes):
+            qcode_list.append(int(-9))  # Assign a default value for non-bytes entries
+            continue
+        qcode_str = str(qcode_bytes_list[i], encoding='UTF-8')
+        qcode_list.append(int(qcode_str))
+
+    return qcode_list
+
+def get_qcode_data_vgosDB(
+    stationNames: List[str],
+    vgosdb_tag: str
+) -> tuple[
+    List[List[Optional[float]]],
+    List[List[Optional[float]]]
+]:
+
+    # For station, we want to extract each observation (defined by qcode) that they participated in (i.e. they were either stat1 or stat2). We will create a list of lists, where each sublist contains the qcodes for that station.
+    def extract_qcode_data(stationNames, stat1, stat2, qcode_list):
+        station_qcodes = {station: [] for station in stationNames}
+        for station in station_qcodes.keys():
+            for i in range(0, len(stat1)):
+                if station == stat1[i] or station == stat2[i]:
+                    station_qcodes[station].append(qcode_list[i])
+
+        # For each station we want the total of each qcode (9-0)
+        legacy_values = []
+        for station in station_qcodes:
+            station_qcodes[station] = [station_qcodes[station].count(i) for i in range(10)]
+
+            # calculate the good vs bad and good vs total for each station
+            good = sum(station_qcodes[station][6:10])  # qcodes 6-9 are good
+            bad = sum(station_qcodes[station][0:6])   # qcodes 0-5 are bad
+            total = good + bad
+
+            legacy_values.append([round(good / (good + bad), 3) if (good + bad) > 0 else None, 
+                                  round(good / total, 3) if total > 0 else None, 
+                                  total if total > 0 else None])
+
+        return station_qcodes, legacy_values
+
+    # Setup file paths. The tar member names include a date-prefixed root directory, so
+    # we must match the archive's actual member names and create the local output dirs before writing.
+    local_root = vgosdb_tag
+    bl_file = os.path.join(local_root, "Observables", "Baseline.nc")
+    qcode_file_X = os.path.join(local_root, "Observables", "QualityCode_bX.nc")
+    qcode_file_S = os.path.join(local_root, "Observables", "QualityCode_bS.nc")
+
+    # extract Qcode and baseline data from vgosDB for the given stations and vgosdb_tag
+    if os.path.isfile(vgosDB_path(vgosdb_tag)):
+        os.makedirs(local_root, exist_ok=True)
+        try:
+            with tarfile.open(vgosDB_path(vgosdb_tag)) as tar:
+                wanted = {
+                    "Baseline.nc": bl_file,
+                    "QualityCode_bX.nc": qcode_file_X,
+                    "QualityCode_bS.nc": qcode_file_S,
+                }
+                for member_name in tar.getnames():
+                    basename = os.path.basename(member_name)
+                    if basename in wanted:
+                        out_path = wanted[basename]
+                        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+                        src = tar.extractfile(member_name)
+                        if src is None:
+                            logger.warning(f"Failed to extract {member_name} from vgosDB tar file.")
+                            continue
+                        with src:
+                            with open(out_path, "wb") as dst:
+                                dst.write(src.read())
+
+                missing = [name for name in wanted if not os.path.isfile(wanted[name])]
+                if missing:
+                    logger.warning(
+                        f"Missing files in vgosDB tar for {vgosdb_tag}: {', '.join(missing)}"
+                    )
+
+        except Exception as e:
+            logger.warning(f"Failed to open vgosDB tar file: {e}")
+
+    # Open datasets
+    if not os.path.isfile(bl_file):
+        raise FileNotFoundError(f"Extracted Baseline file not found: {bl_file}")
+
+    bl_dataset = nc.Dataset(bl_file)
+    stat1, stat2 = extractBaseline(bl_dataset)
+
+    # Pull information from datasets
+    qc_dataset_X = nc.Dataset(qcode_file_X)
+    qcode_list_X = extractQcode(qc_dataset_X)
+    station_qcodes_X, legacy_values_X = extract_qcode_data(stationNames, stat1, stat2, qcode_list_X)
+
+    if os.path.isfile(qcode_file_S):
+        qc_dataset_S = nc.Dataset(qcode_file_S)
+        qcode_list_S = extractQcode(qc_dataset_S)
+        station_qcodes_S, legacy_values_S = extract_qcode_data(stationNames, stat1, stat2, qcode_list_S)
+    else:
+        logger.warning(f"QualityCode_bS.nc not found for {vgosdb_tag}. Setting S-band qcode data to None.")
+        station_qcodes_S = {station: [None]*10 for station in stationNames}
+        legacy_values_S = [[None, None, None] for _ in stationNames]
+
+    shutil.rmtree(vgosdb_tag, ignore_errors=True)  # Clean up extracted files
+
+    return station_qcodes_X, legacy_values_X, station_qcodes_S, legacy_values_S
+
+
+
 def main(
     exp_code: str,
 ) -> Optional[List[StationData]] :
@@ -768,7 +901,11 @@ def main(
             stations_section, report_version
         )
 
-        q_code_data_X, q_code_data_S = get_xs_qcode_data(stationNames, antennas_corr_reference, qcode_section)
+        #q_code_data_X, q_code_data_S = get_xs_qcode_data(stationNames, antennas_corr_reference, qcode_section)
+
+        qcodes_X, q_code_data_X, qcodes_S, q_code_data_S = get_qcode_data_vgosDB(stationNamesLong, vgos_tag_corr)
+
+        print(qcodes_X, qcodes_S)
 
         notes_bool, notes = noteFinder(notes_section, stationNames)
 
@@ -812,6 +949,9 @@ def main(
             station.vgos_bool = vgos_bool
 
             station_objects.append(station)
+
+    for station in station_objects:
+        logger.debug(f"Station object created: {station.__dict__}")
 
     return station_objects
 
