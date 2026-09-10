@@ -1,6 +1,6 @@
 # README
 
-The stationFeedbackDB project attempts to address a core lacunae within the current operations of the International VLBI Service.
+The stationFeedbackDB project attempts to address a core communication issue  within the current operations of the International VLBI Service.
 Experiments are scheduled, performed, correlated and assessed without the results of this assessment being quickly and succinctly provided back to the stations that performed the observations.
 Without this information, there is no opportunity for the continual improvement of station's performance.
 
@@ -9,7 +9,7 @@ The stationFeedbackDB project automates the analysis and assessment of station p
 ## Implementation
 
 In order to use the project, all that should be required is a MariaDB installation and python3.
-We recommend using a python3 virtual environment to hold the required packages, predominately these are: numpy, astropy, MySQLDB, scipy and ftplib. Please see the file `requirements.txt` for a full list, including the package versions used.
+We recommend using a python3 virtual environment (with python version >=3.11) to hold the required packages, predominately these are: numpy, astropy, MySQLDB, scipy and ftplib. Please see the file `requirements.txt` for a full list, including the package versions used.
 
 This project has been designed with use of the current standard formats for the relevant input files, _i.e._ the master schedule assumes Master file format version 2.0, the correlator report versions are assumed to be CORRELATOR_REPORT_FORMAT 3, and the analysis reports are taken to follow the version XXX. (FIXME what version)
 
@@ -19,7 +19,7 @@ Prior to running the project code, manually or as a cronjob, the following prere
 
 - MariaDB (or MySQL) set up with a user corresponding to the field defined in the `.env` file (see below). We use `auscope` in our implementation.
 
-- Python3 virtual environment with required packages loaded (running `pip install -r requirements` inside the activated virtual environment will do this).
+- Python3 (v3.11 or newer) virtual environment with required packages loaded (running `pip install -r requirements` inside the activated virtual environment will do this).
 
 - We use the `Playwright` package to emulate a browser and convert from `.html` to `.pdf`. After a first install of this package, one must run:
 ```

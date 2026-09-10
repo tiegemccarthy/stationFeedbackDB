@@ -43,9 +43,8 @@ def get_vgosdb(exp: str) -> str:
     try:
         with open(analysis_report_path(exp)) as file:
             meta_data = parseFiles.metaData(file.read(), exp)
-
             vgosDB = meta_data[4]
-            databaseReportDownloader.corrReportDL(exp, vgosDB)
+            #databaseReportDownloader.corrReportDL(exp, vgosDB)
 
     except FileNotFoundError as e:
         logger.warning(f"Failed to find file in analysis report: {e}. Moving on.")

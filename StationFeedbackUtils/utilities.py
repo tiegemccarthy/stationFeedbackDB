@@ -29,13 +29,10 @@ def skd_file_path(
 ):
     return f"{base_dir}/skd_files/{exp}.skd"
 
-### FIXME:
-# - these should be Paths or at least os.path.join()
-# e.g.
-# os.path.join(
-#    base_dir, "skd_files/" + exp + ".skd"
-# )
-# - implement some checks in these
+def vgosDB_path(
+    vgosDB_tag: str,
+):
+    return f"{base_dir}/vgosDB_files/{vgosDB_tag}.tgz"
 
 
 def stationParse(

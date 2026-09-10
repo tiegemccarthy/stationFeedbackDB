@@ -9,7 +9,9 @@ from concurrent.futures import ThreadPoolExecutor
 import MySQLdb as mariadb
 from typing import List
 from config import db_conf, logger, stations_config_file, base_dir, cddis_ftp
-from StationFeedbackUtils.utilities import stationParse, corr_file_path, analysis_report_path, skd_file_path, spool_file_path
+from StationFeedbackUtils.utilities import stationParse, corr_file_path, analysis_report_path, skd_file_path, spool_file_path, vgosDB_path
+
+#dirname = os.path.join(os.path.dirname(__file__),"..")
 
 
 def parseFunc():
@@ -91,13 +93,13 @@ def validExpFinder(
 
 def extract_and_delete_corr_tar(exp_id: str, tag: str):
 
-    tar_path = base_dir + "/" + tag + ".tgz"
-
-    if os.path.isfile(tar_path):
-        logger.debug("Tar exists. Extracting.")
+    #tar_path = base_dir + "/" + tag + ".tgz"
+    
+    if os.path.isfile(vgosDB_path(tag)):
+        logger.debug("vgosDB exists. Extracting.")
 
         try:
-            with tarfile.open(tar_path) as tar:
+            with tarfile.open(vgosDB_path(tag)) as tar:
                 default_name = f"{tag}/History/{tag}_V000_kMk4.hist"
                 target = None
 
@@ -116,7 +118,7 @@ def extract_and_delete_corr_tar(exp_id: str, tag: str):
                     src = tar.extractfile(member)
 
                     if src is None:
-                        logger.error(f"Failure on member {member} extraction from tar {tar_path}.")
+                        logger.error(f"Failure on member {member} extraction from tar {vgosDB_path(tag)}.")
                         return
 
                     with src and open(corr_file_path(exp_id), "wb") as dst:
@@ -126,20 +128,22 @@ def extract_and_delete_corr_tar(exp_id: str, tag: str):
                 else:
                     logger.warning("No target in tar found!")
                     return
+                
         except Exception as e:
             logger.error(f"Exception occured while extracing tar: {e}")
-        finally:
-            logger.debug(f"Deleting tgz for {tag}.")
-            try:
-                os.remove(base_dir + "/" + tag + ".tgz")
-            except Exception as e:
-                logger.error(f"Error occurred while deleting the tar file... {e}")
-                raise Exception from e
+#        finally:
+#            logger.debug(f"Deleting tgz for {tag}.")
+#            try:
+#                os.remove(base_dir + "/" + tag + ".tgz")
+#            except Exception as e:
+#                logger.error(f"Error occurred while deleting the tar file... {e}")
+#                raise Exception from e
 
 
 def corrReportDL(
     exp_id: str,
     vgos_tag: str,
+    # The following determines the year of the experiment based on whether vgosDB tag is in the new or old style.
 ) -> None:
 
     if exp_id in vgos_tag:
@@ -150,15 +154,15 @@ def corrReportDL(
     exp_id = str(exp_id)
     vgos_exists = []
 
-    if os.path.isfile(corr_file_path(exp_id)):
+    if os.path.isfile(corr_file_path(exp_id)) and os.path.isfile(vgosDB_path(tag)):
         logger.info(
-            "Corr report already exists for experiment "
+            "Both Corr report and vgosDB already exist for experiment "
             + exp_id
             + ", skipping re-download."
         )
 
     else:
-        logger.info(f"Downloading correlation report for {exp_id}.")
+        logger.info(f"Downloading vgosDB for {exp_id}.")
 
         with FTP_TLS(
             host=cddis_ftp["host"],
@@ -172,7 +176,7 @@ def corrReportDL(
                     vgos_exists.append,
                 )
                 if len(vgos_exists) > 0:
-                    local_filename = os.path.join(base_dir, tag + ".tgz")
+                    local_filename = vgosDB_path(tag)
                     ftps.sendcmd("TYPE I")
                     lf = open(local_filename, "wb")
                     ftps.retrbinary(
@@ -184,7 +188,7 @@ def corrReportDL(
                     extract_and_delete_corr_tar(exp_id, tag)
 
                     logger.info(
-                        "Corr report download complete for experiment " + exp_id + "."
+                        "vgosDB download and report extraction complete for experiment " + exp_id + "."
                     )
 
             except Exception as e:
